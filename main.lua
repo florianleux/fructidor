@@ -1,3 +1,8 @@
+-- Importation des modules
+local Garden = require('src.entities.garden')
+local CardSystem = require('src.systems.card_system')
+local DragDrop = require('src.ui.drag_drop')
+
 function love.load()
     math.randomseed(os.time())
     
@@ -22,12 +27,24 @@ function love.load()
         objective = 100
     }
     
+    -- Initialiser le jardin
+    garden = Garden.new(3, 2)
+    
+    -- Initialiser le système de cartes
+    cardSystem = CardSystem.new()
+    
+    -- Initialiser le système de drag & drop
+    dragDrop = DragDrop.new()
+    
     -- Rouler les dés initiaux
     rollDice()
 end
 
 function love.update(dt)
-    -- Logique de mise à jour
+    -- Mettre à jour le système de drag & drop si une carte est en cours de déplacement
+    if dragDrop.dragging then
+        dragDrop:updateDrag(love.mouse.getX(), love.mouse.getY())
+    end
 end
 
 function love.draw()
@@ -87,13 +104,43 @@ function love.draw()
     love.graphics.print("Score: " .. gameState.score .. "/" .. gameState.objective, 10, 160)
     
     -- Grille du potager
-    drawGarden()
+    garden:draw()
+    
+    -- Dessiner les effets de surbrillance si une carte est en cours de déplacement
+    if dragDrop.dragging then
+        dragDrop:updateHighlight(garden, love.mouse.getX(), love.mouse.getY())
+    end
+    
+    -- Dessiner les cartes en main
+    cardSystem:drawHand()
+    
+    -- Dessiner la carte en cours de déplacement (au-dessus de tout)
+    dragDrop:draw()
 end
 
 function love.mousepressed(x, y, button)
     -- Clic sur le bouton fin de tour
     if button == 1 and x >= 480 and x <= 560 and y >= 110 and y <= 140 then
         nextTurn()
+        return
+    end
+    
+    -- Clic sur une carte en main
+    if button == 1 then
+        local card = cardSystem:getCardAt(x, y)
+        if card then
+            dragDrop:startDrag(card, x, y)
+        end
+    end
+end
+
+function love.mousereleased(x, y, button)
+    -- Lâcher une carte
+    if button == 1 and dragDrop.dragging then
+        local placed = dragDrop:stopDrag(garden, cardSystem)
+        if placed then
+            -- Jouer un son ou autre feedback ici
+        end
     end
 end
 
@@ -116,6 +163,26 @@ function rollDice()
 end
 
 function nextTurn()
+    -- Appliquer les effets météo aux plantes
+    for y = 1, garden.height do
+        for x = 1, garden.width do
+            local cell = garden.grid[y][x]
+            if cell.plant then
+                -- Vérifier le gel
+                if gameState.sunDieValue < cell.plant.frostThreshold then
+                    garden:placePlant(nil, x, y) -- Retirer la plante
+                else
+                    -- Appliquer soleil et pluie
+                    cell.plant:receiveSun(math.max(0, gameState.sunDieValue))
+                    cell.plant:receiveRain(math.max(0, gameState.rainDieValue))
+                end
+            end
+        end
+    end
+    
+    -- Piocher une carte
+    cardSystem:drawCard()
+    
     -- Passer au tour suivant
     gameState.currentTurn = gameState.currentTurn + 1
     
@@ -138,25 +205,4 @@ function nextTurn()
     
     -- Lancer les dés
     rollDice()
-end
-
-function drawGarden()
-    local cellWidth = 70
-    local cellHeight = 70
-    local offsetX = 50
-    local offsetY = 180
-    
-    -- Dessiner les cases
-    for y = 1, 2 do
-        for x = 1, 3 do
-            local posX = offsetX + (x-1) * cellWidth
-            local posY = offsetY + (y-1) * cellHeight
-            
-            -- Case
-            love.graphics.setColor(0.8, 0.7, 0.5)
-            love.graphics.rectangle("fill", posX, posY, cellWidth, cellHeight)
-            love.graphics.setColor(0.4, 0.4, 0.4)
-            love.graphics.rectangle("line", posX, posY, cellWidth, cellHeight)
-        end
-    end
 end
