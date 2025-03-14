@@ -32,6 +32,10 @@ function UIManager:draw(gameState)
         end
     end
     
+    -- Zone des dés et bouton
+    love.graphics.setColor(0.8, 0.9, 0.95)
+    love.graphics.rectangle("fill", 10, 100, 580, 50)
+    
     -- Dés météo
     love.graphics.setColor(1, 0.8, 0)
     love.graphics.rectangle("fill", 240, 105, 40, 40, 6)
@@ -50,6 +54,10 @@ function UIManager:draw(gameState)
     love.graphics.rectangle("fill", 480, 110, 80, 30, 5)
     love.graphics.setColor(0, 0, 0)
     love.graphics.print("Fin du tour", 487, 120)
+    
+    -- Affichage du score
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("Score: " .. gameState.score .. "/" .. gameState.objective, 10, 160)
 end
 
 return UIManager
