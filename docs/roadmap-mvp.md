@@ -31,37 +31,37 @@
 - [✓] Projet LÖVE2D de base
 - [✓] Architecture dossiers (src, assets, lib)
 - [✓] Configuration Git
-- [✓] Tests: `test_project_structure` (vérifie l'intégrité de la structure du projet)
+- [ ] Tests: `test_project_structure` (vérifie l'intégrité de la structure du projet)
 
 ### État de jeu basique
 - [✓] Machine à états (menu, jeu)
 - [✓] Structure GameState
 - [✓] Boucle de jeu principale
-- [✓] Tests: `test_state_transitions` (vérifie que la transition entre les états Menu et Jeu fonctionne correctement)
+- [ ] Tests: `test_state_transitions` (vérifie que la transition entre les états Menu et Jeu fonctionne correctement)
 
 ### Représentation plateau
 - [✓] Grille 3×2 cliquable
 - [✓] Rendu visuel cases
 - [✓] Sélection case
-- [✓] Tests: `test_grid_coordinates` (vérifie que les coordonnées de grille sont correctement calculées à partir des positions de souris)
+- [ ] Tests: `test_grid_coordinates` (vérifie que les coordonnées de grille sont correctement calculées à partir des positions de souris)
 
 ### Système de tours
 - [✓] Compteur tours (1-8)
 - [✓] Bouton "Tour suivant"
 - [✓] Transitions entre tours
-- [✓] Tests: `test_turn_increment` (vérifie que le compteur de tours s'incrémente correctement et déclenche les changements de saison appropriés)
+- [ ] Tests: `test_turn_increment` (vérifie que le compteur de tours s'incrémente correctement et déclenche les changements de saison appropriés)
 
 ### Système de saisons
 - [✓] Saisons liées aux tours
 - [✓] Affichage saison actuelle
 - [✓] Indicateurs visuels saisonniers
-- [✓] Tests: `test_season_changes` (vérifie que les saisons changent après 2 tours et dans le bon ordre)
+- [ ] Tests: `test_season_changes` (vérifie que les saisons changent après 2 tours et dans le bon ordre)
 
 ### Interface minimale
 - [✓] Disposition éléments principaux
 - [✓] Zone jeu + colonne info
 - [✓] Indicateurs tour/saison
-- [✓] Tests: `test_ui_elements_position` (vérifie que tous les éléments d'interface sont correctement positionnés et visibles)
+- [ ] Tests: `test_ui_elements_position` (vérifie que tous les éléments d'interface sont correctement positionnés et visibles)
 
 ### Structure cartes
 - [✓] Classe Card (attributs base)
