@@ -110,12 +110,12 @@ function CardSystem:playCard(cardIndex, garden, x, y)
     return false
 end
 
--- Fonction pour dessiner une carte
-function CardSystem:drawCard(card, x, y)
+-- Fonction pour AFFICHER une carte (renommer pour éviter conflit)
+function CardSystem:renderCard(card, xPos, yPos)
     love.graphics.setColor(1, 1, 1)
-    love.graphics.rectangle("fill", x - 30, y - 50, 60, 100, 3)
+    love.graphics.rectangle("fill", xPos - 30, yPos - 50, 60, 100, 3)
     love.graphics.setColor(0.4, 0.4, 0.4)
-    love.graphics.rectangle("line", x - 30, y - 50, 60, 100, 3)
+    love.graphics.rectangle("line", xPos - 30, yPos - 50, 60, 100, 3)
     
     -- Couleur de fond selon la famille
     if card.color then
@@ -123,22 +123,22 @@ function CardSystem:drawCard(card, x, y)
     else
         love.graphics.setColor(0.7, 0.7, 0.7)
     end
-    love.graphics.rectangle("fill", x - 25, y - 45, 50, 15)
+    love.graphics.rectangle("fill", xPos - 25, yPos - 45, 50, 15)
     
     -- Nom et info
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(card.family, x - 25, y - 45)
-    love.graphics.print("Graine", x - 25, y - 25)
+    love.graphics.print(card.family, xPos - 25, yPos - 45)
+    love.graphics.print("Graine", xPos - 25, yPos - 25)
     
     -- Besoins pour pousser
-    love.graphics.print("☀️ " .. card.sunToSprout, x - 25, y - 5)
-    love.graphics.print("🌧️ " .. card.rainToSprout, x - 25, y + 10)
+    love.graphics.print("☀️ " .. card.sunToSprout, xPos - 25, yPos - 5)
+    love.graphics.print("🌧️ " .. card.rainToSprout, xPos - 25, yPos + 10)
     
     -- Score
-    love.graphics.print(card.baseScore .. " pts", x - 25, y + 25)
+    love.graphics.print(card.baseScore .. " pts", xPos - 25, yPos + 25)
     
     -- Gel
-    love.graphics.print("❄️ " .. card.frostThreshold, x - 25, y + 40)
+    love.graphics.print("❄️ " .. card.frostThreshold, xPos - 25, yPos + 40)
 end
 
 -- Fonction pour dessiner la main du joueur
@@ -158,7 +158,7 @@ function CardSystem:drawHand()
         card.y = y
         
         -- Dessiner la carte
-        self:drawCard(card, x, y)
+        self:renderCard(card, x, y)
     end
 end
 
