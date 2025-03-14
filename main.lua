@@ -3,8 +3,14 @@ local Garden = require('src.entities.garden')
 local CardSystem = require('src.systems.card_system')
 local DragDrop = require('src.ui.drag_drop')
 
-function love.load()
+function love.load(arg)
     math.randomseed(os.time())
+    
+    -- Vérifier si on est en mode test
+    if arg and arg[2] == "--test" then
+        runTests()
+        return
+    end
     
     -- Configuration du jeu
     config = {
@@ -205,4 +211,32 @@ function nextTurn()
     
     -- Lancer les dés
     rollDice()
+end
+
+-- Fonction pour exécuter les tests
+function runTests()
+    print("Exécution des tests unitaires...")
+    
+    -- Vérifier que le module de test existe
+    local success, testSuite = pcall(require, "tests.test_suite")
+    if not success then
+        print("ERREUR: Module de test non trouvé")
+        print(testSuite) -- Afficher l'erreur
+        return
+    end
+    
+    -- Exécuter tous les tests
+    local allPassed = testSuite.run_all_tests()
+    
+    -- Afficher le résultat final
+    if allPassed then
+        print("Tous les tests ont réussi!")
+    else
+        print("Certains tests ont échoué.")
+    end
+    
+    -- Quitter après les tests si en mode ligne de commande
+    if not love.window or not love.graphics or not love.event then
+        os.exit(allPassed and 0 or 1)
+    end
 end
