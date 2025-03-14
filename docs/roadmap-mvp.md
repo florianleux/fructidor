@@ -1,4 +1,3 @@
-
 # FRUCTIDOR - SUIVI DE DÉVELOPPEMENT
 > Document de travail interne - Format optimisé pour suivi d'avancement
 > Tests détaillés dans `/tests/test_suite.lua`
