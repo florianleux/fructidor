@@ -5,14 +5,14 @@
 ## NOTES DE DÉVELOPPEMENT
 - Début projet: 14/03/2025
 - MVP actuel: 1
-- Tâche actuelle: Structure initiale
+- Tâche actuelle: Structure cartes
 - Problèmes bloquants: aucun
 - Dernière mise à jour: 14/03/2025
 
 ## PRIORITÉS
-- Finaliser structure initiale
-- Implémenter machine à états
-- Créer rendu basique du plateau
+- Finaliser système de cartes
+- Tester système de drag & drop
+- Implémenter mécanique de plantation
 
 ## DÉCISIONS & MODIFICATIONS
 1. 
@@ -25,48 +25,48 @@
 - [↪️] Reporté au MVP suivant
 
 ## ÉTAT GLOBAL: MVP 1 - Fondations (Jours 1-3)
-> Progression: 0/7 tâches complétées
+> Progression: 4/7 tâches complétées
 
 ### Structure initiale
-- [ ] Projet LÖVE2D de base
-- [ ] Architecture dossiers (src, assets, lib)
-- [ ] Configuration Git
-- [ ] Tests: `test_project_structure` (vérifie l'intégrité de la structure du projet)
+- [✓] Projet LÖVE2D de base
+- [✓] Architecture dossiers (src, assets, lib)
+- [✓] Configuration Git
+- [✓] Tests: `test_project_structure` (vérifie l'intégrité de la structure du projet)
 
 ### État de jeu basique
-- [ ] Machine à états (menu, jeu)
-- [ ] Structure GameState
-- [ ] Boucle de jeu principale
-- [ ] Tests: `test_state_transitions` (vérifie que la transition entre les états Menu et Jeu fonctionne correctement)
+- [✓] Machine à états (menu, jeu)
+- [✓] Structure GameState
+- [✓] Boucle de jeu principale
+- [✓] Tests: `test_state_transitions` (vérifie que la transition entre les états Menu et Jeu fonctionne correctement)
 
 ### Représentation plateau
-- [ ] Grille 3×2 cliquable
-- [ ] Rendu visuel cases
-- [ ] Sélection case
-- [ ] Tests: `test_grid_coordinates` (vérifie que les coordonnées de grille sont correctement calculées à partir des positions de souris)
+- [✓] Grille 3×2 cliquable
+- [✓] Rendu visuel cases
+- [✓] Sélection case
+- [✓] Tests: `test_grid_coordinates` (vérifie que les coordonnées de grille sont correctement calculées à partir des positions de souris)
 
 ### Système de tours
-- [ ] Compteur tours (1-8)
-- [ ] Bouton "Tour suivant"
-- [ ] Transitions entre tours
-- [ ] Tests: `test_turn_increment` (vérifie que le compteur de tours s'incrémente correctement et déclenche les changements de saison appropriés)
+- [✓] Compteur tours (1-8)
+- [✓] Bouton "Tour suivant"
+- [✓] Transitions entre tours
+- [✓] Tests: `test_turn_increment` (vérifie que le compteur de tours s'incrémente correctement et déclenche les changements de saison appropriés)
 
 ### Système de saisons
-- [ ] Saisons liées aux tours
-- [ ] Affichage saison actuelle
-- [ ] Indicateurs visuels saisonniers
-- [ ] Tests: `test_season_changes` (vérifie que les saisons changent après 2 tours et dans le bon ordre)
+- [✓] Saisons liées aux tours
+- [✓] Affichage saison actuelle
+- [✓] Indicateurs visuels saisonniers
+- [✓] Tests: `test_season_changes` (vérifie que les saisons changent après 2 tours et dans le bon ordre)
 
 ### Interface minimale
-- [ ] Disposition éléments principaux
-- [ ] Zone jeu + colonne info
-- [ ] Indicateurs tour/saison
-- [ ] Tests: `test_ui_elements_position` (vérifie que tous les éléments d'interface sont correctement positionnés et visibles)
+- [✓] Disposition éléments principaux
+- [✓] Zone jeu + colonne info
+- [✓] Indicateurs tour/saison
+- [✓] Tests: `test_ui_elements_position` (vérifie que tous les éléments d'interface sont correctement positionnés et visibles)
 
 ### Structure cartes
-- [ ] Classe Card (attributs base)
-- [ ] Rendu visuel cartes
-- [ ] Main joueur (5 cartes)
+- [✓] Classe Card (attributs base)
+- [🔄] Rendu visuel cartes
+- [🔄] Main joueur (5 cartes)
 - [ ] Tests: `test_card_attributes` (vérifie que les attributs des cartes sont correctement initialisés et accessibles)
 
 ---
@@ -75,9 +75,9 @@
 > Non commencé
 
 ### Système météorologique
-- [ ] Dés soleil et pluie
-- [ ] Valeurs par saison
-- [ ] Affichage valeurs
+- [✓] Dés soleil et pluie
+- [✓] Valeurs par saison
+- [✓] Affichage valeurs
 - [ ] Tests: `test_dice_ranges` (vérifie que les valeurs des dés restent dans les plages définies pour chaque saison)
 
 ### Classe Plant
