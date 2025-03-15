@@ -9,6 +9,7 @@ function CardSystem.new()
     self.deck = {}
     self.hand = {}
     self.discardPile = {}
+    self.draggingCardIndex = nil -- Indice de la carte en cours de déplacement
     
     -- Initialisation du deck avec cartes de base
     self:initializeDeck()
@@ -103,6 +104,15 @@ function CardSystem:playCard(cardIndex, garden, x, y)
         if garden:placePlant(plant, x, y) then
             table.remove(self.hand, cardIndex)
             table.insert(self.discardPile, card)
+            
+            -- Réinitialiser l'indice de la carte en drag si c'était celle-là
+            if self.draggingCardIndex == cardIndex then
+                self.draggingCardIndex = nil
+            elseif self.draggingCardIndex and self.draggingCardIndex > cardIndex then
+                -- Ajuster l'indice si une carte avant celle en déplacement est supprimée
+                self.draggingCardIndex = self.draggingCardIndex - 1
+            end
+            
             return true
         end
     end
@@ -149,16 +159,19 @@ function CardSystem:drawHand()
     
     -- Calculer la position des cartes en arc
     for i, card in ipairs(self.hand) do
-        local angle = (i - (#self.hand + 1) / 2) * 0.1
-        local x = screenWidth / 2 + angle * 200
-        local y = handY + math.abs(angle) * 50
-        
-        -- Stocker la position pour le drag & drop
-        card.x = x
-        card.y = y
-        
-        -- Dessiner la carte
-        self:renderCard(card, x, y)
+        -- Ignorer la carte en cours de déplacement
+        if i ~= self.draggingCardIndex then
+            local angle = (i - (#self.hand + 1) / 2) * 0.1
+            local x = screenWidth / 2 + angle * 200
+            local y = handY + math.abs(angle) * 50
+            
+            -- Stocker la position pour le drag & drop
+            card.x = x
+            card.y = y
+            
+            -- Dessiner la carte
+            self:renderCard(card, x, y)
+        end
     end
 end
 
@@ -172,6 +185,16 @@ function CardSystem:getCardAt(x, y)
         end
     end
     return nil
+end
+
+-- Définir la carte en cours de déplacement
+function CardSystem:setDraggingCard(index)
+    self.draggingCardIndex = index
+end
+
+-- Réinitialiser l'état de déplacement
+function CardSystem:resetDragging()
+    self.draggingCardIndex = nil
 end
 
 return CardSystem
