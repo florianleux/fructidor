@@ -4,6 +4,14 @@ local Plant = require('src.entities.plant')
 local CardSystem = {}
 CardSystem.__index = CardSystem
 
+-- Définition des constantes pour la taille des cartes (180% de la taille originale)
+local CARD_WIDTH = 108  -- 60 * 1.8
+local CARD_HEIGHT = 180 -- 100 * 1.8
+local CARD_CORNER_RADIUS = 5
+local CARD_HEADER_HEIGHT = 27 -- 15 * 1.8
+local TEXT_PADDING_X = 45 -- 25 * 1.8 
+local TEXT_LINE_HEIGHT = 18 -- Ajusté pour les cartes plus grandes
+
 function CardSystem.new()
     local self = setmetatable({}, CardSystem)
     self.deck = {}
@@ -32,8 +40,8 @@ function CardSystem:initializeDeck()
             rainToFruit = 8,
             frostThreshold = -5,
             baseScore = 20,
-            width = 60,
-            height = 100,
+            width = CARD_WIDTH,
+            height = CARD_HEIGHT,
             x = 0,
             y = 0
         })
@@ -52,8 +60,8 @@ function CardSystem:initializeDeck()
             rainToFruit = 6,
             frostThreshold = -2,
             baseScore = 30,
-            width = 60,
-            height = 100,
+            width = CARD_WIDTH,
+            height = CARD_HEIGHT,
             x = 0,
             y = 0
         })
@@ -122,10 +130,15 @@ end
 
 -- Fonction pour AFFICHER une carte (renommer pour éviter conflit)
 function CardSystem:renderCard(card, xPos, yPos)
+    -- Calculer les positions ajustées pour la carte agrandie
+    local cardLeft = xPos - CARD_WIDTH/2
+    local cardTop = yPos - CARD_HEIGHT/2
+    
+    -- Dessiner le fond de la carte
     love.graphics.setColor(1, 1, 1)
-    love.graphics.rectangle("fill", xPos - 30, yPos - 50, 60, 100, 3)
+    love.graphics.rectangle("fill", cardLeft, cardTop, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS)
     love.graphics.setColor(0.4, 0.4, 0.4)
-    love.graphics.rectangle("line", xPos - 30, yPos - 50, 60, 100, 3)
+    love.graphics.rectangle("line", cardLeft, cardTop, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS)
     
     -- Couleur de fond selon la famille
     if card.color then
@@ -133,37 +146,41 @@ function CardSystem:renderCard(card, xPos, yPos)
     else
         love.graphics.setColor(0.7, 0.7, 0.7)
     end
-    love.graphics.rectangle("fill", xPos - 25, yPos - 45, 50, 15)
+    love.graphics.rectangle("fill", cardLeft + 5, cardTop + 5, CARD_WIDTH - 10, CARD_HEADER_HEIGHT)
+    
+    -- Échelle du texte pour les cartes plus grandes
+    local textScale = 1.4
     
     -- Nom et info
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(card.family, xPos - 25, yPos - 45)
-    love.graphics.print("Graine", xPos - 25, yPos - 25)
+    -- Pour le texte à l'échelle, on peut utiliser love.graphics.scale, ou alternativement ajuster les positions
+    love.graphics.print(card.family, cardLeft + 10, cardTop + 9, 0, textScale, textScale)
+    love.graphics.print("Graine", cardLeft + 10, cardTop + 35, 0, textScale, textScale)
     
     -- Besoins pour pousser
-    love.graphics.print("☀️ " .. card.sunToSprout, xPos - 25, yPos - 5)
-    love.graphics.print("🌧️ " .. card.rainToSprout, xPos - 25, yPos + 10)
+    love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10, cardTop + 60, 0, textScale, textScale)
+    love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10, cardTop + 85, 0, textScale, textScale)
     
     -- Score
-    love.graphics.print(card.baseScore .. " pts", xPos - 25, yPos + 25)
+    love.graphics.print(card.baseScore .. " pts", cardLeft + 10, cardTop + 110, 0, textScale, textScale)
     
     -- Gel
-    love.graphics.print("❄️ " .. card.frostThreshold, xPos - 25, yPos + 40)
+    love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10, cardTop + 135, 0, textScale, textScale)
 end
 
 -- Fonction pour dessiner la main du joueur
 function CardSystem:drawHand()
     local screenWidth = love.graphics.getWidth()
     local screenHeight = love.graphics.getHeight()
-    local handY = screenHeight - 70
+    local handY = screenHeight - 100 -- Ajusté pour les cartes plus grandes
     
     -- Calculer la position des cartes en arc
     for i, card in ipairs(self.hand) do
         -- Ignorer la carte en cours de déplacement
         if i ~= self.draggingCardIndex then
             local angle = (i - (#self.hand + 1) / 2) * 0.1
-            local x = screenWidth / 2 + angle * 200
-            local y = handY + math.abs(angle) * 50
+            local x = screenWidth / 2 + angle * 270 -- Ajusté pour les cartes plus grandes
+            local y = handY + math.abs(angle) * 70  -- Ajusté pour les cartes plus grandes
             
             -- Stocker la position pour le drag & drop
             card.x = x
@@ -179,8 +196,8 @@ end
 function CardSystem:getCardAt(x, y)
     for i = #self.hand, 1, -1 do -- Regarder de haut en bas
         local card = self.hand[i]
-        if x >= card.x - 30 and x <= card.x + 30 and
-           y >= card.y - 50 and y <= card.y + 50 then
+        if x >= card.x - CARD_WIDTH/2 and x <= card.x + CARD_WIDTH/2 and
+           y >= card.y - CARD_HEIGHT/2 and y <= card.y + CARD_HEIGHT/2 then
             return card, i
         end
     end
