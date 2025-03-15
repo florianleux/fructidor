@@ -2,6 +2,14 @@
 local DragDrop = {}
 DragDrop.__index = DragDrop
 
+-- Définition des constantes pour la taille des cartes (180% de la taille originale)
+local CARD_WIDTH = 108  -- 60 * 1.8
+local CARD_HEIGHT = 180 -- 100 * 1.8
+local CARD_CORNER_RADIUS = 5
+local CARD_HEADER_HEIGHT = 27 -- 15 * 1.8
+local TEXT_PADDING_X = 45 -- 25 * 1.8 
+local TEXT_LINE_HEIGHT = 18 -- Ajusté pour les cartes plus grandes
+
 function DragDrop.new()
     local self = setmetatable({}, DragDrop)
     self.dragging = nil -- carte en cours de déplacement
@@ -118,19 +126,22 @@ function DragDrop:draw()
     -- Dessiner la carte en cours de déplacement
     if self.dragging then
         local card = self.dragging
+        -- Calculer les positions ajustées pour la carte agrandie
+        local cardLeft = card.x - CARD_WIDTH/2
+        local cardTop = card.y - CARD_HEIGHT/2
         
         -- Dessiner une ombre
         love.graphics.setColor(0, 0, 0, 0.2)
         love.graphics.rectangle("fill", 
-            card.x - 30 + 4, 
-            card.y - 50 + 4, 
-            60, 100, 3)
+            cardLeft + 4, 
+            cardTop + 4, 
+            CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS)
         
         -- Dessiner la carte elle-même
         love.graphics.setColor(1, 1, 1)
-        love.graphics.rectangle("fill", card.x - 30, card.y - 50, 60, 100, 3)
+        love.graphics.rectangle("fill", cardLeft, cardTop, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS)
         love.graphics.setColor(0.4, 0.4, 0.4)
-        love.graphics.rectangle("line", card.x - 30, card.y - 50, 60, 100, 3)
+        love.graphics.rectangle("line", cardLeft, cardTop, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS)
         
         -- Couleur de fond selon la famille
         if card.color then
@@ -138,22 +149,25 @@ function DragDrop:draw()
         else
             love.graphics.setColor(0.7, 0.7, 0.7)
         end
-        love.graphics.rectangle("fill", card.x - 25, card.y - 45, 50, 15)
+        love.graphics.rectangle("fill", cardLeft + 5, cardTop + 5, CARD_WIDTH - 10, CARD_HEADER_HEIGHT)
+        
+        -- Échelle du texte pour les cartes plus grandes
+        local textScale = 1.4
         
         -- Nom et info
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print(card.family, card.x - 25, card.y - 45)
-        love.graphics.print("Graine", card.x - 25, card.y - 25)
+        love.graphics.print(card.family, cardLeft + 10, cardTop + 9, 0, textScale, textScale)
+        love.graphics.print("Graine", cardLeft + 10, cardTop + 35, 0, textScale, textScale)
         
         -- Besoins pour pousser
-        love.graphics.print("☀️ " .. card.sunToSprout, card.x - 25, card.y - 5)
-        love.graphics.print("🌧️ " .. card.rainToSprout, card.x - 25, card.y + 10)
+        love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10, cardTop + 60, 0, textScale, textScale)
+        love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10, cardTop + 85, 0, textScale, textScale)
         
         -- Score
-        love.graphics.print(card.baseScore .. " pts", card.x - 25, card.y + 25)
+        love.graphics.print(card.baseScore .. " pts", cardLeft + 10, cardTop + 110, 0, textScale, textScale)
         
         -- Gel
-        love.graphics.print("❄️ " .. card.frostThreshold, card.x - 25, card.y + 40)
+        love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10, cardTop + 135, 0, textScale, textScale)
     end
 end
 
