@@ -21,24 +21,9 @@ function DragDrop.new()
     self.dragging = nil -- carte en cours de déplacement
     self.originalCard = nil -- sauvegarde des informations de la carte
     self.cardIndex = nil -- indice de la carte dans la main
-    self.dragOffsetX = 0
-    self.dragOffsetY = 0
-    self.targetCell = nil -- cellule cible surbrillance
     
-    -- État de l'animation
-    self.animation = {
-        active = false,
-        direction = nil, -- "in" pour réduire, "out" pour agrandir
-        scale = 1.0,
-        startTime = 0,
-        duration = ANIMATION_DURATION,
-        startScale = 1.0,
-        targetScale = 1.0,
-        callback = nil
-    }
-    
-    -- Animation de retour en ligne droite
-    self.returnAnimation = {
+    -- État de l'animation de déplacement
+    self.moveAnimation = {
         active = false,
         startTime = 0,
         duration = RETURN_ANIMATION_DURATION,
@@ -46,172 +31,75 @@ function DragDrop.new()
         startY = 0,
         targetX = 0,
         targetY = 0,
-        cardSystem = nil, -- Référence au système de cartes pour cacher la carte originale
-        progress = 0,
-        callback = nil
-    }
-    
-    -- Animation finale d'échelle (à la position de la main)
-    self.finalScaleAnimation = {
-        active = false,
-        startTime = 0,
-        duration = ANIMATION_DURATION,
-        scale = 1.0,
         startScale = 1.0,
         targetScale = 1.0,
-        callback = nil
+        currentScale = 1.0
     }
+    
+    -- Référence au système de cartes pour communication
+    self.cardSystem = nil
     
     return self
 end
 
-function DragDrop:startAnimation(direction, startScale, targetScale, callback)
-    self.animation.active = true
-    self.animation.direction = direction
-    self.animation.startTime = love.timer.getTime()
-    self.animation.duration = ANIMATION_DURATION
-    self.animation.startScale = startScale
-    self.animation.targetScale = targetScale
-    self.animation.scale = startScale
-    self.animation.callback = callback
-end
-
-function DragDrop:startFinalScaleAnimation(startScale, targetScale, callback)
-    self.finalScaleAnimation.active = true
-    self.finalScaleAnimation.startTime = love.timer.getTime()
-    self.finalScaleAnimation.duration = ANIMATION_DURATION
-    self.finalScaleAnimation.startScale = startScale
-    self.finalScaleAnimation.targetScale = targetScale
-    self.finalScaleAnimation.scale = startScale
-    self.finalScaleAnimation.callback = callback
-end
-
-function DragDrop:startReturnAnimation(startX, startY, targetX, targetY, cardSystem, callback)
-    self.returnAnimation.active = true
-    self.returnAnimation.startTime = love.timer.getTime()
-    self.returnAnimation.duration = RETURN_ANIMATION_DURATION
-    self.returnAnimation.startX = startX
-    self.returnAnimation.startY = startY
-    self.returnAnimation.targetX = targetX
-    self.returnAnimation.targetY = targetY
-    self.returnAnimation.progress = 0
-    self.returnAnimation.callback = callback
-    self.returnAnimation.cardSystem = cardSystem
-    
-    -- Marquer cette carte comme étant en animation de retour dans le système de cartes
-    if cardSystem and self.cardIndex then
-        cardSystem:setCardInReturnAnimation(self.cardIndex)
-    end
-end
-
-function DragDrop:updateAnimation()
-    if not self.animation.active then return end
-    
-    local currentTime = love.timer.getTime()
-    local elapsedTime = currentTime - self.animation.startTime
-    
-    if elapsedTime >= self.animation.duration then
-        -- Animation terminée
-        self.animation.scale = self.animation.targetScale
-        self.animation.active = false
-        
-        -- Appeler le callback si défini
-        if self.animation.callback then
-            self.animation.callback()
-        end
-    else
-        -- Animation en cours
-        local progress = elapsedTime / self.animation.duration
-        
-        -- Fonction d'easing pour une animation plus fluide (outQuad)
-        progress = 1 - (1 - progress) * (1 - progress)
-        
-        -- Mettre à jour l'échelle
-        self.animation.scale = self.animation.startScale + 
-                             (self.animation.targetScale - self.animation.startScale) * progress
-    end
-end
-
-function DragDrop:updateFinalScaleAnimation()
-    if not self.finalScaleAnimation.active then return end
-    
-    local currentTime = love.timer.getTime()
-    local elapsedTime = currentTime - self.finalScaleAnimation.startTime
-    
-    if elapsedTime >= self.finalScaleAnimation.duration then
-        -- Animation terminée
-        self.finalScaleAnimation.scale = self.finalScaleAnimation.targetScale
-        self.finalScaleAnimation.active = false
-        
-        -- Appeler le callback si défini
-        if self.finalScaleAnimation.callback then
-            self.finalScaleAnimation.callback()
-        end
-    else
-        -- Animation en cours
-        local progress = elapsedTime / self.finalScaleAnimation.duration
-        
-        -- Fonction d'easing pour une animation plus fluide (outQuad)
-        progress = 1 - (1 - progress) * (1 - progress)
-        
-        -- Mettre à jour l'échelle
-        self.finalScaleAnimation.scale = self.finalScaleAnimation.startScale + 
-                                      (self.finalScaleAnimation.targetScale - self.finalScaleAnimation.startScale) * progress
-    end
-end
-
-function DragDrop:updateReturnAnimation()
-    if not self.returnAnimation.active then return end
-    
-    local currentTime = love.timer.getTime()
-    local elapsedTime = currentTime - self.returnAnimation.startTime
-    
-    if elapsedTime >= self.returnAnimation.duration then
-        -- Animation terminée
-        if self.dragging then
-            self.dragging.x = self.returnAnimation.targetX
-            self.dragging.y = self.returnAnimation.targetY
-        end
-        self.returnAnimation.active = false
-        self.returnAnimation.progress = 1
-        
-        -- Appeler le callback si défini
-        if self.returnAnimation.callback then
-            self.returnAnimation.callback()
-        end
-    else
-        -- Animation en cours
-        local progress = elapsedTime / self.returnAnimation.duration
-        
-        -- Fonction d'easing pour une animation plus fluide (outQuad)
-        progress = 1 - (1 - progress) * (1 - progress)
-        
-        -- Mettre à jour la position seulement si dragging existe encore
-        if self.dragging then
-            self.dragging.x = self.returnAnimation.startX + 
-                             (self.returnAnimation.targetX - self.returnAnimation.startX) * progress
-            self.dragging.y = self.returnAnimation.startY + 
-                             (self.returnAnimation.targetY - self.returnAnimation.startY) * progress
-        end
-        
-        self.returnAnimation.progress = progress
-    end
-end
-
 function DragDrop:update(dt)
-    -- Mettre à jour les animations si actives
-    self:updateAnimation()
-    self:updateReturnAnimation()
-    self:updateFinalScaleAnimation()
+    -- Mettre à jour l'animation de mouvement si active
+    if self.moveAnimation.active then
+        local currentTime = love.timer.getTime()
+        local elapsedTime = currentTime - self.moveAnimation.startTime
+        
+        if elapsedTime >= self.moveAnimation.duration then
+            -- Animation terminée
+            if self.dragging then
+                self.dragging.x = self.moveAnimation.targetX
+                self.dragging.y = self.moveAnimation.targetY
+                self.moveAnimation.currentScale = self.moveAnimation.targetScale
+            end
+            
+            -- Réinitialiser tout à la fin de l'animation
+            if self.cardSystem then
+                self.cardSystem:clearCardInAnimation(self.cardIndex)
+            end
+            
+            self.dragging = nil
+            self.originalCard = nil
+            self.cardIndex = nil
+            self.moveAnimation.active = false
+            
+        else
+            -- Animation en cours
+            local progress = elapsedTime / self.moveAnimation.duration
+            
+            -- Fonction d'easing pour une animation plus fluide (outQuad)
+            progress = 1 - (1 - progress) * (1 - progress)
+            
+            -- Mettre à jour la position et l'échelle
+            if self.dragging then
+                self.dragging.x = self.moveAnimation.startX + 
+                                 (self.moveAnimation.targetX - self.moveAnimation.startX) * progress
+                self.dragging.y = self.moveAnimation.startY + 
+                                 (self.moveAnimation.targetY - self.moveAnimation.startY) * progress
+                self.moveAnimation.currentScale = self.moveAnimation.startScale + 
+                                                (self.moveAnimation.targetScale - self.moveAnimation.startScale) * progress
+            end
+        end
+    end
+    
+    -- Mettre à jour la position de la carte si en cours de déplacement
+    if self.dragging and not self.moveAnimation.active then
+        self.dragging.x = love.mouse.getX()
+        self.dragging.y = love.mouse.getY()
+    end
 end
 
-function DragDrop:startDrag(card, cardIndex, x, y)
+function DragDrop:startDrag(card, cardIndex, cardSystem)
     -- Ignorer si une animation est déjà en cours
-    if self.animation.active or self.returnAnimation.active or self.finalScaleAnimation.active then return end
+    if self.moveAnimation.active then return end
     
     -- Sauvegarder la carte originale et son indice
     self.originalCard = card
     self.cardIndex = cardIndex
+    self.cardSystem = cardSystem
     
     -- Créer une copie pour le drag & drop
     self.dragging = {}
@@ -219,32 +107,24 @@ function DragDrop:startDrag(card, cardIndex, x, y)
         self.dragging[k] = v
     end
     
-    -- Calcul des offsets pour centrer la carte sous le curseur
-    self.dragOffsetX = 0
-    self.dragOffsetY = 0
+    -- Initialiser la position au centre du curseur
+    self.dragging.x = love.mouse.getX()
+    self.dragging.y = love.mouse.getY()
     
-    -- Démarrer l'animation de réduction progressive
-    self:startAnimation("in", 1.0, CARD_SCALE_WHEN_DRAGGED)
+    -- Initialiser l'échelle réduite directement
+    self.moveAnimation.currentScale = CARD_SCALE_WHEN_DRAGGED
     
-    -- Mettre à jour immédiatement la position de la carte
-    self:updateDrag(x, y)
+    -- Marquer cette carte comme étant en animation dans le système de cartes
+    if self.cardSystem then
+        self.cardSystem:setCardInAnimation(cardIndex)
+    end
 end
 
-function DragDrop:updateDrag(x, y)
-    if not self.dragging or self.returnAnimation.active then return end
+function DragDrop:stopDrag(garden)
+    if not self.dragging or not self.originalCard or self.moveAnimation.active then 
+        return false 
+    end
     
-    -- La carte suit directement le curseur
-    self.dragging.x = x
-    self.dragging.y = y
-end
-
-function DragDrop:stopDrag(garden, cardSystem)
-    if not self.dragging or not self.originalCard then return false end
-    
-    -- Ne pas permettre de relâcher pendant une animation de retour
-    if self.returnAnimation.active or self.finalScaleAnimation.active then return false end
-    
-    local card = self.originalCard -- Utiliser la carte originale pour les références
     local placed = false
     
     -- Trouver la cellule sous la carte
@@ -262,8 +142,8 @@ function DragDrop:stopDrag(garden, cardSystem)
                 
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
-                    if self.cardIndex then
-                        placed = cardSystem:playCard(self.cardIndex, garden, x, y)
+                    if self.cardIndex and self.cardSystem then
+                        placed = self.cardSystem:playCard(self.cardIndex, garden, x, y)
                     end
                 end
                 
@@ -275,55 +155,38 @@ function DragDrop:stopDrag(garden, cardSystem)
     
     -- Si la carte n'a pas été placée, animer son retour à la main en ligne droite
     if not placed then
-        -- Réinitialiser l'état du système de cartes
-        if cardSystem then
-            cardSystem:resetDragging()
-        end
+        -- Initialiser l'animation de retour
+        self.moveAnimation.active = true
+        self.moveAnimation.startTime = love.timer.getTime()
+        self.moveAnimation.duration = RETURN_ANIMATION_DURATION
+        self.moveAnimation.startX = self.dragging.x
+        self.moveAnimation.startY = self.dragging.y
+        self.moveAnimation.targetX = self.originalCard.x
+        self.moveAnimation.targetY = self.originalCard.y
+        self.moveAnimation.startScale = CARD_SCALE_WHEN_DRAGGED
+        self.moveAnimation.targetScale = 1.0
         
-        -- Mémoriser la position actuelle de la carte
-        local startX = self.dragging.x
-        local startY = self.dragging.y
-        
-        -- Position de destination (position originale de la carte dans la main)
-        local targetX = self.originalCard.x
-        local targetY = self.originalCard.y
-        
-        -- Stocker l'échelle actuelle
-        local currentScale = self.animation.scale
-        
-        -- Démarrer l'animation de retour en ligne droite
-        self:startReturnAnimation(startX, startY, targetX, targetY, cardSystem, function()
-            -- Maintenant que la carte est à sa position finale, démarrer l'animation de redimensionnement
-            self:startFinalScaleAnimation(currentScale, 1.0, function()
-                -- Nettoyer après la fin des animations
-                self.dragging = nil
-                self.originalCard = nil
-                self.cardIndex = nil
-                self.targetCell = nil
-                
-                -- S'assurer que la carte n'est plus marquée comme en animation de retour
-                if cardSystem then
-                    cardSystem:clearCardInReturnAnimation()
-                end
-            end)
-        end)
-        
+        -- La carte reste masquée dans le cardSystem jusqu'à la fin de l'animation
         return false
     else
         -- Si la carte a été placée, nettoyer immédiatement
+        if self.cardSystem then
+            self.cardSystem:clearCardInAnimation(self.cardIndex)
+        end
+        
         self.dragging = nil
         self.originalCard = nil
         self.cardIndex = nil
-        self.targetCell = nil
-        self.animation.active = false
-        self.returnAnimation.active = false
-        self.finalScaleAnimation.active = false
+        self.moveAnimation.active = false
         
         return placed
     end
 end
 
 function DragDrop:updateHighlight(garden, x, y)
+    -- Ne pas afficher de surbrillance si une animation est en cours
+    if self.moveAnimation.active or not self.dragging then return end
+    
     -- Réinitialiser les surbrillances
     for cy = 1, garden.height do
         for cx = 1, garden.width do
@@ -336,11 +199,9 @@ function DragDrop:updateHighlight(garden, x, y)
             
             local highlight = x >= cell.x and x < cell.x + cell.width and
                              y >= cell.y and y < cell.y + cell.height and
-                             not garden.grid[cy][cx].plant and
-                             self.dragging ~= nil
+                             not garden.grid[cy][cx].plant
             
             if highlight then
-                self.targetCell = {x = cx, y = cy}
                 love.graphics.setColor(0.8, 0.9, 0.7, 0.6)
                 love.graphics.rectangle("fill", cell.x, cell.y, cell.width, cell.height)
                 love.graphics.setColor(0.4, 0.8, 0.4)
@@ -351,28 +212,21 @@ function DragDrop:updateHighlight(garden, x, y)
 end
 
 function DragDrop:isAnimating()
-    return self.animation.active or self.returnAnimation.active or self.finalScaleAnimation.active
-end
-
-function DragDrop:getAnimatingCardIndex()
-    return self.returnAnimation.active and self.cardIndex or nil
+    return self.moveAnimation.active
 end
 
 function DragDrop:draw()
-    -- Dessiner la carte en cours de déplacement
+    -- Dessiner la carte en cours de déplacement ou d'animation
     if self.dragging then
         local card = self.dragging
         
-        -- Déterminer l'échelle à utiliser selon l'animation active
-        local currentScale = self.animation.scale
-        if self.finalScaleAnimation.active then
-            currentScale = self.finalScaleAnimation.scale
-        end
+        -- Obtenir l'échelle actuelle
+        local scale = self.moveAnimation.currentScale
         
-        -- Appliquer l'échelle actuelle aux dimensions de la carte
-        local scaledWidth = CARD_WIDTH * currentScale
-        local scaledHeight = CARD_HEIGHT * currentScale
-        local scaledHeaderHeight = CARD_HEADER_HEIGHT * currentScale
+        -- Appliquer l'échelle aux dimensions de la carte
+        local scaledWidth = CARD_WIDTH * scale
+        local scaledHeight = CARD_HEIGHT * scale
+        local scaledHeaderHeight = CARD_HEADER_HEIGHT * scale
         
         -- Calculer les positions ajustées pour la carte
         local cardLeft = card.x - scaledWidth/2
@@ -381,8 +235,8 @@ function DragDrop:draw()
         -- Dessiner une ombre
         love.graphics.setColor(0, 0, 0, 0.2)
         love.graphics.rectangle("fill", 
-            cardLeft + 4 * currentScale, 
-            cardTop + 4 * currentScale, 
+            cardLeft + 4 * scale, 
+            cardTop + 4 * scale, 
             scaledWidth, scaledHeight, CARD_CORNER_RADIUS)
         
         -- Dessiner la carte elle-même
@@ -397,26 +251,26 @@ function DragDrop:draw()
         else
             love.graphics.setColor(0.7, 0.7, 0.7)
         end
-        love.graphics.rectangle("fill", cardLeft + 5 * currentScale, cardTop + 5 * currentScale, 
-                               scaledWidth - 10 * currentScale, scaledHeaderHeight)
+        love.graphics.rectangle("fill", cardLeft + 5 * scale, cardTop + 5 * scale, 
+                               scaledWidth - 10 * scale, scaledHeaderHeight)
         
         -- Calculer l'échelle du texte pour les cartes redimensionnées
-        local textScale = 1.4 * currentScale
+        local textScale = 1.4 * scale
         
         -- Nom et info
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print(card.family, cardLeft + 10 * currentScale, cardTop + 9 * currentScale, 0, textScale, textScale)
-        love.graphics.print("Graine", cardLeft + 10 * currentScale, cardTop + 35 * currentScale, 0, textScale, textScale)
+        love.graphics.print(card.family, cardLeft + 10 * scale, cardTop + 9 * scale, 0, textScale, textScale)
+        love.graphics.print("Graine", cardLeft + 10 * scale, cardTop + 35 * scale, 0, textScale, textScale)
         
         -- Besoins pour pousser
-        love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10 * currentScale, cardTop + 60 * currentScale, 0, textScale, textScale)
-        love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10 * currentScale, cardTop + 85 * currentScale, 0, textScale, textScale)
+        love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10 * scale, cardTop + 60 * scale, 0, textScale, textScale)
+        love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10 * scale, cardTop + 85 * scale, 0, textScale, textScale)
         
         -- Score
-        love.graphics.print(card.baseScore .. " pts", cardLeft + 10 * currentScale, cardTop + 110 * currentScale, 0, textScale, textScale)
+        love.graphics.print(card.baseScore .. " pts", cardLeft + 10 * scale, cardTop + 110 * scale, 0, textScale, textScale)
         
         -- Gel
-        love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10 * currentScale, cardTop + 135 * currentScale, 0, textScale, textScale)
+        love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10 * scale, cardTop + 135 * scale, 0, textScale, textScale)
     end
 end
 
