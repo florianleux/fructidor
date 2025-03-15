@@ -47,7 +47,7 @@ function love.load(arg)
 end
 
 function love.update(dt)
-    -- Mettre à jour le timer d'animation du drag & drop
+    -- Mettre à jour le système d'animation du drag & drop
     dragDrop:update(dt)
     
     -- Mettre à jour le système de drag & drop si une carte est en cours de déplacement

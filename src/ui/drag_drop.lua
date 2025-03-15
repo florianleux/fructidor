@@ -1,5 +1,4 @@
 -- Système de Drag & Drop
-local Timer = require('lib.timer')
 
 local DragDrop = {}
 DragDrop.__index = DragDrop
@@ -15,7 +14,6 @@ local TEXT_LINE_HEIGHT = 18
 -- Constantes d'animation
 local ANIMATION_DURATION = 0.3 -- Durée de l'animation en secondes
 local CARD_SCALE_WHEN_DRAGGED = 0.6 -- Taille réduite à 60% (réduction de 40%)
-local DRAG_ANIMATION_METHOD = "outQuad" -- Méthode d'interpolation pour l'animation
 
 function DragDrop.new()
     local self = setmetatable({}, DragDrop)
@@ -26,30 +24,68 @@ function DragDrop.new()
     self.dragOffsetY = 0
     self.targetCell = nil -- cellule cible surbrillance
     
-    -- Ajout d'un timer pour les animations
-    self.timer = Timer.new()
-    
     -- État de l'animation
-    self.animating = false
     self.animation = {
-        scale = 1.0, -- Échelle actuelle (1.0 = taille normale)
+        active = false,
         direction = nil, -- "in" pour réduire, "out" pour agrandir
-        complete = true -- L'animation est-elle terminée
+        scale = 1.0,
+        startTime = 0,
+        duration = ANIMATION_DURATION,
+        startScale = 1.0,
+        targetScale = 1.0,
+        callback = nil
     }
     
     return self
 end
 
-function DragDrop:update(dt)
-    -- Mettre à jour le timer d'animation
-    if self.timer then
-        self.timer:update(dt)
+function DragDrop:startAnimation(direction, startScale, targetScale, callback)
+    self.animation.active = true
+    self.animation.direction = direction
+    self.animation.startTime = love.timer.getTime()
+    self.animation.duration = ANIMATION_DURATION
+    self.animation.startScale = startScale
+    self.animation.targetScale = targetScale
+    self.animation.scale = startScale
+    self.animation.callback = callback
+end
+
+function DragDrop:updateAnimation()
+    if not self.animation.active then return end
+    
+    local currentTime = love.timer.getTime()
+    local elapsedTime = currentTime - self.animation.startTime
+    
+    if elapsedTime >= self.animation.duration then
+        -- Animation terminée
+        self.animation.scale = self.animation.targetScale
+        self.animation.active = false
+        
+        -- Appeler le callback si défini
+        if self.animation.callback then
+            self.animation.callback()
+        end
+    else
+        -- Animation en cours
+        local progress = elapsedTime / self.animation.duration
+        
+        -- Fonction d'easing pour une animation plus fluide (outQuad)
+        progress = 1 - (1 - progress) * (1 - progress)
+        
+        -- Mettre à jour l'échelle
+        self.animation.scale = self.animation.startScale + 
+                             (self.animation.targetScale - self.animation.startScale) * progress
     end
+end
+
+function DragDrop:update(dt)
+    -- Mettre à jour l'animation si active
+    self:updateAnimation()
 end
 
 function DragDrop:startDrag(card, cardIndex, x, y)
     -- Ignorer si une animation est déjà en cours
-    if self.animating then return end
+    if self.animation.active then return end
     
     -- Sauvegarder la carte originale et son indice
     self.originalCard = card
@@ -66,22 +102,7 @@ function DragDrop:startDrag(card, cardIndex, x, y)
     self.dragOffsetY = 0
     
     -- Démarrer l'animation de réduction progressive
-    self.animating = true
-    self.animation.direction = "in"
-    self.animation.scale = 1.0
-    self.animation.complete = false
-    
-    -- Animer la réduction de la carte (progressivement jusqu'à 60% de sa taille)
-    self.timer:tween(
-        ANIMATION_DURATION, 
-        self.animation, 
-        { scale = CARD_SCALE_WHEN_DRAGGED }, 
-        DRAG_ANIMATION_METHOD,
-        function() 
-            self.animating = false
-            self.animation.complete = true
-        end
-    )
+    self:startAnimation("in", 1.0, CARD_SCALE_WHEN_DRAGGED)
     
     -- Mettre à jour immédiatement la position de la carte
     self:updateDrag(x, y)
@@ -134,30 +155,15 @@ function DragDrop:stopDrag(garden, cardSystem)
             cardSystem:resetDragging()
         end
         
-        -- Déclencher l'animation de restauration de taille
-        self.animating = true
-        self.animation.direction = "out"
-        self.animation.complete = false
+        -- Démarrer l'animation de retour à la taille normale
+        self:startAnimation("out", self.animation.scale, 1.0, function()
+            -- Nettoyer après la fin de l'animation
+            self.dragging = nil
+            self.originalCard = nil
+            self.cardIndex = nil
+            self.targetCell = nil
+        end)
         
-        -- Animer le retour à la taille normale
-        self.timer:tween(
-            ANIMATION_DURATION, 
-            self.animation, 
-            { scale = 1.0 }, 
-            DRAG_ANIMATION_METHOD,
-            function()
-                self.animating = false
-                self.animation.complete = true
-                
-                -- Nettoyer la référence après l'animation terminée
-                self.dragging = nil
-                self.originalCard = nil
-                self.cardIndex = nil
-                self.targetCell = nil
-            end
-        )
-        
-        -- Ne pas effacer les références tout de suite pour permettre à l'animation de s'achever
         return false
     else
         -- Si la carte a été placée, nettoyer immédiatement
@@ -165,7 +171,7 @@ function DragDrop:stopDrag(garden, cardSystem)
         self.originalCard = nil
         self.cardIndex = nil
         self.targetCell = nil
-        self.timer:clear() -- Annuler toute animation en cours
+        self.animation.active = false
         
         return placed
     end
@@ -199,7 +205,7 @@ function DragDrop:updateHighlight(garden, x, y)
 end
 
 function DragDrop:isAnimating()
-    return self.animating
+    return self.animation.active
 end
 
 function DragDrop:draw()
