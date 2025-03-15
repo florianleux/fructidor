@@ -47,7 +47,8 @@ function DragDrop.new()
         targetX = 0,
         targetY = 0,
         cardSystem = nil, -- Référence au système de cartes pour cacher la carte originale
-        progress = 0
+        progress = 0,
+        callback = nil
     }
     
     return self
@@ -251,6 +252,11 @@ function DragDrop:stopDrag(garden, cardSystem)
                 self.originalCard = nil
                 self.cardIndex = nil
                 self.targetCell = nil
+                
+                -- S'assurer que la carte n'est plus marquée comme en animation de retour
+                if cardSystem then
+                    cardSystem:clearCardInReturnAnimation()
+                end
             end)
         end)
         
