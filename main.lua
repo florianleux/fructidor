@@ -133,9 +133,11 @@ function love.mousepressed(x, y, button)
     
     -- Clic sur une carte en main
     if button == 1 then
-        local card = cardSystem:getCardAt(x, y)
+        local card, cardIndex = cardSystem:getCardAt(x, y)
         if card then
-            dragDrop:startDrag(card, x, y)
+            -- Marquer la carte comme étant en cours de déplacement
+            cardSystem:setDraggingCard(cardIndex)
+            dragDrop:startDrag(card, cardIndex, x, y)
         end
     end
 end
