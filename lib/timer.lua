@@ -61,15 +61,21 @@ function Timer:update(dt)
     for handle, delay in pairs(to_update) do
         delay = delay - dt
         if delay <= 0 then
-            local func = self.tween[handle].func
-            local params = self.tween[handle].params
-            local dt = delay + dt
-            
-            if func then
-                func(dt, unpack(params))
+            -- Vérifier que le handle existe toujours dans tween
+            if self.tween[handle] then
+                local func = self.tween[handle].func
+                local params = self.tween[handle].params
+                
+                if func then
+                    func(dt, unpack(params))
+                end
             end
         end
-        self.functions[handle] = delay
+        
+        -- Vérifier si le handle existe toujours avant de mettre à jour
+        if self.functions[handle] then
+            self.functions[handle] = delay
+        end
     end
 end
 
@@ -83,8 +89,10 @@ function Timer:tween(len, obj, target, method, after, ...)
 end
 
 function Timer:cancel(handle)
-    self.functions[handle] = nil
-    self.tween[handle] = nil
+    if handle then
+        self.functions[handle] = nil
+        self.tween[handle] = nil
+    end
 end
 
 function Timer:clear()
