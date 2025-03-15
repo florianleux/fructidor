@@ -18,7 +18,7 @@ function CardSystem.new()
     self.hand = {}
     self.discardPile = {}
     self.draggingCardIndex = nil -- Indice de la carte en cours de déplacement
-    self.cardInReturnAnimation = nil -- Indice de la carte en cours d'animation de retour
+    self.cardInAnimation = nil -- Indice de la carte en cours d'animation
     
     -- Initialisation du deck avec cartes de base
     self:initializeDeck()
@@ -122,12 +122,12 @@ function CardSystem:playCard(cardIndex, garden, x, y)
                 self.draggingCardIndex = self.draggingCardIndex - 1
             end
             
-            -- Réinitialiser aussi l'indice de la carte en animation de retour si nécessaire
-            if self.cardInReturnAnimation == cardIndex then
-                self.cardInReturnAnimation = nil
-            elseif self.cardInReturnAnimation and self.cardInReturnAnimation > cardIndex then
+            -- Réinitialiser aussi l'indice de la carte en animation si nécessaire
+            if self.cardInAnimation == cardIndex then
+                self.cardInAnimation = nil
+            elseif self.cardInAnimation and self.cardInAnimation > cardIndex then
                 -- Ajuster l'indice si une carte avant celle en animation est supprimée
-                self.cardInReturnAnimation = self.cardInReturnAnimation - 1
+                self.cardInAnimation = self.cardInAnimation - 1
             end
             
             return true
@@ -185,8 +185,8 @@ function CardSystem:drawHand()
     
     -- Calculer la position des cartes en arc
     for i, card in ipairs(self.hand) do
-        -- Ignorer la carte en cours de déplacement ou en animation de retour
-        if i ~= self.draggingCardIndex and i ~= self.cardInReturnAnimation then
+        -- Ignorer la carte en cours de déplacement ou d'animation
+        if i ~= self.draggingCardIndex and i ~= self.cardInAnimation then
             local angle = (i - (#self.hand + 1) / 2) * 0.1
             local x = screenWidth / 2 + angle * 270 -- Ajusté pour les cartes plus grandes
             local y = handY + math.abs(angle) * 70  -- Ajusté pour les cartes plus grandes
@@ -204,8 +204,8 @@ end
 -- Fonction pour savoir si un point est sur une carte
 function CardSystem:getCardAt(x, y)
     for i = #self.hand, 1, -1 do -- Regarder de haut en bas
-        -- Ignorer les cartes en animation de retour
-        if i ~= self.cardInReturnAnimation then
+        -- Ignorer les cartes en animation
+        if i ~= self.cardInAnimation then
             local card = self.hand[i]
             if x >= card.x - CARD_WIDTH/2 and x <= card.x + CARD_WIDTH/2 and
                y >= card.y - CARD_HEIGHT/2 and y <= card.y + CARD_HEIGHT/2 then
@@ -221,14 +221,21 @@ function CardSystem:setDraggingCard(index)
     self.draggingCardIndex = index
 end
 
--- Définir la carte en cours d'animation de retour
-function CardSystem:setCardInReturnAnimation(index)
-    self.cardInReturnAnimation = index
+-- Définir la carte en cours d'animation
+function CardSystem:setCardInAnimation(index)
+    self.cardInAnimation = index
+    -- Désactiver le dragging si c'est la même carte
+    if self.draggingCardIndex == index then
+        self.draggingCardIndex = nil
+    end
 end
 
--- Réinitialiser la carte en animation de retour
-function CardSystem:clearCardInReturnAnimation()
-    self.cardInReturnAnimation = nil
+-- Réinitialiser la carte en animation
+function CardSystem:clearCardInAnimation(index)
+    -- Ne réinitialiser que si l'index est le même que celui qui est actuellement animé
+    if index == nil or self.cardInAnimation == index then
+        self.cardInAnimation = nil
+    end
 end
 
 -- Réinitialiser l'état de déplacement
