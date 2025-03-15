@@ -1,14 +1,21 @@
 -- Système de Drag & Drop
+local Timer = require('lib.timer')
+
 local DragDrop = {}
 DragDrop.__index = DragDrop
 
--- Définition des constantes pour la taille des cartes (180% de la taille originale)
-local CARD_WIDTH = 108  -- 60 * 1.8
-local CARD_HEIGHT = 180 -- 100 * 1.8
+-- Définition des constantes pour la taille des cartes
+local CARD_WIDTH = 108  -- Taille de base des cartes (60 * 1.8)
+local CARD_HEIGHT = 180 -- (100 * 1.8)
 local CARD_CORNER_RADIUS = 5
-local CARD_HEADER_HEIGHT = 27 -- 15 * 1.8
-local TEXT_PADDING_X = 45 -- 25 * 1.8 
-local TEXT_LINE_HEIGHT = 18 -- Ajusté pour les cartes plus grandes
+local CARD_HEADER_HEIGHT = 27 -- (15 * 1.8)
+local TEXT_PADDING_X = 45
+local TEXT_LINE_HEIGHT = 18
+
+-- Constantes d'animation
+local ANIMATION_DURATION = 0.3 -- Durée de l'animation en secondes
+local CARD_SCALE_WHEN_DRAGGED = 0.6 -- Taille réduite à 60% (réduction de 40%)
+local DRAG_ANIMATION_METHOD = "outQuad" -- Méthode d'interpolation pour l'animation
 
 function DragDrop.new()
     local self = setmetatable({}, DragDrop)
@@ -19,10 +26,31 @@ function DragDrop.new()
     self.dragOffsetY = 0
     self.targetCell = nil -- cellule cible surbrillance
     
+    -- Ajout d'un timer pour les animations
+    self.timer = Timer.new()
+    
+    -- État de l'animation
+    self.animating = false
+    self.animation = {
+        scale = 1.0, -- Échelle actuelle (1.0 = taille normale)
+        direction = nil, -- "in" pour réduire, "out" pour agrandir
+        complete = true -- L'animation est-elle terminée
+    }
+    
     return self
 end
 
+function DragDrop:update(dt)
+    -- Mettre à jour le timer d'animation
+    if self.timer then
+        self.timer:update(dt)
+    end
+end
+
 function DragDrop:startDrag(card, cardIndex, x, y)
+    -- Ignorer si une animation est déjà en cours
+    if self.animating then return end
+    
     -- Sauvegarder la carte originale et son indice
     self.originalCard = card
     self.cardIndex = cardIndex
@@ -34,8 +62,26 @@ function DragDrop:startDrag(card, cardIndex, x, y)
     end
     
     -- Calcul des offsets pour centrer la carte sous le curseur
-    self.dragOffsetX = 0 -- La carte sera centrée sur le curseur
+    self.dragOffsetX = 0
     self.dragOffsetY = 0
+    
+    -- Démarrer l'animation de réduction progressive
+    self.animating = true
+    self.animation.direction = "in"
+    self.animation.scale = 1.0
+    self.animation.complete = false
+    
+    -- Animer la réduction de la carte (progressivement jusqu'à 60% de sa taille)
+    self.timer:tween(
+        ANIMATION_DURATION, 
+        self.animation, 
+        { scale = CARD_SCALE_WHEN_DRAGGED }, 
+        DRAG_ANIMATION_METHOD,
+        function() 
+            self.animating = false
+            self.animation.complete = true
+        end
+    )
     
     -- Mettre à jour immédiatement la position de la carte
     self:updateDrag(x, y)
@@ -81,18 +127,48 @@ function DragDrop:stopDrag(garden, cardSystem)
         if placed then break end
     end
     
-    -- Réinitialiser l'état du système de cartes
-    if not placed and cardSystem then
-        cardSystem:resetDragging()
+    -- Si la carte n'a pas été placée, animer son retour à la taille normale
+    if not placed then
+        -- Réinitialiser l'état du système de cartes
+        if cardSystem then
+            cardSystem:resetDragging()
+        end
+        
+        -- Déclencher l'animation de restauration de taille
+        self.animating = true
+        self.animation.direction = "out"
+        self.animation.complete = false
+        
+        -- Animer le retour à la taille normale
+        self.timer:tween(
+            ANIMATION_DURATION, 
+            self.animation, 
+            { scale = 1.0 }, 
+            DRAG_ANIMATION_METHOD,
+            function()
+                self.animating = false
+                self.animation.complete = true
+                
+                -- Nettoyer la référence après l'animation terminée
+                self.dragging = nil
+                self.originalCard = nil
+                self.cardIndex = nil
+                self.targetCell = nil
+            end
+        )
+        
+        -- Ne pas effacer les références tout de suite pour permettre à l'animation de s'achever
+        return false
+    else
+        -- Si la carte a été placée, nettoyer immédiatement
+        self.dragging = nil
+        self.originalCard = nil
+        self.cardIndex = nil
+        self.targetCell = nil
+        self.timer:clear() -- Annuler toute animation en cours
+        
+        return placed
     end
-    
-    -- Réinitialiser l'état de drag & drop
-    self.dragging = nil
-    self.originalCard = nil
-    self.cardIndex = nil
-    self.targetCell = nil
-    
-    return placed
 end
 
 function DragDrop:updateHighlight(garden, x, y)
@@ -122,26 +198,36 @@ function DragDrop:updateHighlight(garden, x, y)
     end
 end
 
+function DragDrop:isAnimating()
+    return self.animating
+end
+
 function DragDrop:draw()
     -- Dessiner la carte en cours de déplacement
     if self.dragging then
         local card = self.dragging
-        -- Calculer les positions ajustées pour la carte agrandie
-        local cardLeft = card.x - CARD_WIDTH/2
-        local cardTop = card.y - CARD_HEIGHT/2
+        
+        -- Appliquer l'échelle actuelle aux dimensions de la carte
+        local scaledWidth = CARD_WIDTH * self.animation.scale
+        local scaledHeight = CARD_HEIGHT * self.animation.scale
+        local scaledHeaderHeight = CARD_HEADER_HEIGHT * self.animation.scale
+        
+        -- Calculer les positions ajustées pour la carte
+        local cardLeft = card.x - scaledWidth/2
+        local cardTop = card.y - scaledHeight/2
         
         -- Dessiner une ombre
         love.graphics.setColor(0, 0, 0, 0.2)
         love.graphics.rectangle("fill", 
-            cardLeft + 4, 
-            cardTop + 4, 
-            CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS)
+            cardLeft + 4 * self.animation.scale, 
+            cardTop + 4 * self.animation.scale, 
+            scaledWidth, scaledHeight, CARD_CORNER_RADIUS)
         
         -- Dessiner la carte elle-même
         love.graphics.setColor(1, 1, 1)
-        love.graphics.rectangle("fill", cardLeft, cardTop, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS)
+        love.graphics.rectangle("fill", cardLeft, cardTop, scaledWidth, scaledHeight, CARD_CORNER_RADIUS)
         love.graphics.setColor(0.4, 0.4, 0.4)
-        love.graphics.rectangle("line", cardLeft, cardTop, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS)
+        love.graphics.rectangle("line", cardLeft, cardTop, scaledWidth, scaledHeight, CARD_CORNER_RADIUS)
         
         -- Couleur de fond selon la famille
         if card.color then
@@ -149,25 +235,26 @@ function DragDrop:draw()
         else
             love.graphics.setColor(0.7, 0.7, 0.7)
         end
-        love.graphics.rectangle("fill", cardLeft + 5, cardTop + 5, CARD_WIDTH - 10, CARD_HEADER_HEIGHT)
+        love.graphics.rectangle("fill", cardLeft + 5 * self.animation.scale, cardTop + 5 * self.animation.scale, 
+                               scaledWidth - 10 * self.animation.scale, scaledHeaderHeight)
         
-        -- Échelle du texte pour les cartes plus grandes
-        local textScale = 1.4
+        -- Calculer l'échelle du texte pour les cartes redimensionnées
+        local textScale = 1.4 * self.animation.scale
         
         -- Nom et info
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print(card.family, cardLeft + 10, cardTop + 9, 0, textScale, textScale)
-        love.graphics.print("Graine", cardLeft + 10, cardTop + 35, 0, textScale, textScale)
+        love.graphics.print(card.family, cardLeft + 10 * self.animation.scale, cardTop + 9 * self.animation.scale, 0, textScale, textScale)
+        love.graphics.print("Graine", cardLeft + 10 * self.animation.scale, cardTop + 35 * self.animation.scale, 0, textScale, textScale)
         
         -- Besoins pour pousser
-        love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10, cardTop + 60, 0, textScale, textScale)
-        love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10, cardTop + 85, 0, textScale, textScale)
+        love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10 * self.animation.scale, cardTop + 60 * self.animation.scale, 0, textScale, textScale)
+        love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10 * self.animation.scale, cardTop + 85 * self.animation.scale, 0, textScale, textScale)
         
         -- Score
-        love.graphics.print(card.baseScore .. " pts", cardLeft + 10, cardTop + 110, 0, textScale, textScale)
+        love.graphics.print(card.baseScore .. " pts", cardLeft + 10 * self.animation.scale, cardTop + 110 * self.animation.scale, 0, textScale, textScale)
         
         -- Gel
-        love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10, cardTop + 135, 0, textScale, textScale)
+        love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10 * self.animation.scale, cardTop + 135 * self.animation.scale, 0, textScale, textScale)
     end
 end
 
