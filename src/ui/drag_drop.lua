@@ -14,6 +14,7 @@ local TEXT_LINE_HEIGHT = 18
 -- Constantes d'animation
 local ANIMATION_DURATION = 0.3 -- Durée de l'animation en secondes
 local CARD_SCALE_WHEN_DRAGGED = 0.6 -- Taille réduite à 60% (réduction de 40%)
+local RETURN_ANIMATION_DURATION = 0.3 -- Durée de l'animation de retour en ligne droite
 
 function DragDrop.new()
     local self = setmetatable({}, DragDrop)
@@ -36,6 +37,18 @@ function DragDrop.new()
         callback = nil
     }
     
+    -- Animation de retour en ligne droite
+    self.returnAnimation = {
+        active = false,
+        startTime = 0,
+        duration = RETURN_ANIMATION_DURATION,
+        startX = 0,
+        startY = 0,
+        targetX = 0,
+        targetY = 0,
+        progress = 0
+    }
+    
     return self
 end
 
@@ -48,6 +61,18 @@ function DragDrop:startAnimation(direction, startScale, targetScale, callback)
     self.animation.targetScale = targetScale
     self.animation.scale = startScale
     self.animation.callback = callback
+end
+
+function DragDrop:startReturnAnimation(startX, startY, targetX, targetY, callback)
+    self.returnAnimation.active = true
+    self.returnAnimation.startTime = love.timer.getTime()
+    self.returnAnimation.duration = RETURN_ANIMATION_DURATION
+    self.returnAnimation.startX = startX
+    self.returnAnimation.startY = startY
+    self.returnAnimation.targetX = targetX
+    self.returnAnimation.targetY = targetY
+    self.returnAnimation.progress = 0
+    self.returnAnimation.callback = callback
 end
 
 function DragDrop:updateAnimation()
@@ -78,14 +103,49 @@ function DragDrop:updateAnimation()
     end
 end
 
+function DragDrop:updateReturnAnimation()
+    if not self.returnAnimation.active then return end
+    
+    local currentTime = love.timer.getTime()
+    local elapsedTime = currentTime - self.returnAnimation.startTime
+    
+    if elapsedTime >= self.returnAnimation.duration then
+        -- Animation terminée
+        self.dragging.x = self.returnAnimation.targetX
+        self.dragging.y = self.returnAnimation.targetY
+        self.returnAnimation.active = false
+        self.returnAnimation.progress = 1
+        
+        -- Appeler le callback si défini
+        if self.returnAnimation.callback then
+            self.returnAnimation.callback()
+        end
+    else
+        -- Animation en cours
+        local progress = elapsedTime / self.returnAnimation.duration
+        
+        -- Fonction d'easing pour une animation plus fluide (outQuad)
+        progress = 1 - (1 - progress) * (1 - progress)
+        
+        -- Mettre à jour la position
+        self.dragging.x = self.returnAnimation.startX + 
+                         (self.returnAnimation.targetX - self.returnAnimation.startX) * progress
+        self.dragging.y = self.returnAnimation.startY + 
+                         (self.returnAnimation.targetY - self.returnAnimation.startY) * progress
+        
+        self.returnAnimation.progress = progress
+    end
+end
+
 function DragDrop:update(dt)
-    -- Mettre à jour l'animation si active
+    -- Mettre à jour les animations si actives
     self:updateAnimation()
+    self:updateReturnAnimation()
 end
 
 function DragDrop:startDrag(card, cardIndex, x, y)
     -- Ignorer si une animation est déjà en cours
-    if self.animation.active then return end
+    if self.animation.active or self.returnAnimation.active then return end
     
     -- Sauvegarder la carte originale et son indice
     self.originalCard = card
@@ -109,7 +169,7 @@ function DragDrop:startDrag(card, cardIndex, x, y)
 end
 
 function DragDrop:updateDrag(x, y)
-    if not self.dragging then return end
+    if not self.dragging or self.returnAnimation.active then return end
     
     -- La carte suit directement le curseur
     self.dragging.x = x
@@ -118,6 +178,9 @@ end
 
 function DragDrop:stopDrag(garden, cardSystem)
     if not self.dragging or not self.originalCard then return false end
+    
+    -- Ne pas permettre de relâcher pendant une animation de retour
+    if self.returnAnimation.active then return false end
     
     local card = self.originalCard -- Utiliser la carte originale pour les références
     local placed = false
@@ -148,20 +211,31 @@ function DragDrop:stopDrag(garden, cardSystem)
         if placed then break end
     end
     
-    -- Si la carte n'a pas été placée, animer son retour à la taille normale
+    -- Si la carte n'a pas été placée, animer son retour à la main en ligne droite
     if not placed then
         -- Réinitialiser l'état du système de cartes
         if cardSystem then
             cardSystem:resetDragging()
         end
         
-        -- Démarrer l'animation de retour à la taille normale
-        self:startAnimation("out", self.animation.scale, 1.0, function()
-            -- Nettoyer après la fin de l'animation
-            self.dragging = nil
-            self.originalCard = nil
-            self.cardIndex = nil
-            self.targetCell = nil
+        -- Mémoriser la position actuelle de la carte
+        local startX = self.dragging.x
+        local startY = self.dragging.y
+        
+        -- Position de destination (position originale de la carte dans la main)
+        local targetX = self.originalCard.x
+        local targetY = self.originalCard.y
+        
+        -- Démarrer l'animation de retour en ligne droite
+        self:startReturnAnimation(startX, startY, targetX, targetY, function()
+            -- Après l'animation de retour à la position, démarrer l'animation de retour à la taille normale
+            self:startAnimation("out", self.animation.scale, 1.0, function()
+                -- Nettoyer après la fin des animations
+                self.dragging = nil
+                self.originalCard = nil
+                self.cardIndex = nil
+                self.targetCell = nil
+            end)
         end)
         
         return false
@@ -172,6 +246,7 @@ function DragDrop:stopDrag(garden, cardSystem)
         self.cardIndex = nil
         self.targetCell = nil
         self.animation.active = false
+        self.returnAnimation.active = false
         
         return placed
     end
@@ -205,7 +280,7 @@ function DragDrop:updateHighlight(garden, x, y)
 end
 
 function DragDrop:isAnimating()
-    return self.animation.active
+    return self.animation.active or self.returnAnimation.active
 end
 
 function DragDrop:draw()
