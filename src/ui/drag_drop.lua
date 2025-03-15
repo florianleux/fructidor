@@ -99,23 +99,43 @@ end
 function DragDrop:draw()
     -- Dessiner la carte en cours de déplacement
     if self.dragging then
+        local card = self.dragging
+        
         -- Dessiner une ombre
         love.graphics.setColor(0, 0, 0, 0.2)
         love.graphics.rectangle("fill", 
-            self.dragging.x - 30 + 4, 
-            self.dragging.y - 50 + 4, 
+            card.x - 30 + 4, 
+            card.y - 50 + 4, 
             60, 100, 3)
         
         -- Dessiner la carte elle-même
         love.graphics.setColor(1, 1, 1)
-        love.graphics.rectangle("fill", self.dragging.x - 30, self.dragging.y - 50, 60, 100, 3)
+        love.graphics.rectangle("fill", card.x - 30, card.y - 50, 60, 100, 3)
         love.graphics.setColor(0.4, 0.4, 0.4)
-        love.graphics.rectangle("line", self.dragging.x - 30, self.dragging.y - 50, 60, 100, 3)
+        love.graphics.rectangle("line", card.x - 30, card.y - 50, 60, 100, 3)
         
-        -- Dessiner le contenu de la carte
+        -- Couleur de fond selon la famille
+        if card.color then
+            love.graphics.setColor(card.color)
+        else
+            love.graphics.setColor(0.7, 0.7, 0.7)
+        end
+        love.graphics.rectangle("fill", card.x - 25, card.y - 45, 50, 15)
+        
+        -- Nom et info
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print(self.dragging.family, self.dragging.x - 20, self.dragging.y - 30)
-        love.graphics.print("Graine", self.dragging.x - 20, self.dragging.y - 15)
+        love.graphics.print(card.family, card.x - 25, card.y - 45)
+        love.graphics.print("Graine", card.x - 25, card.y - 25)
+        
+        -- Besoins pour pousser
+        love.graphics.print("☀️ " .. card.sunToSprout, card.x - 25, card.y - 5)
+        love.graphics.print("🌧️ " .. card.rainToSprout, card.x - 25, card.y + 10)
+        
+        -- Score
+        love.graphics.print(card.baseScore .. " pts", card.x - 25, card.y + 25)
+        
+        -- Gel
+        love.graphics.print("❄️ " .. card.frostThreshold, card.x - 25, card.y + 40)
     end
 end
 
