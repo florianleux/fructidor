@@ -51,6 +51,17 @@ function DragDrop.new()
         callback = nil
     }
     
+    -- Animation finale d'échelle (à la position de la main)
+    self.finalScaleAnimation = {
+        active = false,
+        startTime = 0,
+        duration = ANIMATION_DURATION,
+        scale = 1.0,
+        startScale = 1.0,
+        targetScale = 1.0,
+        callback = nil
+    }
+    
     return self
 end
 
@@ -63,6 +74,16 @@ function DragDrop:startAnimation(direction, startScale, targetScale, callback)
     self.animation.targetScale = targetScale
     self.animation.scale = startScale
     self.animation.callback = callback
+end
+
+function DragDrop:startFinalScaleAnimation(startScale, targetScale, callback)
+    self.finalScaleAnimation.active = true
+    self.finalScaleAnimation.startTime = love.timer.getTime()
+    self.finalScaleAnimation.duration = ANIMATION_DURATION
+    self.finalScaleAnimation.startScale = startScale
+    self.finalScaleAnimation.targetScale = targetScale
+    self.finalScaleAnimation.scale = startScale
+    self.finalScaleAnimation.callback = callback
 end
 
 function DragDrop:startReturnAnimation(startX, startY, targetX, targetY, cardSystem, callback)
@@ -111,6 +132,34 @@ function DragDrop:updateAnimation()
     end
 end
 
+function DragDrop:updateFinalScaleAnimation()
+    if not self.finalScaleAnimation.active then return end
+    
+    local currentTime = love.timer.getTime()
+    local elapsedTime = currentTime - self.finalScaleAnimation.startTime
+    
+    if elapsedTime >= self.finalScaleAnimation.duration then
+        -- Animation terminée
+        self.finalScaleAnimation.scale = self.finalScaleAnimation.targetScale
+        self.finalScaleAnimation.active = false
+        
+        -- Appeler le callback si défini
+        if self.finalScaleAnimation.callback then
+            self.finalScaleAnimation.callback()
+        end
+    else
+        -- Animation en cours
+        local progress = elapsedTime / self.finalScaleAnimation.duration
+        
+        -- Fonction d'easing pour une animation plus fluide (outQuad)
+        progress = 1 - (1 - progress) * (1 - progress)
+        
+        -- Mettre à jour l'échelle
+        self.finalScaleAnimation.scale = self.finalScaleAnimation.startScale + 
+                                      (self.finalScaleAnimation.targetScale - self.finalScaleAnimation.startScale) * progress
+    end
+end
+
 function DragDrop:updateReturnAnimation()
     if not self.returnAnimation.active then return end
     
@@ -125,11 +174,6 @@ function DragDrop:updateReturnAnimation()
         end
         self.returnAnimation.active = false
         self.returnAnimation.progress = 1
-        
-        -- Réactiver l'affichage de la carte originale dans le système de cartes
-        if self.returnAnimation.cardSystem and self.cardIndex then
-            self.returnAnimation.cardSystem:clearCardInReturnAnimation()
-        end
         
         -- Appeler le callback si défini
         if self.returnAnimation.callback then
@@ -158,11 +202,12 @@ function DragDrop:update(dt)
     -- Mettre à jour les animations si actives
     self:updateAnimation()
     self:updateReturnAnimation()
+    self:updateFinalScaleAnimation()
 end
 
 function DragDrop:startDrag(card, cardIndex, x, y)
     -- Ignorer si une animation est déjà en cours
-    if self.animation.active or self.returnAnimation.active then return end
+    if self.animation.active or self.returnAnimation.active or self.finalScaleAnimation.active then return end
     
     -- Sauvegarder la carte originale et son indice
     self.originalCard = card
@@ -197,7 +242,7 @@ function DragDrop:stopDrag(garden, cardSystem)
     if not self.dragging or not self.originalCard then return false end
     
     -- Ne pas permettre de relâcher pendant une animation de retour
-    if self.returnAnimation.active then return false end
+    if self.returnAnimation.active or self.finalScaleAnimation.active then return false end
     
     local card = self.originalCard -- Utiliser la carte originale pour les références
     local placed = false
@@ -243,10 +288,13 @@ function DragDrop:stopDrag(garden, cardSystem)
         local targetX = self.originalCard.x
         local targetY = self.originalCard.y
         
+        -- Stocker l'échelle actuelle
+        local currentScale = self.animation.scale
+        
         -- Démarrer l'animation de retour en ligne droite
         self:startReturnAnimation(startX, startY, targetX, targetY, cardSystem, function()
-            -- Après l'animation de retour à la position, démarrer l'animation de retour à la taille normale
-            self:startAnimation("out", self.animation.scale, 1.0, function()
+            -- Maintenant que la carte est à sa position finale, démarrer l'animation de redimensionnement
+            self:startFinalScaleAnimation(currentScale, 1.0, function()
                 -- Nettoyer après la fin des animations
                 self.dragging = nil
                 self.originalCard = nil
@@ -269,6 +317,7 @@ function DragDrop:stopDrag(garden, cardSystem)
         self.targetCell = nil
         self.animation.active = false
         self.returnAnimation.active = false
+        self.finalScaleAnimation.active = false
         
         return placed
     end
@@ -302,7 +351,7 @@ function DragDrop:updateHighlight(garden, x, y)
 end
 
 function DragDrop:isAnimating()
-    return self.animation.active or self.returnAnimation.active
+    return self.animation.active or self.returnAnimation.active or self.finalScaleAnimation.active
 end
 
 function DragDrop:getAnimatingCardIndex()
@@ -314,10 +363,16 @@ function DragDrop:draw()
     if self.dragging then
         local card = self.dragging
         
+        -- Déterminer l'échelle à utiliser selon l'animation active
+        local currentScale = self.animation.scale
+        if self.finalScaleAnimation.active then
+            currentScale = self.finalScaleAnimation.scale
+        end
+        
         -- Appliquer l'échelle actuelle aux dimensions de la carte
-        local scaledWidth = CARD_WIDTH * self.animation.scale
-        local scaledHeight = CARD_HEIGHT * self.animation.scale
-        local scaledHeaderHeight = CARD_HEADER_HEIGHT * self.animation.scale
+        local scaledWidth = CARD_WIDTH * currentScale
+        local scaledHeight = CARD_HEIGHT * currentScale
+        local scaledHeaderHeight = CARD_HEADER_HEIGHT * currentScale
         
         -- Calculer les positions ajustées pour la carte
         local cardLeft = card.x - scaledWidth/2
@@ -326,8 +381,8 @@ function DragDrop:draw()
         -- Dessiner une ombre
         love.graphics.setColor(0, 0, 0, 0.2)
         love.graphics.rectangle("fill", 
-            cardLeft + 4 * self.animation.scale, 
-            cardTop + 4 * self.animation.scale, 
+            cardLeft + 4 * currentScale, 
+            cardTop + 4 * currentScale, 
             scaledWidth, scaledHeight, CARD_CORNER_RADIUS)
         
         -- Dessiner la carte elle-même
@@ -342,26 +397,26 @@ function DragDrop:draw()
         else
             love.graphics.setColor(0.7, 0.7, 0.7)
         end
-        love.graphics.rectangle("fill", cardLeft + 5 * self.animation.scale, cardTop + 5 * self.animation.scale, 
-                               scaledWidth - 10 * self.animation.scale, scaledHeaderHeight)
+        love.graphics.rectangle("fill", cardLeft + 5 * currentScale, cardTop + 5 * currentScale, 
+                               scaledWidth - 10 * currentScale, scaledHeaderHeight)
         
         -- Calculer l'échelle du texte pour les cartes redimensionnées
-        local textScale = 1.4 * self.animation.scale
+        local textScale = 1.4 * currentScale
         
         -- Nom et info
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print(card.family, cardLeft + 10 * self.animation.scale, cardTop + 9 * self.animation.scale, 0, textScale, textScale)
-        love.graphics.print("Graine", cardLeft + 10 * self.animation.scale, cardTop + 35 * self.animation.scale, 0, textScale, textScale)
+        love.graphics.print(card.family, cardLeft + 10 * currentScale, cardTop + 9 * currentScale, 0, textScale, textScale)
+        love.graphics.print("Graine", cardLeft + 10 * currentScale, cardTop + 35 * currentScale, 0, textScale, textScale)
         
         -- Besoins pour pousser
-        love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10 * self.animation.scale, cardTop + 60 * self.animation.scale, 0, textScale, textScale)
-        love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10 * self.animation.scale, cardTop + 85 * self.animation.scale, 0, textScale, textScale)
+        love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10 * currentScale, cardTop + 60 * currentScale, 0, textScale, textScale)
+        love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10 * currentScale, cardTop + 85 * currentScale, 0, textScale, textScale)
         
         -- Score
-        love.graphics.print(card.baseScore .. " pts", cardLeft + 10 * self.animation.scale, cardTop + 110 * self.animation.scale, 0, textScale, textScale)
+        love.graphics.print(card.baseScore .. " pts", cardLeft + 10 * currentScale, cardTop + 110 * currentScale, 0, textScale, textScale)
         
         -- Gel
-        love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10 * self.animation.scale, cardTop + 135 * self.animation.scale, 0, textScale, textScale)
+        love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10 * currentScale, cardTop + 135 * currentScale, 0, textScale, textScale)
     end
 end
 

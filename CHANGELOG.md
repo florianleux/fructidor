@@ -4,10 +4,15 @@ Ce document liste les modifications majeures apportées au projet depuis sa cré
 
 ## [Non publié] - 2025-03-15
 
+### Corrections
+- **Interface utilisateur**
+  - Correction du problème de double affichage des cartes lors du retour à la main
+  - Refonte du système d'animation des cartes avec séparation des animations de position et d'échelle
+  - Élimination du scintillement visuel lors du relâchement d'une carte
+
 ### Amélioration
 - **Interface utilisateur**
   - Animation de retour en ligne droite des cartes après un drag & drop non réussi
-  - Correction complète du scintillement des cartes en masquant la carte d'origine pendant le retour
   - Meilleur retour visuel pour les actions de drag & drop
 
 ## [Non publié] - 2025-03-14
