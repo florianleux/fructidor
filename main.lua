@@ -49,11 +49,6 @@ end
 function love.update(dt)
     -- Mettre à jour le système d'animation du drag & drop
     dragDrop:update(dt)
-    
-    -- Mettre à jour le système de drag & drop si une carte est en cours de déplacement
-    if dragDrop.dragging then
-        dragDrop:updateDrag(love.mouse.getX(), love.mouse.getY())
-    end
 end
 
 function love.draw()
@@ -116,14 +111,14 @@ function love.draw()
     garden:draw()
     
     -- Dessiner les effets de surbrillance si une carte est en cours de déplacement
-    if dragDrop.dragging and not dragDrop:isAnimating() then
+    if not dragDrop:isAnimating() then
         dragDrop:updateHighlight(garden, love.mouse.getX(), love.mouse.getY())
     end
     
-    -- Dessiner les cartes en main
+    -- Dessiner les cartes en main (qui ne sont pas en cours de déplacement ou d'animation)
     cardSystem:drawHand()
     
-    -- Dessiner la carte en cours de déplacement (au-dessus de tout)
+    -- Dessiner la carte en cours de déplacement ou d'animation (au-dessus de tout)
     dragDrop:draw()
 end
 
@@ -141,20 +136,16 @@ function love.mousepressed(x, y, button)
     if button == 1 then
         local card, cardIndex = cardSystem:getCardAt(x, y)
         if card then
-            -- Marquer la carte comme étant en cours de déplacement
-            cardSystem:setDraggingCard(cardIndex)
-            dragDrop:startDrag(card, cardIndex, x, y)
+            -- Démarrer le drag & drop
+            dragDrop:startDrag(card, cardIndex, cardSystem)
         end
     end
 end
 
 function love.mousereleased(x, y, button)
     -- Lâcher une carte
-    if button == 1 and dragDrop.dragging and not dragDrop:isAnimating() then
-        local placed = dragDrop:stopDrag(garden, cardSystem)
-        if placed then
-            -- Jouer un son ou autre feedback ici
-        end
+    if button == 1 and not dragDrop:isAnimating() then
+        dragDrop:stopDrag(garden)
     end
 end
 
