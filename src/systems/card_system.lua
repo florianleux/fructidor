@@ -18,6 +18,7 @@ function CardSystem.new()
     self.hand = {}
     self.discardPile = {}
     self.draggingCardIndex = nil -- Indice de la carte en cours de déplacement
+    self.cardInReturnAnimation = nil -- Indice de la carte en cours d'animation de retour
     
     -- Initialisation du deck avec cartes de base
     self:initializeDeck()
@@ -121,6 +122,14 @@ function CardSystem:playCard(cardIndex, garden, x, y)
                 self.draggingCardIndex = self.draggingCardIndex - 1
             end
             
+            -- Réinitialiser aussi l'indice de la carte en animation de retour si nécessaire
+            if self.cardInReturnAnimation == cardIndex then
+                self.cardInReturnAnimation = nil
+            elseif self.cardInReturnAnimation and self.cardInReturnAnimation > cardIndex then
+                -- Ajuster l'indice si une carte avant celle en animation est supprimée
+                self.cardInReturnAnimation = self.cardInReturnAnimation - 1
+            end
+            
             return true
         end
     end
@@ -176,8 +185,8 @@ function CardSystem:drawHand()
     
     -- Calculer la position des cartes en arc
     for i, card in ipairs(self.hand) do
-        -- Ignorer la carte en cours de déplacement
-        if i ~= self.draggingCardIndex then
+        -- Ignorer la carte en cours de déplacement ou en animation de retour
+        if i ~= self.draggingCardIndex and i ~= self.cardInReturnAnimation then
             local angle = (i - (#self.hand + 1) / 2) * 0.1
             local x = screenWidth / 2 + angle * 270 -- Ajusté pour les cartes plus grandes
             local y = handY + math.abs(angle) * 70  -- Ajusté pour les cartes plus grandes
@@ -195,10 +204,13 @@ end
 -- Fonction pour savoir si un point est sur une carte
 function CardSystem:getCardAt(x, y)
     for i = #self.hand, 1, -1 do -- Regarder de haut en bas
-        local card = self.hand[i]
-        if x >= card.x - CARD_WIDTH/2 and x <= card.x + CARD_WIDTH/2 and
-           y >= card.y - CARD_HEIGHT/2 and y <= card.y + CARD_HEIGHT/2 then
-            return card, i
+        -- Ignorer les cartes en animation de retour
+        if i ~= self.cardInReturnAnimation then
+            local card = self.hand[i]
+            if x >= card.x - CARD_WIDTH/2 and x <= card.x + CARD_WIDTH/2 and
+               y >= card.y - CARD_HEIGHT/2 and y <= card.y + CARD_HEIGHT/2 then
+                return card, i
+            end
         end
     end
     return nil
@@ -207,6 +219,16 @@ end
 -- Définir la carte en cours de déplacement
 function CardSystem:setDraggingCard(index)
     self.draggingCardIndex = index
+end
+
+-- Définir la carte en cours d'animation de retour
+function CardSystem:setCardInReturnAnimation(index)
+    self.cardInReturnAnimation = index
+end
+
+-- Réinitialiser la carte en animation de retour
+function CardSystem:clearCardInReturnAnimation()
+    self.cardInReturnAnimation = nil
 end
 
 -- Réinitialiser l'état de déplacement

@@ -46,7 +46,9 @@ function DragDrop.new()
         startY = 0,
         targetX = 0,
         targetY = 0,
-        progress = 0
+        cardSystem = nil, -- Référence au système de cartes pour cacher la carte originale
+        progress = 0,
+        callback = nil
     }
     
     return self
@@ -63,7 +65,7 @@ function DragDrop:startAnimation(direction, startScale, targetScale, callback)
     self.animation.callback = callback
 end
 
-function DragDrop:startReturnAnimation(startX, startY, targetX, targetY, callback)
+function DragDrop:startReturnAnimation(startX, startY, targetX, targetY, cardSystem, callback)
     self.returnAnimation.active = true
     self.returnAnimation.startTime = love.timer.getTime()
     self.returnAnimation.duration = RETURN_ANIMATION_DURATION
@@ -73,6 +75,12 @@ function DragDrop:startReturnAnimation(startX, startY, targetX, targetY, callbac
     self.returnAnimation.targetY = targetY
     self.returnAnimation.progress = 0
     self.returnAnimation.callback = callback
+    self.returnAnimation.cardSystem = cardSystem
+    
+    -- Marquer cette carte comme étant en animation de retour dans le système de cartes
+    if cardSystem and self.cardIndex then
+        cardSystem:setCardInReturnAnimation(self.cardIndex)
+    end
 end
 
 function DragDrop:updateAnimation()
@@ -111,10 +119,17 @@ function DragDrop:updateReturnAnimation()
     
     if elapsedTime >= self.returnAnimation.duration then
         -- Animation terminée
-        self.dragging.x = self.returnAnimation.targetX
-        self.dragging.y = self.returnAnimation.targetY
+        if self.dragging then
+            self.dragging.x = self.returnAnimation.targetX
+            self.dragging.y = self.returnAnimation.targetY
+        end
         self.returnAnimation.active = false
         self.returnAnimation.progress = 1
+        
+        -- Réactiver l'affichage de la carte originale dans le système de cartes
+        if self.returnAnimation.cardSystem and self.cardIndex then
+            self.returnAnimation.cardSystem:clearCardInReturnAnimation()
+        end
         
         -- Appeler le callback si défini
         if self.returnAnimation.callback then
@@ -127,11 +142,13 @@ function DragDrop:updateReturnAnimation()
         -- Fonction d'easing pour une animation plus fluide (outQuad)
         progress = 1 - (1 - progress) * (1 - progress)
         
-        -- Mettre à jour la position
-        self.dragging.x = self.returnAnimation.startX + 
-                         (self.returnAnimation.targetX - self.returnAnimation.startX) * progress
-        self.dragging.y = self.returnAnimation.startY + 
-                         (self.returnAnimation.targetY - self.returnAnimation.startY) * progress
+        -- Mettre à jour la position seulement si dragging existe encore
+        if self.dragging then
+            self.dragging.x = self.returnAnimation.startX + 
+                             (self.returnAnimation.targetX - self.returnAnimation.startX) * progress
+            self.dragging.y = self.returnAnimation.startY + 
+                             (self.returnAnimation.targetY - self.returnAnimation.startY) * progress
+        end
         
         self.returnAnimation.progress = progress
     end
@@ -227,7 +244,7 @@ function DragDrop:stopDrag(garden, cardSystem)
         local targetY = self.originalCard.y
         
         -- Démarrer l'animation de retour en ligne droite
-        self:startReturnAnimation(startX, startY, targetX, targetY, function()
+        self:startReturnAnimation(startX, startY, targetX, targetY, cardSystem, function()
             -- Après l'animation de retour à la position, démarrer l'animation de retour à la taille normale
             self:startAnimation("out", self.animation.scale, 1.0, function()
                 -- Nettoyer après la fin des animations
@@ -235,6 +252,11 @@ function DragDrop:stopDrag(garden, cardSystem)
                 self.originalCard = nil
                 self.cardIndex = nil
                 self.targetCell = nil
+                
+                -- S'assurer que la carte n'est plus marquée comme en animation de retour
+                if cardSystem then
+                    cardSystem:clearCardInReturnAnimation()
+                end
             end)
         end)
         
@@ -281,6 +303,10 @@ end
 
 function DragDrop:isAnimating()
     return self.animation.active or self.returnAnimation.active
+end
+
+function DragDrop:getAnimatingCardIndex()
+    return self.returnAnimation.active and self.cardIndex or nil
 end
 
 function DragDrop:draw()

@@ -7,6 +7,7 @@ Ce document liste les modifications majeures apportées au projet depuis sa cré
 ### Amélioration
 - **Interface utilisateur**
   - Animation de retour en ligne droite des cartes après un drag & drop non réussi
+  - Correction complète du scintillement des cartes en masquant la carte d'origine pendant le retour
   - Meilleur retour visuel pour les actions de drag & drop
 
 ## [Non publié] - 2025-03-14
