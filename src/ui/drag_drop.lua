@@ -6,6 +6,7 @@ function DragDrop.new()
     local self = setmetatable({}, DragDrop)
     self.dragging = nil -- carte en cours de déplacement
     self.originalCard = nil -- sauvegarde des informations de la carte
+    self.cardIndex = nil -- indice de la carte dans la main
     self.dragOffsetX = 0
     self.dragOffsetY = 0
     self.targetCell = nil -- cellule cible surbrillance
@@ -13,9 +14,10 @@ function DragDrop.new()
     return self
 end
 
-function DragDrop:startDrag(card, x, y)
-    -- Sauvegarder la carte originale
+function DragDrop:startDrag(card, cardIndex, x, y)
+    -- Sauvegarder la carte originale et son indice
     self.originalCard = card
+    self.cardIndex = cardIndex
     
     -- Créer une copie pour le drag & drop
     self.dragging = {}
@@ -60,18 +62,8 @@ function DragDrop:stopDrag(garden, cardSystem)
                 
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
-                    local cardIndex = nil
-                    
-                    -- Trouver l'index de la carte dans la main
-                    for i, handCard in ipairs(cardSystem.hand) do
-                        if handCard == card then
-                            cardIndex = i
-                            break
-                        end
-                    end
-                    
-                    if cardIndex then
-                        placed = cardSystem:playCard(cardIndex, garden, x, y)
+                    if self.cardIndex then
+                        placed = cardSystem:playCard(self.cardIndex, garden, x, y)
                     end
                 end
                 
@@ -81,8 +73,15 @@ function DragDrop:stopDrag(garden, cardSystem)
         if placed then break end
     end
     
+    -- Réinitialiser l'état du système de cartes
+    if not placed and cardSystem then
+        cardSystem:resetDragging()
+    end
+    
+    -- Réinitialiser l'état de drag & drop
     self.dragging = nil
     self.originalCard = nil
+    self.cardIndex = nil
     self.targetCell = nil
     
     return placed
