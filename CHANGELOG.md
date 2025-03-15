@@ -2,6 +2,13 @@
 
 Ce document liste les modifications majeures apportées au projet depuis sa création.
 
+## [Non publié] - 2025-03-15
+
+### Amélioration
+- **Interface utilisateur**
+  - Animation de retour en ligne droite des cartes après un drag & drop non réussi
+  - Meilleur retour visuel pour les actions de drag & drop
+
 ## [Non publié] - 2025-03-14
 
 ### Ajout
