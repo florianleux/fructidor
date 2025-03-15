@@ -46,8 +46,12 @@ function DragDrop.new()
         startY = 0,
         targetX = 0,
         targetY = 0,
-        progress = 0
+        progress = 0,
+        callback = nil
     }
+    
+    -- État d'affichage
+    self.visible = true
     
     return self
 end
@@ -111,8 +115,10 @@ function DragDrop:updateReturnAnimation()
     
     if elapsedTime >= self.returnAnimation.duration then
         -- Animation terminée
-        self.dragging.x = self.returnAnimation.targetX
-        self.dragging.y = self.returnAnimation.targetY
+        if self.dragging then
+            self.dragging.x = self.returnAnimation.targetX
+            self.dragging.y = self.returnAnimation.targetY
+        end
         self.returnAnimation.active = false
         self.returnAnimation.progress = 1
         
@@ -127,11 +133,13 @@ function DragDrop:updateReturnAnimation()
         -- Fonction d'easing pour une animation plus fluide (outQuad)
         progress = 1 - (1 - progress) * (1 - progress)
         
-        -- Mettre à jour la position
-        self.dragging.x = self.returnAnimation.startX + 
-                         (self.returnAnimation.targetX - self.returnAnimation.startX) * progress
-        self.dragging.y = self.returnAnimation.startY + 
-                         (self.returnAnimation.targetY - self.returnAnimation.startY) * progress
+        -- Mettre à jour la position seulement si dragging existe encore
+        if self.dragging then
+            self.dragging.x = self.returnAnimation.startX + 
+                             (self.returnAnimation.targetX - self.returnAnimation.startX) * progress
+            self.dragging.y = self.returnAnimation.startY + 
+                             (self.returnAnimation.targetY - self.returnAnimation.startY) * progress
+        end
         
         self.returnAnimation.progress = progress
     end
@@ -141,6 +149,22 @@ function DragDrop:update(dt)
     -- Mettre à jour les animations si actives
     self:updateAnimation()
     self:updateReturnAnimation()
+    
+    -- Vérifier si le curseur est sur la position finale de la carte
+    if self.returnAnimation.active and self.dragging then
+        local mouseX, mouseY = love.mouse.getPosition()
+        local distance = math.sqrt((mouseX - self.dragging.x)^2 + (mouseY - self.dragging.y)^2)
+        
+        -- Si le curseur est proche de la position finale et l'animation est presque terminée,
+        -- rendre la carte temporairement invisible pour éviter le scintillement
+        if distance < CARD_WIDTH/2 and self.returnAnimation.progress > 0.8 then
+            self.visible = false
+        else
+            self.visible = true
+        end
+    else
+        self.visible = true
+    end
 end
 
 function DragDrop:startDrag(card, cardIndex, x, y)
@@ -163,6 +187,9 @@ function DragDrop:startDrag(card, cardIndex, x, y)
     
     -- Démarrer l'animation de réduction progressive
     self:startAnimation("in", 1.0, CARD_SCALE_WHEN_DRAGGED)
+    
+    -- Rendre la carte visible
+    self.visible = true
     
     -- Mettre à jour immédiatement la position de la carte
     self:updateDrag(x, y)
@@ -235,6 +262,7 @@ function DragDrop:stopDrag(garden, cardSystem)
                 self.originalCard = nil
                 self.cardIndex = nil
                 self.targetCell = nil
+                self.visible = true
             end)
         end)
         
@@ -247,6 +275,7 @@ function DragDrop:stopDrag(garden, cardSystem)
         self.targetCell = nil
         self.animation.active = false
         self.returnAnimation.active = false
+        self.visible = true
         
         return placed
     end
@@ -284,8 +313,8 @@ function DragDrop:isAnimating()
 end
 
 function DragDrop:draw()
-    -- Dessiner la carte en cours de déplacement
-    if self.dragging then
+    -- Dessiner la carte en cours de déplacement seulement si elle est visible
+    if self.dragging and self.visible then
         local card = self.dragging
         
         -- Appliquer l'échelle actuelle aux dimensions de la carte
