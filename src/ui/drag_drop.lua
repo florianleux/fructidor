@@ -5,6 +5,7 @@ DragDrop.__index = DragDrop
 function DragDrop.new()
     local self = setmetatable({}, DragDrop)
     self.dragging = nil -- carte en cours de déplacement
+    self.originalCard = nil -- sauvegarde des informations de la carte
     self.dragOffsetX = 0
     self.dragOffsetY = 0
     self.targetCell = nil -- cellule cible surbrillance
@@ -13,22 +14,35 @@ function DragDrop.new()
 end
 
 function DragDrop:startDrag(card, x, y)
-    self.dragging = card
-    self.dragOffsetX = card.x - x
-    self.dragOffsetY = card.y - y
+    -- Sauvegarder la carte originale
+    self.originalCard = card
+    
+    -- Créer une copie pour le drag & drop
+    self.dragging = {}
+    for k, v in pairs(card) do
+        self.dragging[k] = v
+    end
+    
+    -- Calcul des offsets pour centrer la carte sous le curseur
+    self.dragOffsetX = 0 -- La carte sera centrée sur le curseur
+    self.dragOffsetY = 0
+    
+    -- Mettre à jour immédiatement la position de la carte
+    self:updateDrag(x, y)
 end
 
 function DragDrop:updateDrag(x, y)
     if not self.dragging then return end
     
-    self.dragging.x = x + self.dragOffsetX
-    self.dragging.y = y + self.dragOffsetY
+    -- La carte suit directement le curseur
+    self.dragging.x = x
+    self.dragging.y = y
 end
 
 function DragDrop:stopDrag(garden, cardSystem)
-    if not self.dragging then return false end
+    if not self.dragging or not self.originalCard then return false end
     
-    local card = self.dragging
+    local card = self.originalCard -- Utiliser la carte originale pour les références
     local placed = false
     
     -- Trouver la cellule sous la carte
@@ -37,8 +51,12 @@ function DragDrop:stopDrag(garden, cardSystem)
             local posX = 50 + (x-1) * 70
             local posY = 180 + (y-1) * 70
             
-            if card.x >= posX and card.x < posX + 70 and
-               card.y >= posY and card.y < posY + 70 then
+            -- Utiliser le centre de la carte pour la détection
+            local cardCenterX = self.dragging.x
+            local cardCenterY = self.dragging.y
+            
+            if cardCenterX >= posX and cardCenterX < posX + 70 and
+               cardCenterY >= posY and cardCenterY < posY + 70 then
                 
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
@@ -64,6 +82,7 @@ function DragDrop:stopDrag(garden, cardSystem)
     end
     
     self.dragging = nil
+    self.originalCard = nil
     self.targetCell = nil
     
     return placed
