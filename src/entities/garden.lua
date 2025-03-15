@@ -25,7 +25,7 @@ function Garden:draw()
     local cellWidth = 70
     local cellHeight = 70
     local offsetX = 50
-    local offsetY = 50
+    local offsetY = 180  -- Modifié de 50 à 180 pour aligner avec le système de drag & drop
     
     -- Dessiner les cellules
     for y = 1, self.height do
