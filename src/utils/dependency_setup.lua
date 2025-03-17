@@ -8,8 +8,10 @@ local CardRenderer = require('src.ui.card_renderer')
 local DependencySetup = {}
 
 -- Fonction d'initialisation à appeler une seule fois au démarrage
-function DependencySetup.initialize()
-    -- Enregistrer les renderers
+function DependencySetup.initialize(systems)
+    systems = systems or {}
+    
+    -- Enregistrer les renderers en tant que singletons
     DependencyContainer.register("PlantRenderer", function()
         return PlantRenderer.new()
     end)
@@ -22,16 +24,22 @@ function DependencySetup.initialize()
         return CardRenderer.new()
     end)
     
-    -- Enregistrer les systèmes globaux après leur initialisation
-    DependencyContainer.register("CardSystem", function()
-        -- Utilisation de la référence globale
-        return _G.cardSystem
-    end)
+    -- Enregistrer les instances des systèmes principales si fournies
+    if systems.garden then
+        DependencyContainer.registerInstance("Garden", systems.garden)
+    end
     
-    DependencyContainer.register("Garden", function()
-        -- Utilisation de la référence globale via GameState
-        return _G.gameState and _G.gameState.garden
-    end)
+    if systems.cardSystem then
+        DependencyContainer.registerInstance("CardSystem", systems.cardSystem)
+    end
+    
+    if systems.gameState then
+        DependencyContainer.registerInstance("GameState", systems.gameState)
+    end
+    
+    if systems.dragDrop then
+        DependencyContainer.registerInstance("DragDrop", systems.dragDrop)
+    end
     
     return true
 end
