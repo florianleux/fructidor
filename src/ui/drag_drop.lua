@@ -25,6 +25,7 @@ function DragDrop.new(dependencies)
     
     -- Stocker les dépendances
     self.dependencies = dependencies or {}
+    self.scaleManager = self.dependencies.scaleManager
     
     -- État de l'animation de déplacement
     self.moveAnimation = {
@@ -89,8 +90,18 @@ function DragDrop:update(dt)
     
     -- Mettre à jour la position de la carte si en cours de déplacement
     if self.dragging and not self.moveAnimation.active then
-        self.dragging.x = love.mouse.getX()
-        self.dragging.y = love.mouse.getY()
+        -- Utiliser les coordonnées ajustées à l'échelle
+        local mouseX, mouseY
+        if self.scaleManager then
+            mouseX = love.mouse.getX() / self.scaleManager.scale
+            mouseY = love.mouse.getY() / self.scaleManager.scale
+        else
+            mouseX = love.mouse.getX()
+            mouseY = love.mouse.getY()
+        end
+        
+        self.dragging.x = mouseX
+        self.dragging.y = mouseY
     end
 end
 
@@ -114,8 +125,17 @@ function DragDrop:startDrag(card, cardIndex, cardSystem)
     end
     
     -- Initialiser la position au centre du curseur
-    self.dragging.x = love.mouse.getX()
-    self.dragging.y = love.mouse.getY()
+    local mouseX, mouseY
+    if self.scaleManager then
+        mouseX = love.mouse.getX() / self.scaleManager.scale
+        mouseY = love.mouse.getY() / self.scaleManager.scale
+    else
+        mouseX = love.mouse.getX()
+        mouseY = love.mouse.getY()
+    end
+    
+    self.dragging.x = mouseX
+    self.dragging.y = mouseY
     
     -- Initialiser l'échelle réduite directement
     self.moveAnimation.currentScale = CARD_SCALE_WHEN_DRAGGED
