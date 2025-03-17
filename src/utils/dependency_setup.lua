@@ -22,7 +22,16 @@ function DependencySetup.initialize()
         return CardRenderer.new()
     end)
     
-    -- D'autres dépendances peuvent être ajoutées ici
+    -- Enregistrer les systèmes globaux après leur initialisation
+    DependencyContainer.register("CardSystem", function()
+        -- Utilisation de la référence globale
+        return _G.cardSystem
+    end)
+    
+    DependencyContainer.register("Garden", function()
+        -- Utilisation de la référence globale via GameState
+        return _G.gameState and _G.gameState.garden
+    end)
     
     return true
 end

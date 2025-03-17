@@ -39,19 +39,57 @@ function GameState:draw()
     -- Convertir constante en texte pour affichage via le système de localisation
     local seasonText = Localization.getText(self.currentSeason)
     
-    -- Interface utilisateur
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print(Localization.getText("ui.tour") .. ": " .. self.currentTurn .. "/" .. self.maxTurns, 10, 10)
-    love.graphics.print(Localization.getText("ui.saison") .. ": " .. seasonText, 150, 10)
-    love.graphics.print(Localization.getText("ui.soleil") .. ": " .. self.sunDieValue, 300, 10)
-    love.graphics.print(Localization.getText("ui.pluie") .. ": " .. self.rainDieValue, 400, 10)
-    love.graphics.print(Localization.getText("ui.score") .. ": " .. self.score .. "/" .. self.objective, 500, 10)
+    -- Interface utilisateur - haut de l'écran
+    love.graphics.setColor(0.9, 0.95, 0.9)
+    love.graphics.rectangle("fill", 10, 10, 580, 40)
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.print(Localization.getText("ui.saison") .. ": " .. seasonText .. " (" .. math.ceil(self.currentTurn/2) .. "/4)", 30, 25)
     
-    -- Dessiner bouton fin de tour
+    -- Indicateur de tour
+    love.graphics.setColor(0.8, 0.9, 0.95)
+    love.graphics.rectangle("fill", 10, 60, 580, 30)
+    love.graphics.setColor(0.4, 0.4, 0.4)
+    love.graphics.line(50, 75, 550, 75)
+    
+    -- Cercles des tours
+    for i = 1, 8 do
+        local x = 50 + (i-1) * 500/7
+        if i == self.currentTurn then
+            love.graphics.setColor(0.4, 0.4, 0.4)
+            love.graphics.circle("fill", x, 75, 8)
+        else
+            love.graphics.setColor(0.4, 0.4, 0.4)
+            love.graphics.circle("line", x, 75, 8)
+        end
+    end
+    
+    -- Dés et bouton
+    love.graphics.setColor(0.8, 0.9, 0.95)
+    love.graphics.rectangle("fill", 10, 100, 580, 50)
+    
+    -- Dé soleil
+    love.graphics.setColor(1, 0.8, 0)
+    love.graphics.rectangle("fill", 240, 105, 40, 40, 6)
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.print(self.sunDieValue, 255, 115)
+    love.graphics.print(Localization.getText("ui.soleil"), 245, 130)
+    
+    -- Dé pluie
+    love.graphics.setColor(0.6, 0.8, 1)
+    love.graphics.rectangle("fill", 310, 105, 40, 40, 6)
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.print(self.rainDieValue, 325, 115)
+    love.graphics.print(Localization.getText("ui.pluie"), 317, 130)
+    
+    -- Bouton fin de tour
     love.graphics.setColor(0.6, 0.8, 0.6)
     love.graphics.rectangle("fill", 480, 110, 80, 30, 5)
-    love.graphics.setColor(0.2, 0.2, 0.2)
-    love.graphics.print(Localization.getText("ui.fin_tour"), 487, 115)
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.print(Localization.getText("ui.fin_tour"), 487, 120)
+    
+    -- Score
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.print(Localization.getText("ui.score") .. ": " .. self.score .. "/" .. self.objective, 10, 160)
 end
 
 function GameState:mousepressed(x, y, button)
@@ -102,8 +140,30 @@ function GameState:applyWeather()
 end
 
 function GameState:nextTurn()
+    local cardSystem
+    
+    -- Essayer d'abord d'utiliser l'injecteur de dépendances
+    local success = pcall(function()
+        cardSystem = DependencyContainer.resolve("CardSystem")
+    end)
+    
+    -- Si échec, utiliser la référence globale directement
+    if not success or not cardSystem then
+        cardSystem = _G.cardSystem
+    end
+    
+    -- Piocher une carte
+    if cardSystem then
+        cardSystem:drawCard()
+    end
+    
     -- Passer au tour suivant
     self.currentTurn = self.currentTurn + 1
+    
+    -- Vérifier fin de partie
+    if self.currentTurn > self.maxTurns then
+        self.currentTurn = 1
+    end
     
     -- Mettre à jour la saison
     local season = math.ceil(self.currentTurn / 2)
