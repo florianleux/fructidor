@@ -37,7 +37,17 @@ Localization.translations = {
         ["ui.pluie"] = "Pluie",
         ["ui.score"] = "Score",
         ["ui.fin_tour"] = "Fin du tour",
-        ["ui.points"] = "pts"
+        ["ui.points"] = "pts",
+        
+        -- Textes d'erreur et d'information
+        ["error.dependency_not_found"] = "Dépendance non trouvée",
+        ["info.turn_completed"] = "Tour terminé",
+        
+        -- Nom des saisons au format numérique
+        ["season.1"] = "Printemps",
+        ["season.2"] = "Été",
+        ["season.3"] = "Automne",
+        ["season.4"] = "Hiver"
     }
     -- Support pour d'autres langues à ajouter ici
 }
