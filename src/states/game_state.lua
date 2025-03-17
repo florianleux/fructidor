@@ -8,9 +8,16 @@ local Localization = require('src.utils.localization')
 local GameState = {}
 GameState.__index = GameState
 
-function GameState.new()
+-- Constructeur modifié pour accepter les dépendances
+function GameState.new(dependencies)
     local self = setmetatable({}, GameState)
-    self.garden = Garden.new(3, 2) -- Grille 3x2 pour l'Alpha
+    
+    -- Stocker les dépendances
+    self.dependencies = dependencies or {}
+    
+    -- Créer un jardin ou utiliser celui fourni
+    self.garden = self.dependencies.garden or Garden.new(3, 2) -- Grille 3x2 pour l'Alpha
+    
     self.currentTurn = 1
     self.maxTurns = 8
     self.currentSeason = Constants.SEASON.SPRING
@@ -140,17 +147,8 @@ function GameState:applyWeather()
 end
 
 function GameState:nextTurn()
-    local cardSystem
-    
-    -- Essayer d'abord d'utiliser l'injecteur de dépendances
-    local success = pcall(function()
-        cardSystem = DependencyContainer.resolve("CardSystem")
-    end)
-    
-    -- Si échec, utiliser la référence globale directement
-    if not success or not cardSystem then
-        cardSystem = _G.cardSystem
-    end
+    -- Récupérer le système de cartes via les dépendances ou le conteneur
+    local cardSystem = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
     
     -- Piocher une carte
     if cardSystem then

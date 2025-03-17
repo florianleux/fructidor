@@ -3,6 +3,11 @@ local GameState = require('src.states.game_state')
 local CardSystem = require('src.systems.card_system')
 local DragDrop = require('src.ui.drag_drop')
 local DependencySetup = require('src.utils.dependency_setup')
+local DependencyContainer = require('src.utils.dependency_container')
+local Garden = require('src.entities.garden')
+
+-- Module principal pour stocker les références localement
+local Game = {}
 
 function love.load(arg)
     math.randomseed(os.time())
@@ -13,70 +18,104 @@ function love.load(arg)
         return
     end
     
-    -- Initialiser le système d'injection de dépendances
-    DependencySetup.initialize()
+    -- Créer les instances principales avec leurs dépendances mutuelles
+    -- Nous créons d'abord toutes les instances, puis nous les relions ensemble
     
-    -- Initialiser l'état du jeu
-    gameState = GameState.new()
+    -- Créer le jardin
+    local garden = Garden.new(3, 2)
     
-    -- Initialiser le système de cartes
-    cardSystem = CardSystem.new()
+    -- Créer les systèmes principaux avec leurs dépendances
+    local cardSystem = CardSystem.new()
+    local gameState = GameState.new({
+        cardSystem = cardSystem,
+        garden = garden
+    })
+    local dragDrop = DragDrop.new({
+        cardSystem = cardSystem
+    })
     
-    -- Initialiser le système de drag & drop
-    dragDrop = DragDrop.new()
+    -- Stocker les références localement 
+    Game.gameState = gameState
+    Game.cardSystem = cardSystem
+    Game.dragDrop = dragDrop
+    Game.garden = garden
+    
+    -- Initialiser le système d'injection de dépendances avec nos instances
+    DependencySetup.initialize({
+        gameState = gameState,
+        cardSystem = cardSystem,
+        garden = garden,
+        dragDrop = dragDrop
+    })
 end
 
 function love.update(dt)
+    -- Vérifier que le jeu est initialisé
+    if not Game.gameState then return end
+    
     -- Mettre à jour l'état du jeu
-    gameState:update(dt)
+    Game.gameState:update(dt)
     
     -- Mettre à jour le système d'animation du drag & drop
-    dragDrop:update(dt)
+    Game.dragDrop:update(dt)
 end
 
 function love.draw()
     -- Fond
     love.graphics.setBackgroundColor(0.9, 0.9, 0.9)
     
+    -- Vérifier que les objets existent avant de les utiliser
+    if not Game.gameState or not Game.cardSystem or not Game.dragDrop then
+        love.graphics.setColor(1, 0, 0)
+        love.graphics.print("Erreur: Systèmes principaux non initialisés", 20, 20)
+        return
+    end
+    
     -- Dessiner l'état du jeu
-    gameState:draw()
+    Game.gameState:draw()
     
     -- Dessiner les effets de surbrillance si une carte est en cours de déplacement
-    if not dragDrop:isAnimating() then
-        dragDrop:updateHighlight(gameState.garden, love.mouse.getX(), love.mouse.getY())
+    if not Game.dragDrop:isAnimating() then
+        Game.dragDrop:updateHighlight(Game.gameState.garden, love.mouse.getX(), love.mouse.getY())
     end
     
     -- Dessiner les cartes en main
-    cardSystem:drawHand()
+    Game.cardSystem:drawHand()
     
     -- Dessiner la carte en cours de déplacement ou d'animation (au-dessus de tout)
-    dragDrop:draw()
+    Game.dragDrop:draw()
 end
 
 function love.mousepressed(x, y, button)
+    -- Vérifier que le jeu est initialisé
+    if not Game.gameState then return end
+    
     -- Ne pas traiter les clics pendant une animation
-    if dragDrop:isAnimating() then return end
+    if Game.dragDrop:isAnimating() then return end
     
     -- Déléguer au GameState pour gérer les clics sur l'interface
-    gameState:mousepressed(x, y, button)
+    Game.gameState:mousepressed(x, y, button)
     
     -- Clic sur une carte en main
     if button == 1 then
-        local card, cardIndex = cardSystem:getCardAt(x, y)
+        local card, cardIndex = Game.cardSystem:getCardAt(x, y)
         if card then
             -- Démarrer le drag & drop
-            dragDrop:startDrag(card, cardIndex, cardSystem)
+            Game.dragDrop:startDrag(card, cardIndex, Game.cardSystem)
         end
     end
 end
 
 function love.mousereleased(x, y, button)
+    -- Vérifier que le jeu est initialisé
+    if not Game.gameState then return end
+    
     -- Déléguer au GameState
-    gameState:mousereleased(x, y, button)
+    Game.gameState:mousereleased(x, y, button)
     
     -- Lâcher une carte
-    if button == 1 and not dragDrop:isAnimating() then
-        dragDrop:stopDrag(gameState.garden)
+    if button == 1 and not Game.dragDrop:isAnimating() then
+        Game.dragDrop:stopDrag(Game.gameState.garden)
     end
 end
 

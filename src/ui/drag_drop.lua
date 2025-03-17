@@ -1,4 +1,5 @@
 -- Système de Drag & Drop
+local DependencyContainer = require('src.utils.dependency_container')
 
 local DragDrop = {}
 DragDrop.__index = DragDrop
@@ -16,11 +17,14 @@ local ANIMATION_DURATION = 0.3 -- Durée de l'animation en secondes
 local CARD_SCALE_WHEN_DRAGGED = 0.6 -- Taille réduite à 60% (réduction de 40%)
 local RETURN_ANIMATION_DURATION = 0.3 -- Durée de l'animation de retour en ligne droite
 
-function DragDrop.new()
+function DragDrop.new(dependencies)
     local self = setmetatable({}, DragDrop)
     self.dragging = nil -- carte en cours de déplacement
     self.originalCard = nil -- sauvegarde des informations de la carte
     self.cardIndex = nil -- indice de la carte dans la main
+    
+    -- Stocker les dépendances
+    self.dependencies = dependencies or {}
     
     -- État de l'animation de déplacement
     self.moveAnimation = {
@@ -35,9 +39,6 @@ function DragDrop.new()
         targetScale = 1.0,
         currentScale = 1.0
     }
-    
-    -- Référence au système de cartes pour communication
-    self.cardSystem = nil
     
     return self
 end
@@ -57,8 +58,9 @@ function DragDrop:update(dt)
             end
             
             -- Réinitialiser tout à la fin de l'animation
-            if self.cardSystem then
-                self.cardSystem:clearCardInAnimation(self.cardIndex)
+            local cardSystem = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
+            if cardSystem then
+                cardSystem:clearCardInAnimation(self.cardIndex)
             end
             
             self.dragging = nil
@@ -99,7 +101,11 @@ function DragDrop:startDrag(card, cardIndex, cardSystem)
     -- Sauvegarder la carte originale et son indice
     self.originalCard = card
     self.cardIndex = cardIndex
-    self.cardSystem = cardSystem
+    
+    -- Stocker la référence au système de cartes
+    if cardSystem then
+        self.dependencies.cardSystem = cardSystem
+    end
     
     -- Créer une copie pour le drag & drop
     self.dragging = {}
@@ -115,8 +121,9 @@ function DragDrop:startDrag(card, cardIndex, cardSystem)
     self.moveAnimation.currentScale = CARD_SCALE_WHEN_DRAGGED
     
     -- Marquer cette carte comme étant en animation dans le système de cartes
-    if self.cardSystem then
-        self.cardSystem:setCardInAnimation(cardIndex)
+    local cardSystemToUse = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
+    if cardSystemToUse then
+        cardSystemToUse:setCardInAnimation(cardIndex)
     end
 end
 
@@ -142,8 +149,9 @@ function DragDrop:stopDrag(garden)
                 
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
-                    if self.cardIndex and self.cardSystem then
-                        placed = self.cardSystem:playCard(self.cardIndex, garden, x, y)
+                    local cardSystem = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
+                    if self.cardIndex and cardSystem then
+                        placed = cardSystem:playCard(self.cardIndex, garden, x, y)
                     end
                 end
                 
@@ -170,8 +178,9 @@ function DragDrop:stopDrag(garden)
         return false
     else
         -- Si la carte a été placée, nettoyer immédiatement
-        if self.cardSystem then
-            self.cardSystem:clearCardInAnimation(self.cardIndex)
+        local cardSystem = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
+        if cardSystem then
+            cardSystem:clearCardInAnimation(self.cardIndex)
         end
         
         self.dragging = nil
