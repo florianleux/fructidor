@@ -1,4 +1,6 @@
 -- Configuration du jeu
+local Constants = require('src.utils.constants')
+
 return {
     -- Paramètres généraux
     baseTurnsPerLevel = 8,
@@ -7,19 +9,19 @@ return {
     
     -- Plages de dés par saison
     diceRanges = {
-        spring = {
+        [Constants.SEASON.SPRING] = {
             sun = {min = -1, max = 5},
             rain = {min = 2, max = 6}
         },
-        summer = {
+        [Constants.SEASON.SUMMER] = {
             sun = {min = 3, max = 8},
             rain = {min = 0, max = 4}
         },
-        autumn = {
+        [Constants.SEASON.AUTUMN] = {
             sun = {min = -2, max = 4},
             rain = {min = 1, max = 6}
         },
-        winter = {
+        [Constants.SEASON.WINTER] = {
             sun = {min = -3, max = 2},
             rain = {min = 0, max = 4}
         }
@@ -35,7 +37,7 @@ return {
     
     -- Propriétés plantes
     plantConfigs = {
-        Brassika = {
+        [Constants.PLANT_FAMILY.BRASSIKA] = {
             frostThreshold = -5,
             sunToSprout = 3,
             rainToSprout = 4,
@@ -43,7 +45,7 @@ return {
             rainToFruit = 8,
             baseScore = 20
         },
-        Solana = {
+        [Constants.PLANT_FAMILY.SOLANA] = {
             frostThreshold = -2,
             sunToSprout = 5,
             rainToSprout = 3,
