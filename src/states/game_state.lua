@@ -4,7 +4,6 @@ local Constants = require('src.utils.constants')
 local Config = require('src.utils.config')
 local DependencyContainer = require('src.utils.dependency_container')
 local Localization = require('src.utils.localization')
-local CardSystem = require('src.systems.card_system')
 
 local GameState = {}
 GameState.__index = GameState
@@ -141,8 +140,17 @@ function GameState:applyWeather()
 end
 
 function GameState:nextTurn()
-    -- Récupérer le CardSystem global (fixé par rapport à la version précédente)
-    local cardSystem = _G.cardSystem
+    local cardSystem
+    
+    -- Essayer d'abord d'utiliser l'injecteur de dépendances
+    local success = pcall(function()
+        cardSystem = DependencyContainer.resolve("CardSystem")
+    end)
+    
+    -- Si échec, utiliser la référence globale directement
+    if not success or not cardSystem then
+        cardSystem = _G.cardSystem
+    end
     
     -- Piocher une carte
     if cardSystem then
