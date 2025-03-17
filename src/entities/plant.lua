@@ -1,8 +1,8 @@
 -- Entité Plante
+local Constants = require('src.utils.constants')
+
 local Plant = {}
 Plant.__index = Plant
-
-local Constants = require('src.utils.constants')
 
 function Plant.new(family, color)
     local self = setmetatable({}, Plant)
@@ -30,35 +30,6 @@ function Plant.new(family, color)
     end
     
     return self
-end
-
-function Plant:draw(x, y, width, height)
-    -- Couleur selon stade de croissance
-    if self.growthStage == Constants.GROWTH_STAGE.SEED then
-        love.graphics.setColor(0.6, 0.6, 0.4)
-    elseif self.growthStage == Constants.GROWTH_STAGE.PLANT then
-        love.graphics.setColor(0.4, 0.7, 0.4)
-    elseif self.growthStage == Constants.GROWTH_STAGE.FRUITING then
-        love.graphics.setColor(0.3, 0.8, 0.3)
-    end
-    
-    -- Dessiner la plante
-    love.graphics.rectangle("fill", x+5, y+5, width-10, height-10)
-    
-    -- Convertir constantes en texte pour affichage
-    local familyText = self.family == Constants.PLANT_FAMILY.BRASSIKA and "Brassika" or 
-                      (self.family == Constants.PLANT_FAMILY.SOLANA and "Solana" or self.family)
-    
-    local stageText = self.growthStage == Constants.GROWTH_STAGE.SEED and "Graine" or
-                     (self.growthStage == Constants.GROWTH_STAGE.PLANT and "Plant" or
-                     (self.growthStage == Constants.GROWTH_STAGE.FRUITING and "Fructifié" or self.growthStage))
-    
-    -- Afficher infos
-    love.graphics.setColor(0, 0, 0)
-    love.graphics.print(familyText, x+10, y+15)
-    love.graphics.print(stageText, x+10, y+30)
-    love.graphics.print("☀️" .. self.accumulatedSun .. "/" .. (self.growthStage == Constants.GROWTH_STAGE.SEED and self.sunToSprout or self.sunToFruit), x+10, y+45)
-    love.graphics.print("🌧️" .. self.accumulatedRain .. "/" .. (self.growthStage == Constants.GROWTH_STAGE.SEED and self.rainToSprout or self.rainToFruit), x+10, y+60)
 end
 
 function Plant:receiveSun(value)
