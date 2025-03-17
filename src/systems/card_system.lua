@@ -9,7 +9,6 @@ CardSystem.__index = CardSystem
 -- Définition des constantes pour la taille des cartes
 local CARD_WIDTH = 108
 local CARD_HEIGHT = 180
-local DEBUG_CARD_DRAW = true -- Activer les logs de débogage
 
 -- Le constructeur prend désormais des dépendances optionnelles
 function CardSystem.new(dependencies)
@@ -103,7 +102,6 @@ function CardSystem:drawInitialHand()
     for i = 1, 5 do
         self:drawCard()
     end
-    print("Main initiale créée avec " .. #self.hand .. " cartes")
 end
 
 function CardSystem:playCard(cardIndex, garden, x, y)
@@ -142,50 +140,28 @@ function CardSystem:playCard(cardIndex, garden, x, y)
     return false
 end
 
--- Fonction pour dessiner la main du joueur en utilisant le renderer directement
+-- Fonction pour dessiner la main du joueur en utilisant le renderer
 function CardSystem:drawHand()
-    -- Vérifier si la main est vide
-    if #self.hand == 0 then
-        if DEBUG_CARD_DRAW then print("Main vide - rien à afficher") end
-        return
-    end
-    
-    if DEBUG_CARD_DRAW then 
-        print("Dessin de la main avec " .. #self.hand .. " cartes")
-    end
-    
-    -- Définir les dimensions d'écran
     local screenWidth, screenHeight
+    local handY
+
+    -- Adapter les coordonnées en fonction de l'échelle
     if self.scaleManager and self.scaleManager.initialized then
+        -- Pour la version scalée, nous utilisons une position fixe qui sera
+        -- adaptée automatiquement par le système de scaling
         screenWidth = self.scaleManager.referenceWidth
         screenHeight = self.scaleManager.referenceHeight
-        if DEBUG_CARD_DRAW then 
-            print("Utilisation des dimensions référence: " .. screenWidth .. "x" .. screenHeight)
-        end
+        handY = screenHeight - 100
     else
+        -- Obtenir les dimensions directement
         screenWidth = love.graphics.getWidth()
         screenHeight = love.graphics.getHeight()
-        if DEBUG_CARD_DRAW then 
-            print("Utilisation des dimensions actuelles: " .. screenWidth .. "x" .. screenHeight)
-        end
+        handY = screenHeight - 100
     end
     
-    -- Position verticale des cartes
-    local handY = screenHeight - 100
-    if DEBUG_CARD_DRAW then print("Position main Y: " .. handY) end
+    -- Récupérer le renderer de cartes via l'injecteur de dépendances
+    local cardRenderer = DependencyContainer.resolve("CardRenderer")
     
-    -- Récupérer le renderer de cartes
-    local cardRenderer = nil
-    if DependencyContainer.isRegistered("CardRenderer") then
-        cardRenderer = DependencyContainer.resolve("CardRenderer")
-    end
-    
-    if not cardRenderer then
-        if DEBUG_CARD_DRAW then print("Erreur: CardRenderer non trouvé dans le conteneur") end
-        return
-    end
-    
-    -- Dessiner les cartes directement si le renderer est indisponible
     -- Calculer la position des cartes en arc
     for i, card in ipairs(self.hand) do
         -- Ignorer la carte en cours de déplacement ou d'animation
@@ -198,20 +174,9 @@ function CardSystem:drawHand()
             card.x = x
             card.y = y
             
-            if DEBUG_CARD_DRAW then 
-                print("Dessin carte " .. i .. " à " .. x .. "," .. y) 
-            end
-            
             -- Dessiner la carte en utilisant le renderer
             cardRenderer:draw(card, x, y)
         end
-    end
-    
-    -- Dessiner un cadre visible pour la zone des cartes en mode debug
-    if DEBUG_CARD_DRAW then
-        love.graphics.setColor(1, 0, 0, 0.3)
-        love.graphics.rectangle("fill", 0, handY - 90, screenWidth, 180)
-        love.graphics.setColor(1, 1, 1, 1)
     end
 end
 
