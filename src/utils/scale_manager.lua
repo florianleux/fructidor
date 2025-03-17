@@ -9,10 +9,36 @@ ScaleManager.referenceHeight = 600
 ScaleManager.scaleX = 1.0
 ScaleManager.scaleY = 1.0
 ScaleManager.scale = 1.0  -- Facteur d'échelle uniforme (min des deux)
+ScaleManager.initialized = false
 
 -- Initialisation du gestionnaire d'échelle
 function ScaleManager.initialize()
-    local width, height = love.graphics.getDimensions()
+    -- Vérifier que les modules requis sont disponibles
+    if not love.graphics then
+        print("ERREUR: ScaleManager - Module love.graphics non disponible")
+        return false
+    end
+    
+    -- Vérifier que love.window existe
+    if not love.window then
+        print("ERREUR: ScaleManager - Module love.window non disponible")
+        return false
+    end
+    
+    local width, height
+    
+    -- Utiliser pcall pour attraper les erreurs potentielles
+    local success, result = pcall(function()
+        return love.graphics.getDimensions()
+    end)
+    
+    if success then
+        width, height = result[1], result[2]
+    else
+        print("ERREUR: ScaleManager - Impossible d'obtenir les dimensions: " .. tostring(result))
+        -- Valeurs par défaut en cas d'erreur
+        width, height = ScaleManager.referenceWidth, ScaleManager.referenceHeight
+    end
     
     -- Calculer les facteurs d'échelle
     ScaleManager.scaleX = width / ScaleManager.referenceWidth
@@ -21,7 +47,11 @@ function ScaleManager.initialize()
     -- Utiliser le facteur minimum pour une mise à l'échelle uniforme
     ScaleManager.scale = math.min(ScaleManager.scaleX, ScaleManager.scaleY)
     
-    print("Échelle d'affichage: " .. ScaleManager.scale)
+    print("ScaleManager: Résolution détectée " .. width .. "x" .. height)
+    print("ScaleManager: Échelle d'affichage: " .. ScaleManager.scale)
+    
+    ScaleManager.initialized = true
+    return true
 end
 
 -- Mise à l'échelle d'une coordonnée X
@@ -41,29 +71,54 @@ end
 
 -- Application d'une transformation pour dessiner à l'échelle
 function ScaleManager.applyScale()
+    if not love.graphics then
+        return
+    end
+    
     love.graphics.push()
     love.graphics.scale(ScaleManager.scale, ScaleManager.scale)
 end
 
 -- Restauration de la transformation d'origine
 function ScaleManager.restoreScale()
+    if not love.graphics then
+        return
+    end
+    
     love.graphics.pop()
 end
 
 -- Calcul de la position centrale horizontale
 function ScaleManager.getCenterX()
+    if not love.graphics then
+        return ScaleManager.referenceWidth / 2
+    end
+    
     local width = love.graphics.getWidth()
     return width / 2
 end
 
 -- Calcul de la position centrale verticale
 function ScaleManager.getCenterY()
+    if not love.graphics then
+        return ScaleManager.referenceHeight / 2
+    end
+    
     local height = love.graphics.getHeight()
     return height / 2
 end
 
 -- Obtenir la région visible centrée
 function ScaleManager.getVisibleArea()
+    if not love.graphics then
+        return {
+            x = 0,
+            y = 0,
+            width = ScaleManager.referenceWidth,
+            height = ScaleManager.referenceHeight
+        }
+    end
+    
     local width, height = love.graphics.getDimensions()
     local visibleWidth = ScaleManager.referenceWidth * ScaleManager.scale
     local visibleHeight = ScaleManager.referenceHeight * ScaleManager.scale
@@ -82,10 +137,17 @@ end
 
 -- Fonction pour redimensionner la fenêtre avec un rapport d'aspect constant
 function ScaleManager.resizeWindow(width, height)
+    if not ScaleManager.initialized then
+        print("AVERTISSEMENT: ScaleManager - Tentative de redimensionnement avant initialisation")
+        return
+    end
+    
     -- Recalculer les facteurs d'échelle
     ScaleManager.scaleX = width / ScaleManager.referenceWidth
     ScaleManager.scaleY = height / ScaleManager.referenceHeight
     ScaleManager.scale = math.min(ScaleManager.scaleX, ScaleManager.scaleY)
+    
+    print("ScaleManager: Redimensionnement à " .. width .. "x" .. height .. " (échelle: " .. ScaleManager.scale .. ")")
 end
 
 return ScaleManager

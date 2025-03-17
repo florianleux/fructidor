@@ -41,6 +41,15 @@ function DependencySetup.initialize(systems)
         DependencyContainer.registerInstance("DragDrop", systems.dragDrop)
     end
     
+    -- Enregistrer le ScaleManager s'il est fourni et initialisé
+    if systems.scaleManager then
+        if systems.scaleManager.initialized then
+            DependencyContainer.registerInstance("ScaleManager", systems.scaleManager)
+        else
+            print("AVERTISSEMENT: ScaleManager fourni mais non initialisé")
+        end
+    end
+    
     return true
 end
 
