@@ -1,4 +1,3 @@
-
 -- Configuration LÖVE
 
 function love.conf(t)
@@ -6,14 +5,23 @@ function love.conf(t)
     t.version = "11.4"                 -- Version de LÖVE
     t.console = true                   -- Attacher une console (debug)
     
+    -- Obtenir les dimensions de l'écran
+    local _, _, displayWidth, displayHeight = love.window.getDesktopDimensions()
+    
+    -- Définir la taille de la fenêtre pour utiliser 90% de l'écran
+    local windowWidth = math.floor(displayWidth * 0.9)
+    local windowHeight = math.floor(displayHeight * 0.9)
+    
     t.window.title = "Fructidor"       -- Titre de la fenêtre
     t.window.icon = nil                -- À remplacer par un chemin vers l'icône
-    t.window.width = 800               -- Largeur de la fenêtre
-    t.window.height = 600              -- Hauteur de la fenêtre
+    t.window.width = windowWidth       -- Largeur de la fenêtre (90% de l'écran)
+    t.window.height = windowHeight     -- Hauteur de la fenêtre (90% de l'écran)
     t.window.minwidth = 800            -- Largeur minimale de la fenêtre (redimensionnable)
     t.window.minheight = 600           -- Hauteur minimale de la fenêtre (redimensionnable)
     t.window.resizable = true          -- La fenêtre peut être redimensionnée
     t.window.vsync = 1                 -- Activer la synchro verticale
+    t.window.fullscreen = false        -- Par défaut en mode fenêtré, mais avec possibilité de basculer
+    t.window.fullscreentype = "desktop" -- Type de plein écran (desktop = résolution native)
     
     -- Les modules dont nous avons besoin
     t.modules.audio = true
