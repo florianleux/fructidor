@@ -4,13 +4,13 @@ local DependencyContainer = require('src.utils.dependency_container')
 local DragDrop = {}
 DragDrop.__index = DragDrop
 
--- Définition des constantes pour la taille des cartes
-local CARD_WIDTH = 108  -- Taille de base des cartes (60 * 1.8)
-local CARD_HEIGHT = 180 -- (100 * 1.8)
-local CARD_CORNER_RADIUS = 5
-local CARD_HEADER_HEIGHT = 27 -- (15 * 1.8)
-local TEXT_PADDING_X = 45
-local TEXT_LINE_HEIGHT = 18
+-- Définition des constantes pour la taille des cartes (réduites de 40%)
+local CARD_WIDTH = 65  -- 108 * 0.6
+local CARD_HEIGHT = 108 -- 180 * 0.6
+local CARD_CORNER_RADIUS = 3 -- 5 * 0.6
+local CARD_HEADER_HEIGHT = 16 -- 27 * 0.6
+local TEXT_PADDING_X = 27 -- 45 * 0.6
+local TEXT_LINE_HEIGHT = 11 -- 18 * 0.6
 
 -- Constantes d'animation
 local ANIMATION_DURATION = 0.3 -- Durée de l'animation en secondes
@@ -154,18 +154,23 @@ function DragDrop:stopDrag(garden)
     
     local placed = false
     
+    -- Taille d'une cellule réduite de 40%
+    local cellSize = 42 -- 70 * 0.6
+    local gardenX = 6   -- UI_MARGIN
+    local gardenY = 96  -- GARDEN_TOP_MARGIN
+    
     -- Trouver la cellule sous la carte
     for y = 1, garden.height do
         for x = 1, garden.width do
-            local posX = 50 + (x-1) * 70
-            local posY = 180 + (y-1) * 70
+            local posX = gardenX + (x-1) * cellSize
+            local posY = gardenY + (y-1) * cellSize
             
             -- Utiliser le centre de la carte pour la détection
             local cardCenterX = self.dragging.x
             local cardCenterY = self.dragging.y
             
-            if cardCenterX >= posX and cardCenterX < posX + 70 and
-               cardCenterY >= posY and cardCenterY < posY + 70 then
+            if cardCenterX >= posX and cardCenterX < posX + cellSize and
+               cardCenterY >= posY and cardCenterY < posY + cellSize then
                 
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
@@ -216,14 +221,19 @@ function DragDrop:updateHighlight(garden, x, y)
     -- Ne pas afficher de surbrillance si une animation est en cours
     if self.moveAnimation.active or not self.dragging then return end
     
+    -- Taille d'une cellule réduite de 40%
+    local cellSize = 42 -- 70 * 0.6
+    local gardenX = 6   -- UI_MARGIN
+    local gardenY = 96  -- GARDEN_TOP_MARGIN
+    
     -- Réinitialiser les surbrillances
     for cy = 1, garden.height do
         for cx = 1, garden.width do
             local cell = {
-                x = 50 + (cx-1) * 70,
-                y = 180 + (cy-1) * 70,
-                width = 70,
-                height = 70
+                x = gardenX + (cx-1) * cellSize,
+                y = gardenY + (cy-1) * cellSize,
+                width = cellSize,
+                height = cellSize
             }
             
             local highlight = x >= cell.x and x < cell.x + cell.width and
@@ -234,7 +244,7 @@ function DragDrop:updateHighlight(garden, x, y)
                 love.graphics.setColor(0.8, 0.9, 0.7, 0.6)
                 love.graphics.rectangle("fill", cell.x, cell.y, cell.width, cell.height)
                 love.graphics.setColor(0.4, 0.8, 0.4)
-                love.graphics.rectangle("line", cell.x, cell.y, cell.width, cell.height, 3)
+                love.graphics.rectangle("line", cell.x, cell.y, cell.width, cell.height, 2)
             end
         end
     end
@@ -264,8 +274,8 @@ function DragDrop:draw()
         -- Dessiner une ombre
         love.graphics.setColor(0, 0, 0, 0.2)
         love.graphics.rectangle("fill", 
-            cardLeft + 4 * scale, 
-            cardTop + 4 * scale, 
+            cardLeft + 2 * scale, 
+            cardTop + 2 * scale, 
             scaledWidth, scaledHeight, CARD_CORNER_RADIUS)
         
         -- Dessiner la carte elle-même
@@ -280,26 +290,26 @@ function DragDrop:draw()
         else
             love.graphics.setColor(0.7, 0.7, 0.7)
         end
-        love.graphics.rectangle("fill", cardLeft + 5 * scale, cardTop + 5 * scale, 
-                               scaledWidth - 10 * scale, scaledHeaderHeight)
+        love.graphics.rectangle("fill", cardLeft + 3 * scale, cardTop + 3 * scale, 
+                               scaledWidth - 6 * scale, scaledHeaderHeight)
         
         -- Calculer l'échelle du texte pour les cartes redimensionnées
-        local textScale = 1.4 * scale
+        local textScale = 0.84 * scale
         
         -- Nom et info
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print(card.family, cardLeft + 10 * scale, cardTop + 9 * scale, 0, textScale, textScale)
-        love.graphics.print("Graine", cardLeft + 10 * scale, cardTop + 35 * scale, 0, textScale, textScale)
+        love.graphics.print(card.family, cardLeft + 6 * scale, cardTop + 5 * scale, 0, textScale, textScale)
+        love.graphics.print("Graine", cardLeft + 6 * scale, cardTop + 21 * scale, 0, textScale, textScale)
         
         -- Besoins pour pousser
-        love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10 * scale, cardTop + 60 * scale, 0, textScale, textScale)
-        love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10 * scale, cardTop + 85 * scale, 0, textScale, textScale)
+        love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 6 * scale, cardTop + 36 * scale, 0, textScale, textScale)
+        love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 6 * scale, cardTop + 51 * scale, 0, textScale, textScale)
         
         -- Score
-        love.graphics.print(card.baseScore .. " pts", cardLeft + 10 * scale, cardTop + 110 * scale, 0, textScale, textScale)
+        love.graphics.print(card.baseScore .. " pts", cardLeft + 6 * scale, cardTop + 66 * scale, 0, textScale, textScale)
         
         -- Gel
-        love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10 * scale, cardTop + 135 * scale, 0, textScale, textScale)
+        love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 6 * scale, cardTop + 81 * scale, 0, textScale, textScale)
     end
 end
 

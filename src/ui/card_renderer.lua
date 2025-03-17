@@ -5,12 +5,13 @@ local Localization = require('src.utils.localization')
 local CardRenderer = {}
 CardRenderer.__index = CardRenderer
 
--- Définition des constantes pour la taille des cartes (180% de la taille originale)
-local CARD_WIDTH = 108  -- 60 * 1.8
-local CARD_HEIGHT = 180 -- 100 * 1.8
-local CARD_CORNER_RADIUS = 5
-local CARD_HEADER_HEIGHT = 27 -- 15 * 1.8
-local TEXT_SCALE = 1.4
+-- Réduction de 40% des dimensions originales
+-- Définition des constantes pour la taille des cartes (108%)
+local CARD_WIDTH = 65  -- 108 * 0.6 (réduit de 40%)
+local CARD_HEIGHT = 108 -- 180 * 0.6 (réduit de 40%)
+local CARD_CORNER_RADIUS = 3 -- 5 * 0.6
+local CARD_HEADER_HEIGHT = 16 -- 27 * 0.6
+local TEXT_SCALE = 0.84 -- 1.4 * 0.6
 
 function CardRenderer.new()
     local self = setmetatable({}, CardRenderer)
@@ -43,7 +44,7 @@ function CardRenderer:draw(card, xPos, yPos)
     else
         love.graphics.setColor(0.7, 0.7, 0.7, 1)
     end
-    love.graphics.rectangle("fill", cardLeft + 5, cardTop + 5, CARD_WIDTH - 10, CARD_HEADER_HEIGHT)
+    love.graphics.rectangle("fill", cardLeft + 3, cardTop + 3, CARD_WIDTH - 6, CARD_HEADER_HEIGHT)
     
     -- Obtenir le texte localisé pour la famille
     local familyText
@@ -55,28 +56,28 @@ function CardRenderer:draw(card, xPos, yPos)
     
     -- Nom et info
     love.graphics.setColor(0, 0, 0, 1)
-    love.graphics.print(familyText, cardLeft + 10, cardTop + 9, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print(familyText, cardLeft + 6, cardTop + 5, 0, TEXT_SCALE, TEXT_SCALE)
     
     -- Info sur le stade
     local stageText = "Graine" -- Par défaut
     if Localization and Localization.getText and Constants and Constants.GROWTH_STAGE and Constants.GROWTH_STAGE.SEED then
         stageText = Localization.getText(Constants.GROWTH_STAGE.SEED) or "Graine"
     end
-    love.graphics.print(stageText, cardLeft + 10, cardTop + 35, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print(stageText, cardLeft + 6, cardTop + 21, 0, TEXT_SCALE, TEXT_SCALE)
     
     -- Besoins pour pousser
-    love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 10, cardTop + 60, 0, TEXT_SCALE, TEXT_SCALE)
-    love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 10, cardTop + 85, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print("☀️ " .. card.sunToSprout, cardLeft + 6, cardTop + 36, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print("🌧️ " .. card.rainToSprout, cardLeft + 6, cardTop + 51, 0, TEXT_SCALE, TEXT_SCALE)
     
     -- Score
     local pointsText = "pts"
     if Localization and Localization.getText then
         pointsText = Localization.getText("ui.points") or "pts"
     end
-    love.graphics.print(card.baseScore .. " " .. pointsText, cardLeft + 10, cardTop + 110, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print(card.baseScore .. " " .. pointsText, cardLeft + 6, cardTop + 66, 0, TEXT_SCALE, TEXT_SCALE)
     
     -- Gel
-    love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 10, cardTop + 135, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print("❄️ " .. card.frostThreshold, cardLeft + 6, cardTop + 81, 0, TEXT_SCALE, TEXT_SCALE)
     
     -- Restaurer l'état graphique
     love.graphics.pop()

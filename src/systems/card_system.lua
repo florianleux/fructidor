@@ -6,11 +6,15 @@ local DependencyContainer = require('src.utils.dependency_container')
 local CardSystem = {}
 CardSystem.__index = CardSystem
 
--- Définition des constantes pour la taille des cartes
-local CARD_WIDTH = 108
-local CARD_HEIGHT = 180
+-- Définition des constantes pour la taille des cartes (réduites de 40%)
+local CARD_WIDTH = 65  -- 108 * 0.6
+local CARD_HEIGHT = 108 -- 180 * 0.6
+
 -- Position verticale fixe pour les cartes (pourcentage de la hauteur de l'écran)
 local HAND_POSITION_PERCENT = 0.75
+-- Espacement entre les cartes réduit de 40%
+local CARD_SPACING_X = 162 -- 270 * 0.6
+local CARD_ARC_HEIGHT = 42 -- 70 * 0.6
 
 -- Le constructeur prend désormais des dépendances optionnelles
 function CardSystem.new(dependencies)
@@ -170,8 +174,8 @@ function CardSystem:drawHand()
         -- Ignorer la carte en cours de déplacement ou d'animation
         if i ~= self.draggingCardIndex and i ~= self.cardInAnimation then
             local angle = (i - (#self.hand + 1) / 2) * 0.1
-            local x = screenWidth / 2 + angle * 270
-            local y = handY + math.abs(angle) * 70
+            local x = screenWidth / 2 + angle * CARD_SPACING_X
+            local y = handY + math.abs(angle) * CARD_ARC_HEIGHT
             
             -- Stocker la position pour le drag & drop
             card.x = x
