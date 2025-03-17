@@ -5,6 +5,7 @@ local DragDrop = require('src.ui.drag_drop')
 local DependencySetup = require('src.utils.dependency_setup')
 local DependencyContainer = require('src.utils.dependency_container')
 local Garden = require('src.entities.garden')
+local ScaleManager = require('src.utils.scale_manager')
 
 -- Module principal pour stocker les références localement
 local Game = {}
@@ -18,6 +19,9 @@ function love.load(arg)
         return
     end
     
+    -- Initialiser le gestionnaire d'échelle
+    ScaleManager.initialize()
+    
     -- Créer les instances principales avec leurs dépendances mutuelles
     -- Nous créons d'abord toutes les instances, puis nous les relions ensemble
     
@@ -28,10 +32,12 @@ function love.load(arg)
     local cardSystem = CardSystem.new()
     local gameState = GameState.new({
         cardSystem = cardSystem,
-        garden = garden
+        garden = garden,
+        scaleManager = ScaleManager
     })
     local dragDrop = DragDrop.new({
-        cardSystem = cardSystem
+        cardSystem = cardSystem,
+        scaleManager = ScaleManager
     })
     
     -- Stocker les références localement 
@@ -45,7 +51,8 @@ function love.load(arg)
         gameState = gameState,
         cardSystem = cardSystem,
         garden = garden,
-        dragDrop = dragDrop
+        dragDrop = dragDrop,
+        scaleManager = ScaleManager
     })
 end
 
@@ -71,12 +78,18 @@ function love.draw()
         return
     end
     
+    -- Appliquer la transformation d'échelle
+    ScaleManager.applyScale()
+    
     -- Dessiner l'état du jeu
     Game.gameState:draw()
     
     -- Dessiner les effets de surbrillance si une carte est en cours de déplacement
     if not Game.dragDrop:isAnimating() then
-        Game.dragDrop:updateHighlight(Game.gameState.garden, love.mouse.getX(), love.mouse.getY())
+        -- Utiliser les coordonnées ajustées à l'échelle
+        local mouseX = love.mouse.getX() / ScaleManager.scale
+        local mouseY = love.mouse.getY() / ScaleManager.scale
+        Game.dragDrop:updateHighlight(Game.gameState.garden, mouseX, mouseY)
     end
     
     -- Dessiner les cartes en main
@@ -84,6 +97,16 @@ function love.draw()
     
     -- Dessiner la carte en cours de déplacement ou d'animation (au-dessus de tout)
     Game.dragDrop:draw()
+    
+    -- Restaurer la transformation
+    ScaleManager.restoreScale()
+    
+    -- Afficher des informations de debug si nécessaire (hors échelle)
+    if love.keyboard.isDown("f3") then
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("Scale: " .. string.format("%.2f", ScaleManager.scale), 10, 10)
+        love.graphics.print("Resolution: " .. love.graphics.getWidth() .. "x" .. love.graphics.getHeight(), 10, 30)
+    end
 end
 
 function love.mousepressed(x, y, button)
@@ -93,12 +116,16 @@ function love.mousepressed(x, y, button)
     -- Ne pas traiter les clics pendant une animation
     if Game.dragDrop:isAnimating() then return end
     
+    -- Ajuster les coordonnées à l'échelle
+    local scaledX = x / ScaleManager.scale
+    local scaledY = y / ScaleManager.scale
+    
     -- Déléguer au GameState pour gérer les clics sur l'interface
-    Game.gameState:mousepressed(x, y, button)
+    Game.gameState:mousepressed(scaledX, scaledY, button)
     
     -- Clic sur une carte en main
     if button == 1 then
-        local card, cardIndex = Game.cardSystem:getCardAt(x, y)
+        local card, cardIndex = Game.cardSystem:getCardAt(scaledX, scaledY)
         if card then
             -- Démarrer le drag & drop
             Game.dragDrop:startDrag(card, cardIndex, Game.cardSystem)
@@ -110,12 +137,30 @@ function love.mousereleased(x, y, button)
     -- Vérifier que le jeu est initialisé
     if not Game.gameState then return end
     
+    -- Ajuster les coordonnées à l'échelle
+    local scaledX = x / ScaleManager.scale
+    local scaledY = y / ScaleManager.scale
+    
     -- Déléguer au GameState
-    Game.gameState:mousereleased(x, y, button)
+    Game.gameState:mousereleased(scaledX, scaledY, button)
     
     -- Lâcher une carte
     if button == 1 and not Game.dragDrop:isAnimating() then
         Game.dragDrop:stopDrag(Game.gameState.garden)
+    end
+end
+
+-- Fonction pour gérer le redimensionnement de la fenêtre
+function love.resize(width, height)
+    ScaleManager.resizeWindow(width, height)
+end
+
+-- Fonction pour gérer la touche F11 pour basculer en plein écran
+function love.keypressed(key)
+    if key == "f11" then
+        love.window.setFullscreen(not love.window.getFullscreen(), "desktop")
+    elseif key == "escape" and love.window.getFullscreen() then
+        love.window.setFullscreen(false)
     end
 end
 
