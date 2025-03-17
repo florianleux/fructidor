@@ -1,5 +1,7 @@
 -- État principal du jeu
 local Garden = require('src.entities.garden')
+local Constants = require('src.utils.constants')
+local Config = require('src.utils.config')
 
 local GameState = {}
 GameState.__index = GameState
@@ -9,7 +11,7 @@ function GameState.new()
     self.garden = Garden.new(3, 2) -- Grille 3x2 pour l'Alpha
     self.currentTurn = 1
     self.maxTurns = 8
-    self.currentSeason = "Printemps"
+    self.currentSeason = Constants.SEASON.SPRING
     self.sunDieValue = 0  -- Sera initialisé par rollDice
     self.rainDieValue = 0 -- Sera initialisé par rollDice
     self.score = 0
@@ -29,10 +31,22 @@ function GameState:draw()
     -- Dessin du jardin
     self.garden:draw()
     
+    -- Convertir constante en texte pour affichage
+    local seasonText = "Inconnu"
+    if self.currentSeason == Constants.SEASON.SPRING then
+        seasonText = "Printemps"
+    elseif self.currentSeason == Constants.SEASON.SUMMER then
+        seasonText = "Été"
+    elseif self.currentSeason == Constants.SEASON.AUTUMN then
+        seasonText = "Automne"
+    elseif self.currentSeason == Constants.SEASON.WINTER then
+        seasonText = "Hiver"
+    end
+    
     -- Interface utilisateur
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("Tour: " .. self.currentTurn .. "/" .. self.maxTurns, 10, 10)
-    love.graphics.print("Saison: " .. self.currentSeason, 150, 10)
+    love.graphics.print("Saison: " .. seasonText, 150, 10)
     love.graphics.print("Soleil: " .. self.sunDieValue, 300, 10)
     love.graphics.print("Pluie: " .. self.rainDieValue, 400, 10)
     love.graphics.print("Score: " .. self.score .. "/" .. self.objective, 500, 10)
@@ -49,18 +63,8 @@ function GameState:mousereleased(x, y, button)
 end
 
 function GameState:rollDice()
-    local config = require('src.utils.config')
-    local seasonData
-    
-    if self.currentSeason == "Printemps" then
-        seasonData = config.diceRanges.spring
-    elseif self.currentSeason == "Été" then
-        seasonData = config.diceRanges.summer
-    elseif self.currentSeason == "Automne" then
-        seasonData = config.diceRanges.autumn
-    else -- Hiver
-        seasonData = config.diceRanges.winter
-    end
+    -- Utiliser directement les constantes pour accéder aux plages de dés
+    local seasonData = Config.diceRanges[self.currentSeason]
     
     -- Lancer les dés avec les plages de la saison
     self.sunDieValue = math.random(seasonData.sun.min, seasonData.sun.max)
@@ -88,6 +92,7 @@ function GameState:applyWeather()
                 if self.sunDieValue < 0 and cell.plant:checkFrost(self.sunDieValue) then
                     -- La plante gèle et meurt
                     self.garden.grid[y][x].plant = nil
+                    self.garden.grid[y][x].state = Constants.CELL_STATE.EMPTY
                 end
             end
         end
@@ -101,13 +106,13 @@ function GameState:nextTurn()
     -- Mettre à jour la saison
     local season = math.ceil(self.currentTurn / 2)
     if season == 1 then
-        self.currentSeason = "Printemps"
+        self.currentSeason = Constants.SEASON.SPRING
     elseif season == 2 then
-        self.currentSeason = "Été"
+        self.currentSeason = Constants.SEASON.SUMMER
     elseif season == 3 then
-        self.currentSeason = "Automne"
+        self.currentSeason = Constants.SEASON.AUTUMN
     elseif season == 4 then
-        self.currentSeason = "Hiver"
+        self.currentSeason = Constants.SEASON.WINTER
     end
     
     -- Lancer les dés pour ce tour

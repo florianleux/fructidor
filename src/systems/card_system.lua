@@ -1,5 +1,6 @@
 -- Système de gestion des cartes
 local Plant = require('src.entities.plant')
+local Constants = require('src.utils.constants')
 
 local CardSystem = {}
 CardSystem.__index = CardSystem
@@ -32,8 +33,8 @@ function CardSystem:initializeDeck()
     for i = 1, 8 do
         table.insert(self.deck, {
             id = "brassika_" .. i,
-            type = "plant",
-            family = "Brassika",
+            type = Constants.CARD_TYPE.PLANT,
+            family = Constants.PLANT_FAMILY.BRASSIKA,
             color = {0.7, 0.85, 0.7}, -- Vert pâle
             sunToSprout = 3,
             rainToSprout = 4,
@@ -52,8 +53,8 @@ function CardSystem:initializeDeck()
     for i = 1, 7 do
         table.insert(self.deck, {
             id = "solana_" .. i,
-            type = "plant",
-            family = "Solana",
+            type = Constants.CARD_TYPE.PLANT,
+            family = Constants.PLANT_FAMILY.SOLANA,
             color = {0.9, 0.7, 0.5}, -- Orange pâle
             sunToSprout = 5,
             rainToSprout = 3,
@@ -108,7 +109,7 @@ function CardSystem:playCard(cardIndex, garden, x, y)
     
     local card = self.hand[cardIndex]
     
-    if card.type == "plant" then
+    if card.type == Constants.CARD_TYPE.PLANT then
         local plant = Plant.new(card.family, card.color)
         if garden:placePlant(plant, x, y) then
             table.remove(self.hand, cardIndex)
@@ -160,10 +161,14 @@ function CardSystem:renderCard(card, xPos, yPos)
     -- Échelle du texte pour les cartes plus grandes
     local textScale = 1.4
     
+    -- Convertir constantes en texte pour affichage
+    local familyText = card.family == Constants.PLANT_FAMILY.BRASSIKA and "Brassika" or 
+                      (card.family == Constants.PLANT_FAMILY.SOLANA and "Solana" or "")
+    
     -- Nom et info
     love.graphics.setColor(0, 0, 0)
     -- Pour le texte à l'échelle, on peut utiliser love.graphics.scale, ou alternativement ajuster les positions
-    love.graphics.print(card.family, cardLeft + 10, cardTop + 9, 0, textScale, textScale)
+    love.graphics.print(familyText, cardLeft + 10, cardTop + 9, 0, textScale, textScale)
     love.graphics.print("Graine", cardLeft + 10, cardTop + 35, 0, textScale, textScale)
     
     -- Besoins pour pousser
