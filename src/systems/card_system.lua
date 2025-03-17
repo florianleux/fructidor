@@ -10,11 +10,9 @@ CardSystem.__index = CardSystem
 local CARD_WIDTH = 65  -- 108 * 0.6
 local CARD_HEIGHT = 108 -- 180 * 0.6
 
--- Position verticale fixe pour les cartes (pourcentage de la hauteur de l'écran)
-local HAND_POSITION_PERCENT = 0.75
 -- Espacement entre les cartes réduit de 40%
-local CARD_SPACING_X = 162 -- 270 * 0.6
-local CARD_ARC_HEIGHT = 42 -- 70 * 0.6
+local CARD_SPACING_X = 270 -- 270 * 0.6
+local CARD_ARC_HEIGHT = 60 -- 70 * 0.6
 
 -- Le constructeur prend désormais des dépendances optionnelles
 function CardSystem.new(dependencies)
@@ -164,7 +162,7 @@ function CardSystem:drawHand()
     end
     
     -- Calculer la position verticale en fonction de la hauteur d'écran (pourcentage fixe)
-    handY = screenHeight * HAND_POSITION_PERCENT
+    handY = screenHeight - CARD_HEIGHT * 0.8
     
     -- Récupérer le renderer de cartes via l'injecteur de dépendances
     local cardRenderer = DependencyContainer.resolve("CardRenderer")
