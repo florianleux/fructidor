@@ -9,6 +9,8 @@ CardSystem.__index = CardSystem
 -- Définition des constantes pour la taille des cartes
 local CARD_WIDTH = 108
 local CARD_HEIGHT = 180
+-- Position verticale fixe pour les cartes (pourcentage de la hauteur de l'écran)
+local HAND_POSITION_PERCENT = 0.75
 
 -- Le constructeur prend désormais des dépendances optionnelles
 function CardSystem.new(dependencies)
@@ -151,13 +153,14 @@ function CardSystem:drawHand()
         -- adaptée automatiquement par le système de scaling
         screenWidth = self.scaleManager.referenceWidth
         screenHeight = self.scaleManager.referenceHeight
-        handY = screenHeight - 100
     else
         -- Obtenir les dimensions directement
         screenWidth = love.graphics.getWidth()
         screenHeight = love.graphics.getHeight()
-        handY = screenHeight - 100
     end
+    
+    -- Calculer la position verticale en fonction de la hauteur d'écran (pourcentage fixe)
+    handY = screenHeight * HAND_POSITION_PERCENT
     
     -- Récupérer le renderer de cartes via l'injecteur de dépendances
     local cardRenderer = DependencyContainer.resolve("CardRenderer")
