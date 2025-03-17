@@ -1,5 +1,6 @@
 -- Entité Jardin (grille de jeu)
 local Plant = require('src.entities.plant')
+local Constants = require('src.utils.constants')
 
 local Garden = {}
 Garden.__index = Garden
@@ -14,7 +15,11 @@ function Garden.new(width, height)
     for y = 1, height do
         self.grid[y] = {}
         for x = 1, width do
-            self.grid[y][x] = {plant = nil, object = nil}
+            self.grid[y][x] = {
+                plant = nil, 
+                object = nil, 
+                state = Constants.CELL_STATE.EMPTY
+            }
         end
     end
     
@@ -51,6 +56,7 @@ function Garden:placePlant(plant, x, y)
     if x > 0 and x <= self.width and y > 0 and y <= self.height then
         if not self.grid[y][x].plant then
             self.grid[y][x].plant = plant
+            self.grid[y][x].state = Constants.CELL_STATE.OCCUPIED
             plant.posX = x
             plant.posY = y
             return true
