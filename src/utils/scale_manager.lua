@@ -12,6 +12,12 @@ ScaleManager.scale = 1.0  -- Facteur d'échelle uniforme (min des deux)
 
 -- Initialisation du gestionnaire d'échelle
 function ScaleManager.initialize()
+    -- Vérifier que love.graphics est disponible
+    if not love.graphics then
+        error("Le module love.graphics n'est pas disponible, impossible d'initialiser le ScaleManager")
+        return
+    end
+
     local width, height = love.graphics.getDimensions()
     
     -- Calculer les facteurs d'échelle
@@ -22,6 +28,7 @@ function ScaleManager.initialize()
     ScaleManager.scale = math.min(ScaleManager.scaleX, ScaleManager.scaleY)
     
     print("Échelle d'affichage: " .. ScaleManager.scale)
+    print("Résolution: " .. width .. "x" .. height)
 end
 
 -- Mise à l'échelle d'une coordonnée X
@@ -86,6 +93,9 @@ function ScaleManager.resizeWindow(width, height)
     ScaleManager.scaleX = width / ScaleManager.referenceWidth
     ScaleManager.scaleY = height / ScaleManager.referenceHeight
     ScaleManager.scale = math.min(ScaleManager.scaleX, ScaleManager.scaleY)
+    
+    print("Fenêtre redimensionnée: " .. width .. "x" .. height)
+    print("Nouvelle échelle: " .. ScaleManager.scale)
 end
 
 return ScaleManager
