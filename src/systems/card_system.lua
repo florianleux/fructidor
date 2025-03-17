@@ -10,13 +10,17 @@ CardSystem.__index = CardSystem
 local CARD_WIDTH = 108
 local CARD_HEIGHT = 180
 
-function CardSystem.new()
+-- Le constructeur prend désormais des dépendances optionnelles
+function CardSystem.new(dependencies)
     local self = setmetatable({}, CardSystem)
     self.deck = {}
     self.hand = {}
     self.discardPile = {}
     self.draggingCardIndex = nil -- Indice de la carte en cours de déplacement
     self.cardInAnimation = nil -- Indice de la carte en cours d'animation
+    
+    -- Stocker les dépendances
+    self.dependencies = dependencies or {}
     
     -- Initialisation du deck avec cartes de base
     self:initializeDeck()
