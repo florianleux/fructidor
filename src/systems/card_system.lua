@@ -142,18 +142,20 @@ end
 
 -- Fonction pour dessiner la main du joueur en utilisant le renderer
 function CardSystem:drawHand()
-    local screenWidth = love.graphics.getWidth()
-    local screenHeight = love.graphics.getHeight()
+    local screenWidth, screenHeight
     local handY
-    
+
     -- Adapter les coordonnées en fonction de l'échelle
-    if self.scaleManager then
+    if self.scaleManager and self.scaleManager.initialized then
         -- Pour la version scalée, nous utilisons une position fixe qui sera
         -- adaptée automatiquement par le système de scaling
         screenWidth = self.scaleManager.referenceWidth
         screenHeight = self.scaleManager.referenceHeight
         handY = screenHeight - 100
     else
+        -- Obtenir les dimensions directement - de manière sécurisée
+        screenWidth = love.graphics.getWidth()
+        screenHeight = love.graphics.getHeight()
         handY = screenHeight - 100
     end
     
