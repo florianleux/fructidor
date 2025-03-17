@@ -8,7 +8,10 @@ local Garden = require('src.entities.garden')
 local ScaleManager = require('src.utils.scale_manager')
 
 -- Module principal pour stocker les références localement
-local Game = {}
+local Game = {
+    initialized = false,
+    initializationError = nil
+}
 
 function love.load(arg)
     math.randomseed(os.time())
@@ -19,8 +22,13 @@ function love.load(arg)
         return
     end
     
-    -- Initialiser le gestionnaire d'échelle
-    ScaleManager.initialize()
+    -- Tenter d'initialiser le gestionnaire d'échelle
+    local success = ScaleManager.initialize()
+    if not success then
+        Game.initializationError = "Échec d'initialisation du ScaleManager"
+        print("ERREUR: " .. Game.initializationError)
+        return
+    end
     
     -- Créer les instances principales avec leurs dépendances mutuelles
     -- Nous créons d'abord toutes les instances, puis nous les relions ensemble
@@ -54,11 +62,14 @@ function love.load(arg)
         dragDrop = dragDrop,
         scaleManager = ScaleManager
     })
+    
+    Game.initialized = true
+    print("Initialisation de Fructidor terminée avec succès")
 end
 
 function love.update(dt)
     -- Vérifier que le jeu est initialisé
-    if not Game.gameState then return end
+    if not Game.initialized then return end
     
     -- Mettre à jour l'état du jeu
     Game.gameState:update(dt)
@@ -70,6 +81,22 @@ end
 function love.draw()
     -- Fond
     love.graphics.setBackgroundColor(0.9, 0.9, 0.9)
+    
+    -- Vérifier si le jeu a rencontré une erreur d'initialisation
+    if Game.initializationError then
+        love.graphics.setColor(1, 0, 0)
+        love.graphics.print("Erreur d'initialisation: " .. Game.initializationError, 20, 20)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("Veuillez vérifier les logs et redémarrer l'application.", 20, 50)
+        return
+    end
+    
+    -- Vérifier que le jeu est bien initialisé
+    if not Game.initialized then
+        love.graphics.setColor(1, 0.5, 0)
+        love.graphics.print("Initialisation en cours...", 20, 20)
+        return
+    end
     
     -- Vérifier que les objets existent avant de les utiliser
     if not Game.gameState or not Game.cardSystem or not Game.dragDrop then
@@ -111,7 +138,7 @@ end
 
 function love.mousepressed(x, y, button)
     -- Vérifier que le jeu est initialisé
-    if not Game.gameState then return end
+    if not Game.initialized then return end
     
     -- Ne pas traiter les clics pendant une animation
     if Game.dragDrop:isAnimating() then return end
@@ -135,7 +162,7 @@ end
 
 function love.mousereleased(x, y, button)
     -- Vérifier que le jeu est initialisé
-    if not Game.gameState then return end
+    if not Game.initialized then return end
     
     -- Ajuster les coordonnées à l'échelle
     local scaledX = x / ScaleManager.scale
@@ -152,7 +179,11 @@ end
 
 -- Fonction pour gérer le redimensionnement de la fenêtre
 function love.resize(width, height)
-    ScaleManager.resizeWindow(width, height)
+    if ScaleManager and ScaleManager.initialized then
+        ScaleManager.resizeWindow(width, height)
+    else
+        print("AVERTISSEMENT: Redimensionnement ignoré - ScaleManager non initialisé")
+    end
 end
 
 -- Fonction pour gérer la touche F11 pour basculer en plein écran
