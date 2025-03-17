@@ -11,11 +11,9 @@ local CARD_HEIGHT = 180 -- 100 * 1.8
 local CARD_CORNER_RADIUS = 5
 local CARD_HEADER_HEIGHT = 27 -- 15 * 1.8
 local TEXT_SCALE = 1.4
-local DEBUG_RENDER = true -- Activer le mode débogage
 
 function CardRenderer.new()
     local self = setmetatable({}, CardRenderer)
-    print("CardRenderer initialisé")
     return self
 end
 
@@ -26,22 +24,12 @@ end
 
 -- Méthode pour dessiner une carte à une position donnée
 function CardRenderer:draw(card, xPos, yPos)
-    if DEBUG_RENDER then
-        print("CardRenderer:draw appelé pour " .. card.family .. " à " .. xPos .. "," .. yPos)
-    end
-    
     -- Calculer les positions ajustées pour la carte agrandie
     local cardLeft = xPos - CARD_WIDTH/2
     local cardTop = yPos - CARD_HEIGHT/2
     
     -- Dessiner le fond de la carte
     love.graphics.push("all") -- Sauvegarder l'état graphique actuel
-    
-    -- Dessiner une bordure plus visible en mode debug
-    if DEBUG_RENDER then
-        love.graphics.setColor(1, 0, 0, 1)
-        love.graphics.rectangle("line", cardLeft-2, cardTop-2, CARD_WIDTH+4, CARD_HEIGHT+4, CARD_CORNER_RADIUS+2, 3)
-    end
     
     -- Fond de carte
     love.graphics.setColor(1, 1, 1, 1)
@@ -92,12 +80,6 @@ function CardRenderer:draw(card, xPos, yPos)
     
     -- Restaurer l'état graphique
     love.graphics.pop()
-    
-    if DEBUG_RENDER then
-        love.graphics.setColor(0, 1, 0, 0.5)
-        love.graphics.circle("fill", xPos, yPos, 5)
-        love.graphics.setColor(1, 1, 1, 1)
-    end
 end
 
 return CardRenderer
