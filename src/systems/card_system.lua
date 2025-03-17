@@ -162,7 +162,7 @@ function CardSystem:drawHand()
     end
     
     -- Calculer la position verticale en fonction de la hauteur d'écran (pourcentage fixe)
-    handY = screenHeight - CARD_HEIGHT * 0.8
+    handY = screenHeight - 2* CARD_HEIGHT
     
     -- Récupérer le renderer de cartes via l'injecteur de dépendances
     local cardRenderer = DependencyContainer.resolve("CardRenderer")
