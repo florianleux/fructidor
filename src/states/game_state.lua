@@ -2,6 +2,8 @@
 local Garden = require('src.entities.garden')
 local Constants = require('src.utils.constants')
 local Config = require('src.utils.config')
+local DependencyContainer = require('src.utils.dependency_container')
+local Localization = require('src.utils.localization')
 
 local GameState = {}
 GameState.__index = GameState
@@ -28,28 +30,28 @@ function GameState:update(dt)
 end
 
 function GameState:draw()
-    -- Dessin du jardin
-    self.garden:draw()
+    -- Utiliser les renderers via le conteneur de dépendances
+    local gardenRenderer = DependencyContainer.resolve("GardenRenderer")
     
-    -- Convertir constante en texte pour affichage
-    local seasonText = "Inconnu"
-    if self.currentSeason == Constants.SEASON.SPRING then
-        seasonText = "Printemps"
-    elseif self.currentSeason == Constants.SEASON.SUMMER then
-        seasonText = "Été"
-    elseif self.currentSeason == Constants.SEASON.AUTUMN then
-        seasonText = "Automne"
-    elseif self.currentSeason == Constants.SEASON.WINTER then
-        seasonText = "Hiver"
-    end
+    -- Dessin du jardin avec son renderer dédié
+    gardenRenderer:draw(self.garden)
+    
+    -- Convertir constante en texte pour affichage via le système de localisation
+    local seasonText = Localization.getText(self.currentSeason)
     
     -- Interface utilisateur
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Tour: " .. self.currentTurn .. "/" .. self.maxTurns, 10, 10)
-    love.graphics.print("Saison: " .. seasonText, 150, 10)
-    love.graphics.print("Soleil: " .. self.sunDieValue, 300, 10)
-    love.graphics.print("Pluie: " .. self.rainDieValue, 400, 10)
-    love.graphics.print("Score: " .. self.score .. "/" .. self.objective, 500, 10)
+    love.graphics.print(Localization.getText("ui.tour") .. ": " .. self.currentTurn .. "/" .. self.maxTurns, 10, 10)
+    love.graphics.print(Localization.getText("ui.saison") .. ": " .. seasonText, 150, 10)
+    love.graphics.print(Localization.getText("ui.soleil") .. ": " .. self.sunDieValue, 300, 10)
+    love.graphics.print(Localization.getText("ui.pluie") .. ": " .. self.rainDieValue, 400, 10)
+    love.graphics.print(Localization.getText("ui.score") .. ": " .. self.score .. "/" .. self.objective, 500, 10)
+    
+    -- Dessiner bouton fin de tour
+    love.graphics.setColor(0.6, 0.8, 0.6)
+    love.graphics.rectangle("fill", 480, 110, 80, 30, 5)
+    love.graphics.setColor(0.2, 0.2, 0.2)
+    love.graphics.print(Localization.getText("ui.fin_tour"), 487, 115)
 end
 
 function GameState:mousepressed(x, y, button)
