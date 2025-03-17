@@ -33,7 +33,12 @@ function ScaleManager.initialize()
     end)
     
     if success then
-        width, height = result[1], result[2]
+        -- getDimensions() renvoie directement width et height, pas un tableau
+        width, height = result, result
+        -- Si result est un tableau, utilisez plutôt:
+        if type(result) == "table" then
+            width, height = result[1], result[2]
+        end
     else
         print("ERREUR: ScaleManager - Impossible d'obtenir les dimensions: " .. tostring(result))
         -- Valeurs par défaut en cas d'erreur
