@@ -228,15 +228,12 @@ end
 function love.keypressed(key)
     if key == "f11" then
         love.window.setFullscreen(not love.window.getFullscreen(), "desktop")
-    elseif key == "escape" and love.window.getFullscreen() then
-        love.window.setFullscreen(false)
-    elseif key == "d" then
-        Game.debug = not Game.debug
-        print("Mode debug: " .. tostring(Game.debug))
-    elseif key == "r" and Game.debug then
-        print("Recharge de la main avec 5 cartes...")
-        Game.cardSystem.hand = {}
-        Game.cardSystem:drawInitialHand()
+    elseif key == "escape" then
+        -- Toujours quitter le mode plein écran avec Échap, que le mode soit actif ou non
+        if love.window.getFullscreen() then
+            love.window.setFullscreen(false)
+            print("Mode plein écran désactivé")
+        end
     end
 end
 
