@@ -10,10 +10,15 @@ local ScaleManager = require('src.utils.scale_manager')
 -- Module principal pour stocker les références localement
 local Game = {
     initialized = false,
-    initializationError = nil
+    initializationError = nil,
+    debug = true -- Activer le mode debug
 }
 
 function love.load(arg)
+    if Game.debug then
+        print("Démarrage de Fructidor en mode debug")
+    end
+    
     math.randomseed(os.time())
     
     -- Vérifier si on est en mode test
@@ -30,6 +35,11 @@ function love.load(arg)
         return
     end
     
+    if Game.debug then
+        print("ScaleManager initialisé avec succès")
+        print("Échelle: " .. ScaleManager.scale)
+    end
+    
     -- Créer les instances principales avec leurs dépendances mutuelles
     -- Nous créons d'abord toutes les instances, puis nous les relions ensemble
     
@@ -37,12 +47,20 @@ function love.load(arg)
     local garden = Garden.new(3, 2)
     
     -- Créer les systèmes principaux avec leurs dépendances
-    local cardSystem = CardSystem.new()
+    local cardSystem = CardSystem.new({
+        scaleManager = ScaleManager
+    })
+    
+    if Game.debug then
+        print("CardSystem créé avec " .. #cardSystem.hand .. " cartes en main")
+    end
+    
     local gameState = GameState.new({
         cardSystem = cardSystem,
         garden = garden,
         scaleManager = ScaleManager
     })
+    
     local dragDrop = DragDrop.new({
         cardSystem = cardSystem,
         scaleManager = ScaleManager
@@ -64,6 +82,13 @@ function love.load(arg)
     })
     
     Game.initialized = true
+    if Game.debug then
+        print("Vérification des dépendances:")
+        print("CardRenderer enregistré: " .. tostring(DependencyContainer.isRegistered("CardRenderer")))
+        print("GardenRenderer enregistré: " .. tostring(DependencyContainer.isRegistered("GardenRenderer")))
+        print("CardSystem enregistré: " .. tostring(DependencyContainer.isRegistered("CardSystem")))
+    end
+    
     print("Initialisation de Fructidor terminée avec succès")
 end
 
@@ -111,6 +136,14 @@ function love.draw()
     -- Dessiner l'état du jeu
     Game.gameState:draw()
     
+    -- Dessiner les cartes en main
+    if Game.debug then
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.print("Affichage des cartes...", 10, 450, 0, 2, 2)
+    end
+    
+    Game.cardSystem:drawHand()
+    
     -- Dessiner les effets de surbrillance si une carte est en cours de déplacement
     if not Game.dragDrop:isAnimating() then
         -- Utiliser les coordonnées ajustées à l'échelle
@@ -119,9 +152,6 @@ function love.draw()
         Game.dragDrop:updateHighlight(Game.gameState.garden, mouseX, mouseY)
     end
     
-    -- Dessiner les cartes en main
-    Game.cardSystem:drawHand()
-    
     -- Dessiner la carte en cours de déplacement ou d'animation (au-dessus de tout)
     Game.dragDrop:draw()
     
@@ -129,10 +159,12 @@ function love.draw()
     ScaleManager.restoreScale()
     
     -- Afficher des informations de debug si nécessaire (hors échelle)
-    if love.keyboard.isDown("f3") then
+    if Game.debug or love.keyboard.isDown("f3") then
         love.graphics.setColor(1, 1, 1)
         love.graphics.print("Scale: " .. string.format("%.2f", ScaleManager.scale), 10, 10)
         love.graphics.print("Resolution: " .. love.graphics.getWidth() .. "x" .. love.graphics.getHeight(), 10, 30)
+        love.graphics.print("Cartes en main: " .. #Game.cardSystem.hand, 10, 50)
+        love.graphics.print("FPS: " .. love.timer.getFPS(), 10, 70)
     end
 end
 
@@ -154,6 +186,9 @@ function love.mousepressed(x, y, button)
     if button == 1 then
         local card, cardIndex = Game.cardSystem:getCardAt(scaledX, scaledY)
         if card then
+            if Game.debug then
+                print("Carte cliquée: " .. card.family .. " (index " .. cardIndex .. ")")
+            end
             -- Démarrer le drag & drop
             Game.dragDrop:startDrag(card, cardIndex, Game.cardSystem)
         end
@@ -181,6 +216,9 @@ end
 function love.resize(width, height)
     if ScaleManager and ScaleManager.initialized then
         ScaleManager.resizeWindow(width, height)
+        if Game.debug then
+            print("Fenêtre redimensionnée: " .. width .. "x" .. height .. " (échelle: " .. ScaleManager.scale .. ")")
+        end
     else
         print("AVERTISSEMENT: Redimensionnement ignoré - ScaleManager non initialisé")
     end
