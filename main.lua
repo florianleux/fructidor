@@ -19,6 +19,25 @@ function love.load(arg)
         return
     end
     
+    -- Redimensionner la fenêtre pour utiliser 90% de l'écran
+    local desktopWidth, desktopHeight = love.window.getDesktopDimensions()
+    local windowWidth = math.floor(desktopWidth * 0.9)
+    local windowHeight = math.floor(desktopHeight * 0.9)
+    
+    -- S'assurer que la fenêtre n'est pas plus petite que les dimensions minimales
+    windowWidth = math.max(windowWidth, 800)
+    windowHeight = math.max(windowHeight, 600)
+    
+    -- Appliquer la nouvelle taille de fenêtre
+    love.window.setMode(windowWidth, windowHeight, {
+        fullscreen = false,
+        fullscreentype = "desktop",
+        resizable = true,
+        minwidth = 800, 
+        minheight = 600,
+        vsync = 1
+    })
+    
     -- Initialiser le gestionnaire d'échelle
     ScaleManager.initialize()
     
@@ -29,7 +48,9 @@ function love.load(arg)
     local garden = Garden.new(3, 2)
     
     -- Créer les systèmes principaux avec leurs dépendances
-    local cardSystem = CardSystem.new()
+    local cardSystem = CardSystem.new({
+        scaleManager = ScaleManager
+    })
     local gameState = GameState.new({
         cardSystem = cardSystem,
         garden = garden,
