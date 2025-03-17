@@ -2,23 +2,25 @@
 local Plant = {}
 Plant.__index = Plant
 
+local Constants = require('src.utils.constants')
+
 function Plant.new(family, color)
     local self = setmetatable({}, Plant)
-    self.family = family or "Brassika"
-    self.color = color or "Vert"
-    self.growthStage = "Graine"  -- Graine, Plant, Fructifié
+    self.family = family or Constants.PLANT_FAMILY.BRASSIKA
+    self.color = color or Constants.COLOR.GREEN
+    self.growthStage = Constants.GROWTH_STAGE.SEED
     self.accumulatedSun = 0
     self.accumulatedRain = 0
     
     -- Attributs selon famille
-    if self.family == "Brassika" then
+    if self.family == Constants.PLANT_FAMILY.BRASSIKA then
         self.sunToSprout = 3
         self.rainToSprout = 4
         self.sunToFruit = 6
         self.rainToFruit = 8
         self.frostThreshold = -5
         self.baseScore = 20
-    elseif self.family == "Solana" then
+    elseif self.family == Constants.PLANT_FAMILY.SOLANA then
         self.sunToSprout = 5
         self.rainToSprout = 3
         self.sunToFruit = 10
@@ -32,23 +34,31 @@ end
 
 function Plant:draw(x, y, width, height)
     -- Couleur selon stade de croissance
-    if self.growthStage == "Graine" then
+    if self.growthStage == Constants.GROWTH_STAGE.SEED then
         love.graphics.setColor(0.6, 0.6, 0.4)
-    elseif self.growthStage == "Plant" then
+    elseif self.growthStage == Constants.GROWTH_STAGE.PLANT then
         love.graphics.setColor(0.4, 0.7, 0.4)
-    elseif self.growthStage == "Fructifié" then
+    elseif self.growthStage == Constants.GROWTH_STAGE.FRUITING then
         love.graphics.setColor(0.3, 0.8, 0.3)
     end
     
     -- Dessiner la plante
     love.graphics.rectangle("fill", x+5, y+5, width-10, height-10)
     
+    -- Convertir constantes en texte pour affichage
+    local familyText = self.family == Constants.PLANT_FAMILY.BRASSIKA and "Brassika" or 
+                      (self.family == Constants.PLANT_FAMILY.SOLANA and "Solana" or self.family)
+    
+    local stageText = self.growthStage == Constants.GROWTH_STAGE.SEED and "Graine" or
+                     (self.growthStage == Constants.GROWTH_STAGE.PLANT and "Plant" or
+                     (self.growthStage == Constants.GROWTH_STAGE.FRUITING and "Fructifié" or self.growthStage))
+    
     -- Afficher infos
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(self.family, x+10, y+15)
-    love.graphics.print(self.growthStage, x+10, y+30)
-    love.graphics.print("☀️" .. self.accumulatedSun .. "/" .. (self.growthStage == "Graine" and self.sunToSprout or self.sunToFruit), x+10, y+45)
-    love.graphics.print("🌧️" .. self.accumulatedRain .. "/" .. (self.growthStage == "Graine" and self.rainToSprout or self.rainToFruit), x+10, y+60)
+    love.graphics.print(familyText, x+10, y+15)
+    love.graphics.print(stageText, x+10, y+30)
+    love.graphics.print("☀️" .. self.accumulatedSun .. "/" .. (self.growthStage == Constants.GROWTH_STAGE.SEED and self.sunToSprout or self.sunToFruit), x+10, y+45)
+    love.graphics.print("🌧️" .. self.accumulatedRain .. "/" .. (self.growthStage == Constants.GROWTH_STAGE.SEED and self.rainToSprout or self.rainToFruit), x+10, y+60)
 end
 
 function Plant:receiveSun(value)
@@ -62,15 +72,15 @@ function Plant:receiveRain(value)
 end
 
 function Plant:checkGrowth()
-    if self.growthStage == "Graine" then
+    if self.growthStage == Constants.GROWTH_STAGE.SEED then
         if self.accumulatedSun >= self.sunToSprout and self.accumulatedRain >= self.rainToSprout then
-            self.growthStage = "Plant"
+            self.growthStage = Constants.GROWTH_STAGE.PLANT
             self.accumulatedSun = 0
             self.accumulatedRain = 0
         end
-    elseif self.growthStage == "Plant" then
+    elseif self.growthStage == Constants.GROWTH_STAGE.PLANT then
         if self.accumulatedSun >= self.sunToFruit and self.accumulatedRain >= self.rainToFruit then
-            self.growthStage = "Fructifié"
+            self.growthStage = Constants.GROWTH_STAGE.FRUITING
         end
     end
 end
@@ -80,7 +90,7 @@ function Plant:checkFrost(temperature)
 end
 
 function Plant:harvest()
-    if self.growthStage == "Fructifié" then
+    if self.growthStage == Constants.GROWTH_STAGE.FRUITING then
         return self.baseScore
     end
     return 0
