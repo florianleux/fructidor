@@ -21,6 +21,7 @@ function CardSystem.new(dependencies)
     
     -- Stocker les dépendances
     self.dependencies = dependencies or {}
+    self.scaleManager = self.dependencies.scaleManager
     
     -- Initialisation du deck avec cartes de base
     self:initializeDeck()
@@ -143,7 +144,18 @@ end
 function CardSystem:drawHand()
     local screenWidth = love.graphics.getWidth()
     local screenHeight = love.graphics.getHeight()
-    local handY = screenHeight - 100
+    local handY
+    
+    -- Adapter les coordonnées en fonction de l'échelle
+    if self.scaleManager then
+        -- Pour la version scalée, nous utilisons une position fixe qui sera
+        -- adaptée automatiquement par le système de scaling
+        screenWidth = self.scaleManager.referenceWidth
+        screenHeight = self.scaleManager.referenceHeight
+        handY = screenHeight - 100
+    else
+        handY = screenHeight - 100
+    end
     
     -- Récupérer le renderer de cartes via l'injecteur de dépendances
     local cardRenderer = DependencyContainer.resolve("CardRenderer")

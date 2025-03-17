@@ -14,6 +14,7 @@ function GameState.new(dependencies)
     
     -- Stocker les dépendances
     self.dependencies = dependencies or {}
+    self.scaleManager = self.dependencies.scaleManager
     
     -- Créer un jardin ou utiliser celui fourni
     self.garden = self.dependencies.garden or Garden.new(3, 2) -- Grille 3x2 pour l'Alpha
@@ -40,10 +41,7 @@ function GameState:draw()
     -- Utiliser les renderers via le conteneur de dépendances
     local gardenRenderer = DependencyContainer.resolve("GardenRenderer")
     
-    -- Dessin du jardin avec son renderer dédié
-    gardenRenderer:draw(self.garden)
-    
-    -- Convertir constante en texte pour affichage via le système de localisation
+    -- Obtenir le texte de saison localisé
     local seasonText = Localization.getText(self.currentSeason)
     
     -- Interface utilisateur - haut de l'écran
@@ -97,6 +95,9 @@ function GameState:draw()
     -- Score
     love.graphics.setColor(0, 0, 0)
     love.graphics.print(Localization.getText("ui.score") .. ": " .. self.score .. "/" .. self.objective, 10, 160)
+    
+    -- Dessin du jardin avec son renderer dédié
+    gardenRenderer:draw(self.garden)
 end
 
 function GameState:mousepressed(x, y, button)
@@ -107,6 +108,7 @@ function GameState:mousepressed(x, y, button)
 end
 
 function GameState:mousereleased(x, y, button)
+    -- Rien à faire actuellement
 end
 
 function GameState:rollDice()
