@@ -1,4 +1,4 @@
--- Composant d'affichage du jardin
+-- Composant d'affichage du jardin simplifié
 local ComponentBase = require('src.ui.components.component_base')
 
 local GardenDisplay = setmetatable({}, {__index = ComponentBase})
@@ -45,21 +45,17 @@ function GardenDisplay:calculateGardenDimensions()
     self.gardenHeight = self.garden.height * (self.cellSize + self.cellSpacing) - self.cellSpacing
     
     -- Calculer la position pour centrer le jardin dans le composant
-    local x, y, width, height = self:getScaledBounds()
-    self.gardenX = x + (width - self.gardenWidth) / 2
-    self.gardenY = y + (height - self.gardenHeight) / 2
+    self.gardenX = self.x + (self.width - self.gardenWidth) / 2
+    self.gardenY = self.y + (self.height - self.gardenHeight) / 2
 end
 
 function GardenDisplay:draw()
-    -- Mettre à jour les dimensions si nécessaire
+    -- Mettre à jour les dimensions
     self:calculateGardenDimensions()
-    
-    -- Coordonnées et dimensions
-    local x, y, width, height = self:getScaledBounds()
     
     -- Dessiner le fond du composant
     love.graphics.setColor(unpack(self.colors.background))
-    love.graphics.rectangle("fill", x, y, width, height, 5)
+    love.graphics.rectangle("fill", self.x, self.y, self.width, self.height, 5)
     
     -- Utiliser le renderer de jardin pour dessiner le jardin
     if self.gardenRenderer then
@@ -161,7 +157,6 @@ function GardenDisplay:mousepressed(x, y, button)
             local card = self.dragDrop:getDraggingCard()
             
             -- Vérifier si on peut placer la carte ici
-            -- Cette logique serait normalement dans le système de jeu
             if card and card.type == "plant" and not cell.plant then
                 -- Logique pour placer une plante
                 return true -- Le clic a été traité
