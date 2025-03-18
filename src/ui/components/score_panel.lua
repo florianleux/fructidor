@@ -7,13 +7,22 @@ ScorePanel.__index = ScorePanel
 function ScorePanel.new(params)
     local self = ComponentBase.new({
         id = "score_panel",
-        relX = params.relX or 0,
-        relY = params.relY or 0,
-        relWidth = params.relWidth or 1,
-        relHeight = params.relHeight or 0.15,
+        pixelX = params.pixelX or 1440,    -- 75% de 1920
+        pixelY = params.pixelY or 0,
+        pixelWidth = params.pixelWidth or 480,  -- 25% de 1920
+        pixelHeight = params.pixelHeight or 162,  -- 15% de 1080
         margin = params.margin or {top=10, right=10, bottom=10, left=10},
         scaleManager = params.scaleManager
     })
+    
+    -- Pour la compatibilité avec l'ancien système
+    if params.relX or params.relY or params.relWidth or params.relHeight then
+        -- Les valeurs relatives seront converties en pixels dans ComponentBase.new
+        self.pixelX = params.relX and math.floor(params.relX * self.scaleManager.referenceWidth) or self.pixelX
+        self.pixelY = params.relY and math.floor(params.relY * self.scaleManager.referenceHeight) or self.pixelY
+        self.pixelWidth = params.relWidth and math.floor(params.relWidth * self.scaleManager.referenceWidth) or self.pixelWidth
+        self.pixelHeight = params.relHeight and math.floor(params.relHeight * self.scaleManager.referenceHeight) or self.pixelHeight
+    end
     
     setmetatable(self, ScorePanel)
     
