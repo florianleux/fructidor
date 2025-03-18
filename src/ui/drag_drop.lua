@@ -1,22 +1,11 @@
 -- Système de Drag & Drop
 local DependencyContainer = require('src.utils.dependency_container')
+local UIConstants = require('src.ui.constants')
 
 local DragDrop = {}
 DragDrop.__index = DragDrop
 
--- Définition des constantes pour la taille des cartes (réduites de 40%)
-local CARD_WIDTH = 65  -- 108 * 0.6
-local CARD_HEIGHT = 108 -- 180 * 0.6
-local CARD_CORNER_RADIUS = 3 -- 5 * 0.6
-local CARD_HEADER_HEIGHT = 16 -- 27 * 0.6
-local TEXT_PADDING_X = 27 -- 45 * 0.6
-local TEXT_LINE_HEIGHT = 11 -- 18 * 0.6
-
--- Constantes d'animation
-local ANIMATION_DURATION = 0.3 -- Durée de l'animation en secondes
-local CARD_SCALE_WHEN_DRAGGED = 0.6 -- Taille réduite à 60% (réduction de 40%)
-local RETURN_ANIMATION_DURATION = 0.3 -- Durée de l'animation de retour en ligne droite
-
+-- Constructeur modifié pour accepter les dépendances
 function DragDrop.new(dependencies)
     local self = setmetatable({}, DragDrop)
     self.dragging = nil -- carte en cours de déplacement
@@ -31,7 +20,7 @@ function DragDrop.new(dependencies)
     self.moveAnimation = {
         active = false,
         startTime = 0,
-        duration = RETURN_ANIMATION_DURATION,
+        duration = UIConstants.RETURN_ANIMATION_DURATION,
         startX = 0,
         startY = 0,
         targetX = 0,
@@ -138,7 +127,7 @@ function DragDrop:startDrag(card, cardIndex, cardSystem)
     self.dragging.y = mouseY
     
     -- Initialiser l'échelle réduite directement
-    self.moveAnimation.currentScale = CARD_SCALE_WHEN_DRAGGED
+    self.moveAnimation.currentScale = UIConstants.CARD_SCALE_WHEN_DRAGGED
     
     -- Marquer cette carte comme étant en animation dans le système de cartes
     local cardSystemToUse = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
@@ -154,23 +143,23 @@ function DragDrop:stopDrag(garden)
     
     local placed = false
     
-    -- Taille d'une cellule réduite de 40%
-    local cellSize = 42 -- 70 * 0.6
-    local gardenX = 6   -- UI_MARGIN
-    local gardenY = 96  -- GARDEN_TOP_MARGIN
+    -- Utiliser les valeurs en pleine échelle multipliées par le facteur d'échelle du drag
+    local scaledCellSize = UIConstants.CELL_SIZE * UIConstants.CARD_SCALE_WHEN_DRAGGED
+    local gardenX = UIConstants.UI_MARGIN * UIConstants.CARD_SCALE_WHEN_DRAGGED
+    local gardenY = UIConstants.GARDEN_TOP_MARGIN * UIConstants.CARD_SCALE_WHEN_DRAGGED
     
     -- Trouver la cellule sous la carte
     for y = 1, garden.height do
         for x = 1, garden.width do
-            local posX = gardenX + (x-1) * cellSize
-            local posY = gardenY + (y-1) * cellSize
+            local posX = gardenX + (x-1) * scaledCellSize
+            local posY = gardenY + (y-1) * scaledCellSize
             
             -- Utiliser le centre de la carte pour la détection
             local cardCenterX = self.dragging.x
             local cardCenterY = self.dragging.y
             
-            if cardCenterX >= posX and cardCenterX < posX + cellSize and
-               cardCenterY >= posY and cardCenterY < posY + cellSize then
+            if cardCenterX >= posX and cardCenterX < posX + scaledCellSize and
+               cardCenterY >= posY and cardCenterY < posY + scaledCellSize then
                 
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
@@ -191,12 +180,12 @@ function DragDrop:stopDrag(garden)
         -- Initialiser l'animation de retour
         self.moveAnimation.active = true
         self.moveAnimation.startTime = love.timer.getTime()
-        self.moveAnimation.duration = RETURN_ANIMATION_DURATION
+        self.moveAnimation.duration = UIConstants.RETURN_ANIMATION_DURATION
         self.moveAnimation.startX = self.dragging.x
         self.moveAnimation.startY = self.dragging.y
         self.moveAnimation.targetX = self.originalCard.x
         self.moveAnimation.targetY = self.originalCard.y
-        self.moveAnimation.startScale = CARD_SCALE_WHEN_DRAGGED
+        self.moveAnimation.startScale = UIConstants.CARD_SCALE_WHEN_DRAGGED
         self.moveAnimation.targetScale = 1.0
         
         -- La carte reste masquée dans le cardSystem jusqu'à la fin de l'animation
@@ -221,19 +210,19 @@ function DragDrop:updateHighlight(garden, x, y)
     -- Ne pas afficher de surbrillance si une animation est en cours
     if self.moveAnimation.active or not self.dragging then return end
     
-    -- Taille d'une cellule réduite de 40%
-    local cellSize = 42 -- 70 * 0.6
-    local gardenX = 6   -- UI_MARGIN
-    local gardenY = 96  -- GARDEN_TOP_MARGIN
+    -- Utiliser les valeurs en pleine échelle multipliées par le facteur d'échelle du drag
+    local scaledCellSize = UIConstants.CELL_SIZE * UIConstants.CARD_SCALE_WHEN_DRAGGED
+    local gardenX = UIConstants.UI_MARGIN * UIConstants.CARD_SCALE_WHEN_DRAGGED
+    local gardenY = UIConstants.GARDEN_TOP_MARGIN * UIConstants.CARD_SCALE_WHEN_DRAGGED
     
     -- Réinitialiser les surbrillances
     for cy = 1, garden.height do
         for cx = 1, garden.width do
             local cell = {
-                x = gardenX + (cx-1) * cellSize,
-                y = gardenY + (cy-1) * cellSize,
-                width = cellSize,
-                height = cellSize
+                x = gardenX + (cx-1) * scaledCellSize,
+                y = gardenY + (cy-1) * scaledCellSize,
+                width = scaledCellSize,
+                height = scaledCellSize
             }
             
             local highlight = x >= cell.x and x < cell.x + cell.width and
@@ -263,9 +252,10 @@ function DragDrop:draw()
         local scale = self.moveAnimation.currentScale
         
         -- Appliquer l'échelle aux dimensions de la carte
-        local scaledWidth = CARD_WIDTH * scale
-        local scaledHeight = CARD_HEIGHT * scale
-        local scaledHeaderHeight = CARD_HEADER_HEIGHT * scale
+        local scaledWidth = UIConstants.CARD_WIDTH * scale
+        local scaledHeight = UIConstants.CARD_HEIGHT * scale
+        local scaledHeaderHeight = UIConstants.CARD_HEADER_HEIGHT * scale
+        local cornerRadius = UIConstants.CARD_CORNER_RADIUS * scale
         
         -- Calculer les positions ajustées pour la carte
         local cardLeft = card.x - scaledWidth/2
@@ -276,13 +266,13 @@ function DragDrop:draw()
         love.graphics.rectangle("fill", 
             cardLeft + 2 * scale, 
             cardTop + 2 * scale, 
-            scaledWidth, scaledHeight, CARD_CORNER_RADIUS)
+            scaledWidth, scaledHeight, cornerRadius)
         
         -- Dessiner la carte elle-même
         love.graphics.setColor(1, 1, 1)
-        love.graphics.rectangle("fill", cardLeft, cardTop, scaledWidth, scaledHeight, CARD_CORNER_RADIUS)
+        love.graphics.rectangle("fill", cardLeft, cardTop, scaledWidth, scaledHeight, cornerRadius)
         love.graphics.setColor(0.4, 0.4, 0.4)
-        love.graphics.rectangle("line", cardLeft, cardTop, scaledWidth, scaledHeight, CARD_CORNER_RADIUS)
+        love.graphics.rectangle("line", cardLeft, cardTop, scaledWidth, scaledHeight, cornerRadius)
         
         -- Couleur de fond selon la famille
         if card.color then
