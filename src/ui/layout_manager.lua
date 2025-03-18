@@ -10,22 +10,15 @@ function LayoutManager.new(params)
     
     -- Conteneurs principaux
     self.containers = {
-        -- Zone principale (gauche) - 75% de la largeur
+        -- Zone principale occupant toute la largeur (100%)
         main = {
             relX = 0,
             relY = 0,
-            relWidth = 0.75,
-            relHeight = 1,
-            components = {}
-        },
-        -- Colonne d'information (droite) - 25% de la largeur
-        sidebar = {
-            relX = 0.75,
-            relY = 0,
-            relWidth = 0.25,
+            relWidth = 1,
             relHeight = 1,
             components = {}
         }
+        -- La sidebar a été supprimée
     }
     
     -- Positions et dimensions absolues calculées
