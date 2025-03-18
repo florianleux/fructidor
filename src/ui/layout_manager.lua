@@ -10,11 +10,12 @@ function LayoutManager.new(params)
     
     -- Conteneurs principaux
     self.containers = {
-        -- Un seul conteneur main qui occupe toute la fenêtre
+        -- Zone principale occupant toute la largeur (100%)
         main = {
             relX = 0,
             relY = 0,
-            relWidth = 1,     -- 100% de la largeur au lieu de 75%
+            relWidth = 1,
+
             relHeight = 1,
             components = {}
         }
