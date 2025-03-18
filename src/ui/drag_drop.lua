@@ -1,5 +1,5 @@
 -- Système de Drag & Drop
-local DependencyContainer = require('src.utils.dependency_container')
+local Services = require('src.utils.services')
 local Constants = require('src.utils.constants')
 
 local DragDrop = {}
@@ -59,7 +59,7 @@ function DragDrop:update(dt)
             end
             
             -- Réinitialiser tout à la fin de l'animation
-            local cardSystem = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
+            local cardSystem = self.dependencies.cardSystem or Services.get("CardSystem")
             if cardSystem then
                 cardSystem:clearCardInAnimation(self.cardIndex)
             end
@@ -141,7 +141,7 @@ function DragDrop:startDrag(card, cardIndex, cardSystem)
     self.moveAnimation.currentScale = CARD_SCALE_WHEN_DRAGGED
     
     -- Marquer cette carte comme étant en animation dans le système de cartes
-    local cardSystemToUse = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
+    local cardSystemToUse = self.dependencies.cardSystem or Services.get("CardSystem")
     if cardSystemToUse then
         cardSystemToUse:setCardInAnimation(cardIndex)
     end
@@ -154,8 +154,8 @@ function DragDrop:stopDrag(garden)
     
     local placed = false
     
-    -- Récupérer le composant GardenDisplay via le conteneur de dépendances
-    local uiManager = self.dependencies.uiManager or DependencyContainer.tryResolve("UIManager")
+    -- Récupérer le composant GardenDisplay via les services
+    local uiManager = self.dependencies.uiManager or Services.get("UIManager")
     local gardenDisplay = nil
     
     if uiManager and uiManager.components and uiManager.components.gardenDisplay then
@@ -191,7 +191,7 @@ function DragDrop:stopDrag(garden)
             if isInside then
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
-                    local cardSystem = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
+                    local cardSystem = self.dependencies.cardSystem or Services.get("CardSystem")
                     if self.cardIndex and cardSystem then
                         placed = cardSystem:playCard(self.cardIndex, garden, x, y)
                     end
@@ -220,7 +220,7 @@ function DragDrop:stopDrag(garden)
         return false
     else
         -- Si la carte a été placée, nettoyer immédiatement
-        local cardSystem = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
+        local cardSystem = self.dependencies.cardSystem or Services.get("CardSystem")
         if cardSystem then
             cardSystem:clearCardInAnimation(self.cardIndex)
         end
@@ -238,8 +238,8 @@ function DragDrop:updateHighlight(garden, x, y)
     -- Ne pas afficher de surbrillance si une animation est en cours
     if self.moveAnimation.active or not self.dragging then return end
     
-    -- Récupérer le composant GardenDisplay via le conteneur de dépendances
-    local uiManager = self.dependencies.uiManager or DependencyContainer.tryResolve("UIManager")
+    -- Récupérer le composant GardenDisplay via les services
+    local uiManager = self.dependencies.uiManager or Services.get("UIManager")
     local gardenDisplay = nil
     
     if uiManager and uiManager.components and uiManager.components.gardenDisplay then

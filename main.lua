@@ -2,8 +2,7 @@
 local GameState = require('src.states.game_state')
 local CardSystem = require('src.systems.card_system')
 local DragDrop = require('src.ui.drag_drop')
-local DependencySetup = require('src.utils.dependency_setup')
-local DependencyContainer = require('src.utils.dependency_container')
+local Services = require('src.utils.services')
 local Garden = require('src.entities.garden')
 local ScaleManager = require('src.utils.scale_manager')
 local UIManager = require('src.ui.ui_manager')
@@ -82,15 +81,15 @@ function love.load(arg)
     Game.garden = garden
     Game.uiManager = uiManager
     
-    -- Initialiser le système d'injection de dépendances avec nos instances
-    DependencySetup.initialize({
-        gameState = gameState,
-        cardSystem = cardSystem,
-        garden = garden,
-        dragDrop = dragDrop,
-        scaleManager = ScaleManager,
-        gardenRenderer = gardenRenderer,
-        uiManager = uiManager
+    -- Initialiser le système de services simplifié avec nos instances
+    Services.initialize({
+        GameState = gameState,
+        CardSystem = cardSystem,
+        Garden = garden,
+        DragDrop = dragDrop,
+        ScaleManager = ScaleManager,
+        GardenRenderer = gardenRenderer,
+        UIManager = uiManager
     })
     
     -- Piocher quelques cartes pour commencer le jeu

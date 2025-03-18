@@ -2,7 +2,7 @@
 local Garden = require('src.entities.garden')
 local Constants = require('src.utils.constants')
 local Config = require('src.utils.config')
-local DependencyContainer = require('src.utils.dependency_container')
+local Services = require('src.utils.services')
 local Localization = require('src.utils.localization')
 
 local GameState = {}
@@ -78,8 +78,8 @@ function GameState:applyWeather()
 end
 
 function GameState:nextTurn()
-    -- Récupérer le système de cartes via les dépendances ou le conteneur
-    local cardSystem = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
+    -- Récupérer le système de cartes via les dépendances ou les services
+    local cardSystem = self.dependencies.cardSystem or Services.get("CardSystem")
     
     -- Piocher une carte
     if cardSystem then
