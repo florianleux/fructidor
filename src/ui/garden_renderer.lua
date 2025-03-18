@@ -1,6 +1,5 @@
 -- Renderer dédié pour le jardin
-local Constants = require('src.utils.constants')
-local DependencyContainer = require('src.utils.dependency_container')
+local Constants = require('src.utils.game_config')
 
 local GardenRenderer = {}
 GardenRenderer.__index = GardenRenderer

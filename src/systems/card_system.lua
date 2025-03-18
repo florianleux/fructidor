@@ -1,13 +1,13 @@
 -- Système de gestion des cartes
 local Plant = require('src.entities.plant')
-local Constants = require('src.utils.constants')
+local GameConfig = require('src.utils.game_config')
 
 local CardSystem = {}
 CardSystem.__index = CardSystem
 
 -- Utilisation des constantes centralisées
-local CARD_WIDTH = Constants.UI.CARD.WIDTH
-local CARD_HEIGHT = Constants.UI.CARD.HEIGHT
+local CARD_WIDTH = GameConfig.UI.CARD.WIDTH
+local CARD_HEIGHT = GameConfig.UI.CARD.HEIGHT
 
 -- Le constructeur prend les dépendances via injection
 function CardSystem.new(dependencies)
@@ -32,8 +32,8 @@ function CardSystem:initializeDeck()
     for i = 1, 8 do
         table.insert(self.deck, {
             id = "brassika_" .. i,
-            type = Constants.CARD_TYPE.PLANT,
-            family = Constants.PLANT_FAMILY.BRASSIKA,
+            type = GameConfig.CARD_TYPE.PLANT,
+            family = GameConfig.PLANT_FAMILY.BRASSIKA,
             color = {0.7, 0.85, 0.7}, -- Vert pâle
             sunToSprout = 3,
             rainToSprout = 4,
@@ -52,8 +52,8 @@ function CardSystem:initializeDeck()
     for i = 1, 7 do
         table.insert(self.deck, {
             id = "solana_" .. i,
-            type = Constants.CARD_TYPE.PLANT,
-            family = Constants.PLANT_FAMILY.SOLANA,
+            type = GameConfig.CARD_TYPE.PLANT,
+            family = GameConfig.PLANT_FAMILY.SOLANA,
             color = {0.9, 0.7, 0.5}, -- Orange pâle
             sunToSprout = 5,
             rainToSprout = 3,
@@ -108,7 +108,7 @@ function CardSystem:playCard(cardIndex, garden, x, y)
     
     local card = self.hand[cardIndex]
     
-    if card.type == Constants.CARD_TYPE.PLANT then
+    if card.type == GameConfig.CARD_TYPE.PLANT then
         local plant = Plant.new(card.family, card.color)
         if garden:placePlant(plant, x, y) then
             -- Retirer la carte de la main

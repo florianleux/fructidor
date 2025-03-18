@@ -1,8 +1,6 @@
 -- État principal du jeu
 local Garden = require('src.entities.garden')
-local Constants = require('src.utils.constants')
-local Config = require('src.utils.config')
-local Services = require('src.utils.services')
+local GameConfig = require('src.utils.game_config')
 local Localization = require('src.utils.localization')
 
 local GameState = {}
@@ -21,7 +19,7 @@ function GameState.new(dependencies)
     
     self.currentTurn = 1
     self.maxTurns = 8
-    self.currentSeason = Constants.SEASON.SPRING
+    self.currentSeason = GameConfig.SEASON.SPRING
     self.sunDieValue = 0  -- Sera initialisé par rollDice
     self.rainDieValue = 0 -- Sera initialisé par rollDice
     self.score = 0
@@ -42,7 +40,7 @@ end
 
 function GameState:rollDice()
     -- Utiliser directement les constantes pour accéder aux plages de dés
-    local seasonData = Config.diceRanges[self.currentSeason]
+    local seasonData = GameConfig.DICE_RANGES[self.currentSeason]
     
     -- Lancer les dés avec les plages de la saison
     self.sunDieValue = math.random(seasonData.sun.min, seasonData.sun.max)
@@ -70,7 +68,7 @@ function GameState:applyWeather()
                 if self.sunDieValue < 0 and cell.plant:checkFrost(self.sunDieValue) then
                     -- La plante gèle et meurt
                     self.garden.grid[y][x].plant = nil
-                    self.garden.grid[y][x].state = Constants.CELL_STATE.EMPTY
+                    self.garden.grid[y][x].state = GameConfig.CELL_STATE.EMPTY
                 end
             end
         end
@@ -78,8 +76,8 @@ function GameState:applyWeather()
 end
 
 function GameState:nextTurn()
-    -- Récupérer le système de cartes via les dépendances ou les services
-    local cardSystem = self.dependencies.cardSystem or Services.get("CardSystem")
+    -- Récupérer le système de cartes via les dépendances
+    local cardSystem = self.dependencies.cardSystem
     
     -- Piocher une carte
     if cardSystem then
@@ -97,13 +95,13 @@ function GameState:nextTurn()
     -- Mettre à jour la saison
     local season = math.ceil(self.currentTurn / 2)
     if season == 1 then
-        self.currentSeason = Constants.SEASON.SPRING
+        self.currentSeason = GameConfig.SEASON.SPRING
     elseif season == 2 then
-        self.currentSeason = Constants.SEASON.SUMMER
+        self.currentSeason = GameConfig.SEASON.SUMMER
     elseif season == 3 then
-        self.currentSeason = Constants.SEASON.AUTUMN
+        self.currentSeason = GameConfig.SEASON.AUTUMN
     elseif season == 4 then
-        self.currentSeason = Constants.SEASON.WINTER
+        self.currentSeason = GameConfig.SEASON.WINTER
     end
     
     -- Lancer les dés pour ce tour

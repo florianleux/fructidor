@@ -13,37 +13,7 @@ ScaleManager.initialized = false
 
 -- Initialisation du gestionnaire d'échelle
 function ScaleManager.initialize()
-    -- Vérifier que les modules requis sont disponibles
-    if not love.graphics then
-        print("ERREUR: ScaleManager - Module love.graphics non disponible")
-        return false
-    end
-    
-    -- Vérifier que love.window existe
-    if not love.window then
-        print("ERREUR: ScaleManager - Module love.window non disponible")
-        return false
-    end
-    
-    local width, height
-    
-    -- Utiliser pcall pour attraper les erreurs potentielles
-    local success, result = pcall(function()
-        return love.graphics.getDimensions()
-    end)
-    
-    if success then
-        -- getDimensions() renvoie directement width et height, pas un tableau
-        width, height = result, result
-        -- Si result est un tableau, utilisez plutôt:
-        if type(result) == "table" then
-            width, height = result[1], result[2]
-        end
-    else
-        print("ERREUR: ScaleManager - Impossible d'obtenir les dimensions: " .. tostring(result))
-        -- Valeurs par défaut en cas d'erreur
-        width, height = ScaleManager.referenceWidth, ScaleManager.referenceHeight
-    end
+    local width, height = love.graphics.getDimensions()
     
     -- Calculer les facteurs d'échelle
     ScaleManager.scaleX = width / ScaleManager.referenceWidth
@@ -76,54 +46,27 @@ end
 
 -- Application d'une transformation pour dessiner à l'échelle
 function ScaleManager.applyScale()
-    if not love.graphics then
-        return
-    end
-    
     love.graphics.push()
     love.graphics.scale(ScaleManager.scale, ScaleManager.scale)
 end
 
 -- Restauration de la transformation d'origine
 function ScaleManager.restoreScale()
-    if not love.graphics then
-        return
-    end
-    
     love.graphics.pop()
 end
 
 -- Calcul de la position centrale horizontale
 function ScaleManager.getCenterX()
-    if not love.graphics then
-        return ScaleManager.referenceWidth / 2
-    end
-    
-    local width = love.graphics.getWidth()
-    return width / 2
+    return love.graphics.getWidth() / 2
 end
 
 -- Calcul de la position centrale verticale
 function ScaleManager.getCenterY()
-    if not love.graphics then
-        return ScaleManager.referenceHeight / 2
-    end
-    
-    local height = love.graphics.getHeight()
-    return height / 2
+    return love.graphics.getHeight() / 2
 end
 
 -- Obtenir la région visible centrée
 function ScaleManager.getVisibleArea()
-    if not love.graphics then
-        return {
-            x = 0,
-            y = 0,
-            width = ScaleManager.referenceWidth,
-            height = ScaleManager.referenceHeight
-        }
-    end
-    
     local width, height = love.graphics.getDimensions()
     local visibleWidth = ScaleManager.referenceWidth * ScaleManager.scale
     local visibleHeight = ScaleManager.referenceHeight * ScaleManager.scale

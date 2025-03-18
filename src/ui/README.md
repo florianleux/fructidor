@@ -24,14 +24,6 @@ local component = ComponentBase.new({
 })
 ```
 
-### LayoutManager
-
-Gère la collection de composants UI et coordonne:
-- Les écrans multiples (main, hub, menu)
-- Le rendu des composants dans l'ordre approprié
-- L'acheminement des entrées utilisateur
-- Le basculement entre différents écrans
-
 ### UIManager
 
 Point d'entrée principal pour l'interface utilisateur, responsable de:
