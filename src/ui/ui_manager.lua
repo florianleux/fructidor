@@ -2,8 +2,7 @@
 local UIManager = {}
 UIManager.__index = UIManager
 
--- Importer les dépendances
-local LayoutManager = require('src.ui.layout_manager')
+-- Importer les composants
 local SeasonBanner = require('src.ui.components.season_banner')
 local WeatherDice = require('src.ui.components.weather_dice')
 local GardenDisplay = require('src.ui.components.garden_display')
@@ -20,14 +19,10 @@ function UIManager.new(params)
     self.garden = params.garden
     self.scaleManager = params.scaleManager
     self.gardenRenderer = params.gardenRenderer
-    
-    -- Référence à la fonction pour passer au tour suivant
     self.nextTurnCallback = params.nextTurnCallback
     
-    -- Initialiser le gestionnaire de mise en page
-    self.layoutManager = LayoutManager.new({
-        scaleManager = self.scaleManager
-    })
+    -- Conteneur simplifié pour les composants
+    self.components = {}
     
     -- Créer les composants d'interface
     self:createComponents()
@@ -36,12 +31,12 @@ function UIManager.new(params)
 end
 
 function UIManager:createComponents()
-    -- Définir les dimensions de base (basées sur une résolution de 1920x1080)
+    -- Calculs de base pour le positionnement
     local width = love.graphics.getWidth() / (self.scaleManager.scale or 1)
     local height = love.graphics.getHeight() / (self.scaleManager.scale or 1)
     
-    -- Panneau de score (en haut à droite)
-    local scorePanel = ScorePanel.new({
+    -- Créer les composants principaux
+    self.components.scorePanel = ScorePanel.new({
         x = width * 0.75,
         y = 0,
         width = width * 0.25,
@@ -49,10 +44,8 @@ function UIManager:createComponents()
         gameState = self.gameState,
         scaleManager = self.scaleManager
     })
-    self.layoutManager:addComponent("main", scorePanel)
     
-    -- Bannière de saison (en haut à gauche)
-    local seasonBanner = SeasonBanner.new({
+    self.components.seasonBanner = SeasonBanner.new({
         x = 0,
         y = 0,
         width = width * 0.75,
@@ -60,10 +53,8 @@ function UIManager:createComponents()
         gameState = self.gameState,
         scaleManager = self.scaleManager
     })
-    self.layoutManager:addComponent("main", seasonBanner)
     
-    -- Composant dés météo et bouton fin de tour
-    local weatherDice = WeatherDice.new({
+    self.components.weatherDice = WeatherDice.new({
         x = width * 0.1,
         y = height * 0.09,
         width = width * 0.8,
@@ -72,10 +63,8 @@ function UIManager:createComponents()
         endTurnCallback = self.nextTurnCallback,
         scaleManager = self.scaleManager
     })
-    self.layoutManager:addComponent("main", weatherDice)
     
-    -- Affichage du potager
-    local gardenDisplay = GardenDisplay.new({
+    self.components.gardenDisplay = GardenDisplay.new({
         x = width * 0.05,
         y = height * 0.2,
         width = width * 0.9,
@@ -85,10 +74,8 @@ function UIManager:createComponents()
         dragDrop = self.dragDrop,
         scaleManager = self.scaleManager
     })
-    self.layoutManager:addComponent("main", gardenDisplay)
     
-    -- Affichage de la main du joueur
-    local handDisplay = HandDisplay.new({
+    self.components.handDisplay = HandDisplay.new({
         x = 0,
         y = height * 0.75,
         width = width,
@@ -97,41 +84,60 @@ function UIManager:createComponents()
         dragDrop = self.dragDrop,
         scaleManager = self.scaleManager
     })
-    self.layoutManager:addComponent("main", handDisplay)
-    
-    -- Stocker des références aux composants principaux pour accès rapide
-    self.components = {
-        seasonBanner = seasonBanner,
-        weatherDice = weatherDice,
-        gardenDisplay = gardenDisplay,
-        handDisplay = handDisplay,
-        scorePanel = scorePanel
-    }
 end
 
 function UIManager:draw()
-    -- Dessiner tous les composants via le gestionnaire de mise en page
-    self.layoutManager:draw()
+    -- Dessiner chaque composant dans l'ordre
+    for _, component in pairs(self.components) do
+        if component.visible ~= false then
+            component:draw()
+        end
+    end
 end
 
 function UIManager:update(dt)
-    -- Mettre à jour tous les composants
-    self.layoutManager:update(dt)
+    -- Mettre à jour chaque composant
+    for _, component in pairs(self.components) do
+        if component.update then
+            component:update(dt)
+        end
+    end
 end
 
 function UIManager:mousepressed(x, y, button)
-    -- Transmettre l'événement au gestionnaire de mise en page
-    return self.layoutManager:mousepressed(x, y, button)
+    -- Vérifier quel composant a capturé l'événement
+    for _, component in pairs(self.components) do
+        if component.mousepressed and component:containsPoint(x, y) then
+            if component:mousepressed(x, y, button) then
+                return true -- Événement traité
+            end
+        end
+    end
+    return false -- Aucun composant n'a traité l'événement
 end
 
 function UIManager:mousereleased(x, y, button)
-    -- Transmettre l'événement au gestionnaire de mise en page
-    return self.layoutManager:mousereleased(x, y, button)
+    -- Vérifier quel composant a capturé l'événement
+    for _, component in pairs(self.components) do
+        if component.mousereleased and component:containsPoint(x, y) then
+            if component:mousereleased(x, y, button) then
+                return true -- Événement traité
+            end
+        end
+    end
+    return false -- Aucun composant n'a traité l'événement
 end
 
 function UIManager:mousemoved(x, y, dx, dy)
-    -- Transmettre l'événement au gestionnaire de mise en page
-    return self.layoutManager:mousemoved(x, y, dx, dy)
+    -- Vérifier quel composant a capturé l'événement
+    for _, component in pairs(self.components) do
+        if component.mousemoved then
+            if component:mousemoved(x, y, dx, dy) then
+                return true -- Événement traité
+            end
+        end
+    end
+    return false -- Aucun composant n'a traité l'événement
 end
 
 -- Méthode pour actualiser un composant spécifique
@@ -149,18 +155,6 @@ function UIManager:updateComponent(componentId)
             component:updateDice()
         elseif componentId == "scorePanel" and component.updateScore then
             component:updateScore()
-        end
-    end
-end
-
--- Méthode simplifiée pour les animations
-function UIManager:triggerAnimation(componentId, animationType, ...)
-    local component = self.components[componentId]
-    if component then
-        if componentId == "scorePanel" and animationType == "scoreChange" and component.animateScoreChange then
-            component:animateScoreChange(...)
-        elseif componentId == "weatherDice" and animationType == "rolling" and component.startRolling then
-            component:startRolling(...)
         end
     end
 end

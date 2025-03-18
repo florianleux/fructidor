@@ -2,7 +2,6 @@
 local GameState = require('src.states.game_state')
 local CardSystem = require('src.systems.card_system')
 local DragDrop = require('src.ui.drag_drop')
-local Services = require('src.utils.services')
 local Garden = require('src.entities.garden')
 local ScaleManager = require('src.utils.scale_manager')
 local UIManager = require('src.ui.ui_manager')
@@ -24,7 +23,7 @@ function love.load(arg)
         return
     end
     
-    -- Tenter d'initialiser le gestionnaire d'échelle
+    -- Initialiser le gestionnaire d'échelle
     local success = ScaleManager.initialize()
     if not success then
         Game.initializationError = "Échec d'initialisation du ScaleManager"
@@ -32,16 +31,10 @@ function love.load(arg)
         return
     end
     
-    -- Créer les instances principales avec leurs dépendances mutuelles
-    -- Nous créons d'abord toutes les instances, puis nous les relions ensemble
-    
-    -- Créer le jardin
+    -- Créer les instances principales
     local garden = Garden.new(3, 2)
-    
-    -- Créer les renderers
     local gardenRenderer = GardenRenderer.new()
     
-    -- Créer les systèmes principaux avec leurs dépendances
     local cardSystem = CardSystem.new({
         scaleManager = ScaleManager
     })
@@ -57,7 +50,6 @@ function love.load(arg)
         scaleManager = ScaleManager
     })
     
-    -- Créer le gestionnaire d'interface utilisateur
     local uiManager = UIManager.new({
         gameState = gameState,
         cardSystem = cardSystem,
@@ -82,7 +74,7 @@ function love.load(arg)
     Game.garden = garden
     Game.uiManager = uiManager
     
-    -- Initialiser le système de services avec nos instances
+    -- Initialiser les services avec nos instances
     ServiceSetup.initialize({
         GameState = gameState,
         CardSystem = cardSystem,
@@ -136,26 +128,19 @@ function love.draw()
         return
     end
     
-    -- Vérifier que les objets existent avant de les utiliser
-    if not Game.gameState or not Game.uiManager then
-        love.graphics.setColor(1, 0, 0)
-        love.graphics.print("Erreur: Systèmes principaux non initialisés", 20, 20)
-        return
-    end
-    
     -- Appliquer la transformation d'échelle
     ScaleManager.applyScale()
     
     -- Dessiner l'interface utilisateur
     Game.uiManager:draw()
     
-    -- Dessiner la carte en cours de déplacement ou d'animation (au-dessus de tout)
+    -- Dessiner la carte en cours de déplacement
     Game.dragDrop:draw()
     
     -- Restaurer la transformation
     ScaleManager.restoreScale()
     
-    -- Afficher des informations de debug si nécessaire (hors échelle)
+    -- Afficher des informations de debug si nécessaire
     if love.keyboard.isDown("f3") then
         love.graphics.setColor(1, 1, 1)
         love.graphics.print("Scale: " .. string.format("%.2f", ScaleManager.scale), 10, 10)
@@ -164,26 +149,17 @@ function love.draw()
 end
 
 function love.mousepressed(x, y, button)
-    -- Vérifier que le jeu est initialisé
     if not Game.initialized then return end
-    
-    -- Ne pas traiter les clics pendant une animation
-    if Game.dragDrop:isAnimating() then return end
     
     -- Ajuster les coordonnées à l'échelle
     local scaledX = x / ScaleManager.scale
     local scaledY = y / ScaleManager.scale
     
-    -- Déléguer au gestionnaire d'interface pour gérer les clics
-    -- Cette méthode retourne true si le clic a été géré par un composant UI
+    -- Déléguer au gestionnaire d'interface
     Game.uiManager:mousepressed(scaledX, scaledY, button)
-    
-    -- Note: La gestion des clics sur les cartes est maintenant
-    -- entièrement gérée par le composant HandDisplay
 end
 
 function love.mousereleased(x, y, button)
-    -- Vérifier que le jeu est initialisé
     if not Game.initialized then return end
     
     -- Ajuster les coordonnées à l'échelle
@@ -200,7 +176,6 @@ function love.mousereleased(x, y, button)
 end
 
 function love.mousemoved(x, y, dx, dy)
-    -- Vérifier que le jeu est initialisé
     if not Game.initialized then return end
     
     -- Ajuster les coordonnées à l'échelle
@@ -213,24 +188,17 @@ function love.mousemoved(x, y, dx, dy)
     Game.uiManager:mousemoved(scaledX, scaledY, scaledDX, scaledDY)
 end
 
--- Fonction pour gérer le redimensionnement de la fenêtre
 function love.resize(width, height)
     if ScaleManager and ScaleManager.initialized then
         ScaleManager.resizeWindow(width, height)
-    else
-        print("AVERTISSEMENT: Redimensionnement ignoré - ScaleManager non initialisé")
     end
 end
 
--- Fonction pour gérer la touche F11 pour basculer en plein écran
 function love.keypressed(key)
     if key == "f11" then
         love.window.setFullscreen(not love.window.getFullscreen(), "desktop")
-    elseif key == "escape" then
-        -- Toujours quitter le mode plein écran avec Échap
-        if love.window.getFullscreen() then
-            love.window.setFullscreen(false)
-        end
+    elseif key == "escape" and love.window.getFullscreen() then
+        love.window.setFullscreen(false)
     end
 end
 
@@ -238,25 +206,15 @@ end
 function runTests()
     print("Exécution des tests unitaires...")
     
-    -- Vérifier que le module de test existe
     local success, testSuite = pcall(require, "tests.test_suite")
     if not success then
         print("ERREUR: Module de test non trouvé")
-        print(testSuite) -- Afficher l'erreur
+        print(testSuite)
         return
     end
     
-    -- Exécuter tous les tests
     local allPassed = testSuite.run_all_tests()
     
-    -- Afficher le résultat final
-    if allPassed then
-        print("Tous les tests ont réussi!")
-    else
-        print("Certains tests ont échoué.")
-    end
-    
-    -- Quitter après les tests si en mode ligne de commande
     if not love.window or not love.graphics or not love.event then
         os.exit(allPassed and 0 or 1)
     end
