@@ -2,6 +2,15 @@
 
 Ce document liste les modifications majeures apportées au projet depuis sa création.
 
+## [Non publié] - 2025-03-18
+
+### Amélioration
+- **Interface utilisateur**
+  - Suppression de la sidebar et extension du composant main à toute la largeur de la fenêtre
+  - Repositionnement des éléments d'interface pour exploiter tout l'espace disponible
+  - Agrandissement de la zone de potager pour faciliter les interactions
+  - Meilleure utilisation de l'espace d'écran horizontal
+
 ## [Non publié] - 2025-03-15
 
 ### Corrections
