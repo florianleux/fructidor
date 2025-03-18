@@ -1,2 +1,2 @@
--- Ce système a été migré vers services.lua
-return require('src.utils.services')
+-- Redirection vers le nouveau module
+return require('src.utils.dependency_injection')
