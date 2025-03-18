@@ -4,25 +4,10 @@ local Constants = require('src.utils.constants')
 local Config = require('src.utils.config')
 local DependencyContainer = require('src.utils.dependency_container')
 local Localization = require('src.utils.localization')
+local UIConstants = require('src.ui.constants')
 
 local GameState = {}
 GameState.__index = GameState
-
--- Dimensions et espacements réduits de 40%
-local UI_MARGIN = 6        -- 10 * 0.6
-local UI_PADDING = 12      -- 20 * 0.6
-local HEADER_HEIGHT = 24   -- 40 * 0.6
-local TURN_INDICATOR_HEIGHT = 18 -- 30 * 0.6
-local WEATHER_SECTION_HEIGHT = 30 -- 50 * 0.6
-local DIE_SIZE = 24        -- 40 * 0.6
-local DIE_CORNER_RADIUS = 4 -- 6 * 0.6
-local BUTTON_WIDTH = 48    -- 80 * 0.6
-local BUTTON_HEIGHT = 18   -- 30 * 0.6
-local TEXT_SCALE = 0.6     -- Échelle de texte réduite
-
--- Position du plateau (réduite de 40%)
-local GARDEN_TOP_MARGIN = 96 -- 160 * 0.6
-local CELL_SIZE = 42       -- 70 * 0.6
 
 -- Constructeur modifié pour accepter les dépendances
 function GameState.new(dependencies)
@@ -60,82 +45,144 @@ function GameState:draw()
     -- Obtenir le texte de saison localisé
     local seasonText = Localization.getText(self.currentSeason)
     
+    -- Facteur d'échelle pour la réduction des éléments d'interface
+    local scale = UIConstants.CARD_SCALE_WHEN_DRAGGED -- Même échelle que pour drag & drop
+
     -- Interface utilisateur - haut de l'écran
     love.graphics.setColor(0.9, 0.95, 0.9)
-    love.graphics.rectangle("fill", UI_MARGIN, UI_MARGIN, 580 * 0.6, HEADER_HEIGHT)
+    love.graphics.rectangle("fill", 
+                           UIConstants.UI_MARGIN, 
+                           UIConstants.UI_MARGIN, 
+                           UIConstants.MAIN_PANEL_WIDTH * scale, 
+                           UIConstants.HEADER_HEIGHT)
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(Localization.getText("ui.saison") .. ": " .. seasonText .. " (" .. math.ceil(self.currentTurn/2) .. "/4)", UI_MARGIN + UI_PADDING, UI_MARGIN + 9, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print(Localization.getText("ui.saison") .. ": " .. seasonText .. " (" .. math.ceil(self.currentTurn/2) .. "/4)", 
+                       UIConstants.UI_MARGIN + UIConstants.UI_PADDING, 
+                       UIConstants.UI_MARGIN + 9, 
+                       0, scale, scale)
     
     -- Indicateur de tour
     love.graphics.setColor(0.8, 0.9, 0.95)
-    love.graphics.rectangle("fill", UI_MARGIN, UI_MARGIN + HEADER_HEIGHT + 6, 580 * 0.6, TURN_INDICATOR_HEIGHT)
+    love.graphics.rectangle("fill", 
+                           UIConstants.UI_MARGIN, 
+                           UIConstants.UI_MARGIN + UIConstants.HEADER_HEIGHT + 6, 
+                           UIConstants.MAIN_PANEL_WIDTH * scale, 
+                           UIConstants.TURN_INDICATOR_HEIGHT)
     love.graphics.setColor(0.4, 0.4, 0.4)
-    love.graphics.line(30, UI_MARGIN + HEADER_HEIGHT + 6 + TURN_INDICATOR_HEIGHT/2, 
-                       UI_MARGIN + 580 * 0.6 - 30, UI_MARGIN + HEADER_HEIGHT + 6 + TURN_INDICATOR_HEIGHT/2)
+    love.graphics.line(30, UIConstants.UI_MARGIN + UIConstants.HEADER_HEIGHT + 6 + UIConstants.TURN_INDICATOR_HEIGHT/2, 
+                       UIConstants.UI_MARGIN + UIConstants.MAIN_PANEL_WIDTH * scale - 30, 
+                       UIConstants.UI_MARGIN + UIConstants.HEADER_HEIGHT + 6 + UIConstants.TURN_INDICATOR_HEIGHT/2)
     
     -- Cercles des tours
-    local circleSpacing = (580 * 0.6 - 60) / 7
+    local circleSpacing = (UIConstants.MAIN_PANEL_WIDTH * scale - 60) / 7
     for i = 1, 8 do
         local x = 30 + (i-1) * circleSpacing
         if i == self.currentTurn then
             love.graphics.setColor(0.4, 0.4, 0.4)
-            love.graphics.circle("fill", x, UI_MARGIN + HEADER_HEIGHT + 6 + TURN_INDICATOR_HEIGHT/2, 5)
+            love.graphics.circle("fill", x, UIConstants.UI_MARGIN + UIConstants.HEADER_HEIGHT + 6 + UIConstants.TURN_INDICATOR_HEIGHT/2, 5)
         else
             love.graphics.setColor(0.4, 0.4, 0.4)
-            love.graphics.circle("line", x, UI_MARGIN + HEADER_HEIGHT + 6 + TURN_INDICATOR_HEIGHT/2, 5)
+            love.graphics.circle("line", x, UIConstants.UI_MARGIN + UIConstants.HEADER_HEIGHT + 6 + UIConstants.TURN_INDICATOR_HEIGHT/2, 5)
         end
     end
     
     -- Dés et bouton
-    local weatherTop = UI_MARGIN + HEADER_HEIGHT + 6 + TURN_INDICATOR_HEIGHT + 6
+    local weatherTop = UIConstants.UI_MARGIN + UIConstants.HEADER_HEIGHT + 6 + UIConstants.TURN_INDICATOR_HEIGHT + 6
     love.graphics.setColor(0.8, 0.9, 0.95)
-    love.graphics.rectangle("fill", UI_MARGIN, weatherTop, 580 * 0.6, WEATHER_SECTION_HEIGHT)
+    love.graphics.rectangle("fill", 
+                           UIConstants.UI_MARGIN, 
+                           weatherTop, 
+                           UIConstants.MAIN_PANEL_WIDTH * scale, 
+                           UIConstants.WEATHER_SECTION_HEIGHT)
     
     -- Dé soleil
-    local dieX1 = UI_MARGIN + (580 * 0.6) * 0.4
+    local dieX1 = UIConstants.UI_MARGIN + (UIConstants.MAIN_PANEL_WIDTH * scale) * 0.4
     love.graphics.setColor(1, 0.8, 0)
-    love.graphics.rectangle("fill", dieX1, weatherTop + 3, DIE_SIZE, DIE_SIZE, DIE_CORNER_RADIUS)
+    love.graphics.rectangle("fill", 
+                           dieX1, 
+                           weatherTop + 3, 
+                           UIConstants.DIE_SIZE * scale, 
+                           UIConstants.DIE_SIZE * scale, 
+                           UIConstants.DIE_CORNER_RADIUS)
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(self.sunDieValue, dieX1 + 9, weatherTop + 6, 0, TEXT_SCALE, TEXT_SCALE)
-    love.graphics.print(Localization.getText("ui.soleil"), dieX1 + 3, weatherTop + 18, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print(self.sunDieValue, 
+                       dieX1 + 9, 
+                       weatherTop + 6, 
+                       0, scale, scale)
+    love.graphics.print(Localization.getText("ui.soleil"), 
+                       dieX1 + 3, 
+                       weatherTop + 18, 
+                       0, scale, scale)
     
     -- Dé pluie
-    local dieX2 = UI_MARGIN + (580 * 0.6) * 0.55
+    local dieX2 = UIConstants.UI_MARGIN + (UIConstants.MAIN_PANEL_WIDTH * scale) * 0.55
     love.graphics.setColor(0.6, 0.8, 1)
-    love.graphics.rectangle("fill", dieX2, weatherTop + 3, DIE_SIZE, DIE_SIZE, DIE_CORNER_RADIUS)
+    love.graphics.rectangle("fill", 
+                           dieX2, 
+                           weatherTop + 3, 
+                           UIConstants.DIE_SIZE * scale, 
+                           UIConstants.DIE_SIZE * scale, 
+                           UIConstants.DIE_CORNER_RADIUS)
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(self.rainDieValue, dieX2 + 9, weatherTop + 6, 0, TEXT_SCALE, TEXT_SCALE)
-    love.graphics.print(Localization.getText("ui.pluie"), dieX2 + 6, weatherTop + 18, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print(self.rainDieValue, 
+                       dieX2 + 9, 
+                       weatherTop + 6, 
+                       0, scale, scale)
+    love.graphics.print(Localization.getText("ui.pluie"), 
+                       dieX2 + 6, 
+                       weatherTop + 18, 
+                       0, scale, scale)
     
     -- Bouton fin de tour
-    local buttonX = UI_MARGIN + (580 * 0.6) * 0.8
+    local buttonX = UIConstants.UI_MARGIN + (UIConstants.MAIN_PANEL_WIDTH * scale) * 0.8
     love.graphics.setColor(0.6, 0.8, 0.6)
-    love.graphics.rectangle("fill", buttonX, weatherTop + 6, BUTTON_WIDTH, BUTTON_HEIGHT, 3)
+    love.graphics.rectangle("fill", 
+                           buttonX, 
+                           weatherTop + 6, 
+                           UIConstants.BUTTON_WIDTH * scale, 
+                           UIConstants.BUTTON_HEIGHT * scale, 
+                           3)
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(Localization.getText("ui.fin_tour"), buttonX + 3, weatherTop + 12, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print(Localization.getText("ui.fin_tour"), 
+                       buttonX + 3, 
+                       weatherTop + 12, 
+                       0, scale, scale)
     
     -- Score
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(Localization.getText("ui.score") .. ": " .. self.score .. "/" .. self.objective, UI_MARGIN, weatherTop + WEATHER_SECTION_HEIGHT + 6, 0, TEXT_SCALE, TEXT_SCALE)
+    love.graphics.print(Localization.getText("ui.score") .. ": " .. self.score .. "/" .. self.objective, 
+                       UIConstants.UI_MARGIN, 
+                       weatherTop + UIConstants.WEATHER_SECTION_HEIGHT + 6, 
+                       0, scale, scale)
     
     -- Dessin du jardin avec son renderer dédié
     -- Transmission de la position du jardin et de la taille des cellules
-    gardenRenderer:draw(self.garden, UI_MARGIN, GARDEN_TOP_MARGIN, CELL_SIZE)
+    gardenRenderer:draw(self.garden, 
+                       UIConstants.UI_MARGIN, 
+                       UIConstants.GARDEN_TOP_MARGIN * scale, 
+                       UIConstants.CELL_SIZE * scale)
 end
 
 function GameState:mousepressed(x, y, button)
-    -- Vérifier si le bouton fin de tour a été cliqué
-    local weatherTop = UI_MARGIN + HEADER_HEIGHT + 6 + TURN_INDICATOR_HEIGHT + 6
-    local buttonX = UI_MARGIN + (580 * 0.6) * 0.8
+    -- Facteur d'échelle pour la réduction des éléments d'interface
+    local scale = UIConstants.CARD_SCALE_WHEN_DRAGGED
     
-    if button == 1 and x >= buttonX and x <= buttonX + BUTTON_WIDTH and 
-                       y >= weatherTop + 6 and y <= weatherTop + 6 + BUTTON_HEIGHT then
+    -- Vérifier si le bouton fin de tour a été cliqué
+    local weatherTop = UIConstants.UI_MARGIN + UIConstants.HEADER_HEIGHT + 6 + UIConstants.TURN_INDICATOR_HEIGHT + 6
+    local buttonX = UIConstants.UI_MARGIN + (UIConstants.MAIN_PANEL_WIDTH * scale) * 0.8
+    
+    if button == 1 and x >= buttonX and x <= buttonX + UIConstants.BUTTON_WIDTH * scale and 
+                       y >= weatherTop + 6 and y <= weatherTop + 6 + UIConstants.BUTTON_HEIGHT * scale then
         self:nextTurn()
     end
     
     -- Vérifier si une cellule du jardin a été cliquée
-    local cellX = math.floor((x - UI_MARGIN) / CELL_SIZE) + 1
-    local cellY = math.floor((y - GARDEN_TOP_MARGIN) / CELL_SIZE) + 1
+    local gardenX = UIConstants.UI_MARGIN
+    local gardenY = UIConstants.GARDEN_TOP_MARGIN * scale
+    local cellSize = UIConstants.CELL_SIZE * scale
+    
+    local cellX = math.floor((x - gardenX) / cellSize) + 1
+    local cellY = math.floor((y - gardenY) / cellSize) + 1
     
     if cellX >= 1 and cellX <= self.garden.width and 
        cellY >= 1 and cellY <= self.garden.height then
