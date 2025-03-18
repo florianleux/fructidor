@@ -16,15 +16,6 @@ function ComponentBase.new(params)
     self.pixelWidth = params.pixelWidth or 384  -- 20% de 1920 par défaut
     self.pixelHeight = params.pixelHeight or 108  -- 10% de 1080 par défaut
     
-    -- Conversion des anciennes valeurs relatives si fournies pour compatibilité
-    if params.relX or params.relY or params.relWidth or params.relHeight then
-        -- Conversion des positions et dimensions relatives en pixels
-        self.pixelX = params.relX and math.floor(params.relX * self.scaleManager.referenceWidth) or self.pixelX
-        self.pixelY = params.relY and math.floor(params.relY * self.scaleManager.referenceHeight) or self.pixelY
-        self.pixelWidth = params.relWidth and math.floor(params.relWidth * self.scaleManager.referenceWidth) or self.pixelWidth
-        self.pixelHeight = params.relHeight and math.floor(params.relHeight * self.scaleManager.referenceHeight) or self.pixelHeight
-    end
-    
     -- Marges (en pixels)
     self.margin = params.margin or {top=0, right=0, bottom=0, left=0}
     
