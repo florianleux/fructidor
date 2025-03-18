@@ -6,13 +6,9 @@ local DependencyContainer = require('src.utils.dependency_container')
 local CardSystem = {}
 CardSystem.__index = CardSystem
 
--- Définition des constantes pour la taille des cartes (réduites de 40%)
-local CARD_WIDTH = 65  -- 108 * 0.6
-local CARD_HEIGHT = 108 -- 180 * 0.6
-
--- Espacement entre les cartes réduit de 40%
-local CARD_SPACING_X = 270 -- 270 * 0.6
-local CARD_ARC_HEIGHT = 60 -- 70 * 0.6
+-- Définition des constantes pour la taille des cartes
+local CARD_WIDTH = 65
+local CARD_HEIGHT = 108
 
 -- Le constructeur prend désormais des dépendances optionnelles
 function CardSystem.new(dependencies)
@@ -144,48 +140,13 @@ function CardSystem:playCard(cardIndex, garden, x, y)
     return false
 end
 
--- Fonction pour dessiner la main du joueur en utilisant le renderer
-function CardSystem:drawHand()
-    local screenWidth, screenHeight
-    local handY
-
-    -- Adapter les coordonnées en fonction de l'échelle
-    if self.scaleManager and self.scaleManager.initialized then
-        -- Pour la version scalée, nous utilisons une position fixe qui sera
-        -- adaptée automatiquement par le système de scaling
-        screenWidth = self.scaleManager.referenceWidth
-        screenHeight = self.scaleManager.referenceHeight
-    else
-        -- Obtenir les dimensions directement
-        screenWidth = love.graphics.getWidth()
-        screenHeight = love.graphics.getHeight()
-    end
-    
-    -- Calculer la position verticale en fonction de la hauteur d'écran (pourcentage fixe)
-    handY = screenHeight - 2* CARD_HEIGHT
-    
-    -- Récupérer le renderer de cartes via l'injecteur de dépendances
-    local cardRenderer = DependencyContainer.resolve("CardRenderer")
-    
-    -- Calculer la position des cartes en arc
-    for i, card in ipairs(self.hand) do
-        -- Ignorer la carte en cours de déplacement ou d'animation
-        if i ~= self.draggingCardIndex and i ~= self.cardInAnimation then
-            local angle = (i - (#self.hand + 1) / 2) * 0.1
-            local x = screenWidth / 2 + angle * CARD_SPACING_X
-            local y = handY + math.abs(angle) * CARD_ARC_HEIGHT
-            
-            -- Stocker la position pour le drag & drop
-            card.x = x
-            card.y = y
-            
-            -- Dessiner la carte en utilisant le renderer
-            cardRenderer:draw(card, x, y)
-        end
-    end
+-- Getter pour récupérer la main
+function CardSystem:getHand()
+    return self.hand
 end
 
 -- Fonction pour savoir si un point est sur une carte
+-- Cette méthode est maintenant utilisée uniquement par le HandDisplay
 function CardSystem:getCardAt(x, y)
     local cardWidth, cardHeight = CARD_WIDTH, CARD_HEIGHT
     
