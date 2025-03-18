@@ -7,10 +7,10 @@ SeasonBanner.__index = SeasonBanner
 function SeasonBanner.new(params)
     local self = ComponentBase.new({
         id = "season_banner",
-        relX = params.relX or 0,
-        relY = params.relY or 0,
-        relWidth = params.relWidth or 1,
-        relHeight = params.relHeight or 0.05,
+        pixelX = params.pixelX or 0,
+        pixelY = params.pixelY or 0,
+        pixelWidth = params.pixelWidth or 1440,  -- 75% de 1920
+        pixelHeight = params.pixelHeight or 54,  -- 5% de 1080
         margin = params.margin or {top=10, right=10, bottom=0, left=10},
         scaleManager = params.scaleManager
     })

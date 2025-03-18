@@ -38,10 +38,10 @@ end
 function UIManager:createComponents()
     -- Panneau de score (repositionné en haut à droite)
     local scorePanel = ScorePanel.new({
-        relX = 0.75,       -- Déplacé en haut à droite
-        relY = 0,
-        relWidth = 0.25,   -- Conserve la même largeur
-        relHeight = 0.15,  -- Légèrement réduit en hauteur
+        pixelX = 1440,    -- 75% de 1920
+        pixelY = 0,
+        pixelWidth = 480, -- 25% de 1920
+        pixelHeight = 162, -- 15% de 1080
         gameState = self.gameState,
         scaleManager = self.scaleManager
     })
@@ -49,10 +49,10 @@ function UIManager:createComponents()
     
     -- Bannière de saison (en haut à gauche)
     local seasonBanner = SeasonBanner.new({
-        relX = 0,
-        relY = 0,
-        relWidth = 0.75,   -- Redimensionné pour laisser de la place au score panel
-        relHeight = 0.07,
+        pixelX = 0,
+        pixelY = 0,
+        pixelWidth = 1440, -- 75% de 1920
+        pixelHeight = 76,  -- 7% de 1080
         gameState = self.gameState,
         scaleManager = self.scaleManager
     })
@@ -60,33 +60,22 @@ function UIManager:createComponents()
     
     -- Composant dés météo et bouton fin de tour
     local weatherDice = WeatherDice.new({
-        relX = 0.1,
-        relY = 0.09,
-        relWidth = 0.8,
-        relHeight = 0.08,
+        pixelX = 192,     -- 10% de 1920
+        pixelY = 97,      -- 9% de 1080
+        pixelWidth = 1536, -- 80% de 1920
+        pixelHeight = 86,  -- 8% de 1080
         gameState = self.gameState,
         endTurnCallback = self.nextTurnCallback,
         scaleManager = self.scaleManager
     })
     self.layoutManager:addComponent("main", weatherDice)
     
-    -- Panneau de score (intégré au composant principal en haut à droite)
-    local scorePanel = ScorePanel.new({
-        relX = 0.75,
-        relY = 0,
-        relWidth = 0.25,
-        relHeight = 0.15,
-        gameState = self.gameState,
-        scaleManager = self.scaleManager
-    })
-    self.layoutManager:addComponent("main", scorePanel)
-    
     -- Affichage du potager (agrandi pour utiliser plus d'espace horizontal)
     local gardenDisplay = GardenDisplay.new({
-        relX = 0.05,      -- Centré horizontalement
-        relY = 0.2,
-        relWidth = 0.9,   -- Utilise plus d'espace horizontal
-        relHeight = 0.55, -- Légèrement plus grand pour profiter de l'espace
+        pixelX = 96,      -- 5% de 1920
+        pixelY = 216,     -- 20% de 1080
+        pixelWidth = 1728, -- 90% de 1920
+        pixelHeight = 594, -- 55% de 1080
         garden = self.garden,
         gardenRenderer = self.gardenRenderer,
         dragDrop = self.dragDrop,
@@ -96,10 +85,10 @@ function UIManager:createComponents()
     
     -- Affichage de la main du joueur
     local handDisplay = HandDisplay.new({
-        relX = 0,
-        relY = 0.75,
-        relWidth = 1,
-        relHeight = 0.25,
+        pixelX = 0,
+        pixelY = 810,     -- 75% de 1080
+        pixelWidth = 1920, -- 100% de 1920
+        pixelHeight = 270, -- 25% de 1080
         cardSystem = self.cardSystem,
         dragDrop = self.dragDrop,
         scaleManager = self.scaleManager

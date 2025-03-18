@@ -7,10 +7,10 @@ WeatherDice.__index = WeatherDice
 function WeatherDice.new(params)
     local self = ComponentBase.new({
         id = "weather_dice",
-        relX = params.relX or 0.3,
-        relY = params.relY or 0.1,
-        relWidth = params.relWidth or 0.4,
-        relHeight = params.relHeight or 0.08,
+        pixelX = params.pixelX or 576,    -- 30% de 1920
+        pixelY = params.pixelY or 108,    -- 10% de 1080
+        pixelWidth = params.pixelWidth or 768,  -- 40% de 1920
+        pixelHeight = params.pixelHeight or 86,  -- 8% de 1080
         margin = params.margin or {top=5, right=5, bottom=5, left=5},
         scaleManager = params.scaleManager
     })

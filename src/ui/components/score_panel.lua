@@ -7,10 +7,10 @@ ScorePanel.__index = ScorePanel
 function ScorePanel.new(params)
     local self = ComponentBase.new({
         id = "score_panel",
-        relX = params.relX or 0,
-        relY = params.relY or 0,
-        relWidth = params.relWidth or 1,
-        relHeight = params.relHeight or 0.15,
+        pixelX = params.pixelX or 1440,    -- 75% de 1920
+        pixelY = params.pixelY or 0,
+        pixelWidth = params.pixelWidth or 480,  -- 25% de 1920
+        pixelHeight = params.pixelHeight or 162,  -- 15% de 1080
         margin = params.margin or {top=10, right=10, bottom=10, left=10},
         scaleManager = params.scaleManager
     })

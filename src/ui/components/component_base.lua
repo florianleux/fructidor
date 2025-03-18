@@ -5,18 +5,21 @@ ComponentBase.__index = ComponentBase
 function ComponentBase.new(params)
     local self = setmetatable({}, ComponentBase)
     
-    -- Position relative (0-1) dans la zone parent
-    self.relX = params.relX or 0
-    self.relY = params.relY or 0
+    -- Référence au gestionnaire d'échelle pour les calculs
+    self.scaleManager = params.scaleManager
     
-    -- Dimensions relatives (0-1) de la zone parent
-    self.relWidth = params.relWidth or 0.2
-    self.relHeight = params.relHeight or 0.1
+    -- Position absolue en pixels (basée sur dimensions HD de référence 1920x1080)
+    self.pixelX = params.pixelX or 0
+    self.pixelY = params.pixelY or 0
     
-    -- Marges (en pixels après mise à l'échelle)
+    -- Dimensions absolues en pixels (basées sur dimensions HD de référence 1920x1080)
+    self.pixelWidth = params.pixelWidth or 384  -- 20% de 1920 par défaut
+    self.pixelHeight = params.pixelHeight or 108  -- 10% de 1080 par défaut
+    
+    -- Marges (en pixels)
     self.margin = params.margin or {top=0, right=0, bottom=0, left=0}
     
-    -- Position absolue calculée (en pixels)
+    -- Position et dimensions finales après calcul
     self.x = 0
     self.y = 0
     self.width = 0
@@ -24,9 +27,6 @@ function ComponentBase.new(params)
     
     -- Visibilité
     self.visible = params.visible ~= false
-    
-    -- Référence au gestionnaire d'échelle pour les calculs
-    self.scaleManager = params.scaleManager
     
     -- Identifiant du composant
     self.id = params.id or "unnamed_component"
@@ -36,14 +36,18 @@ end
 
 -- Calcule les positions et dimensions absolues basées sur la position et taille du parent
 function ComponentBase:calculateBounds(parentX, parentY, parentWidth, parentHeight)
-    -- Calcul des coordonnées absolues basées sur la position relative
-    self.x = parentX + (parentWidth * self.relX) + self.margin.left
-    self.y = parentY + (parentHeight * self.relY) + self.margin.top
+    -- Pourcentage du parent utilisé pour positionner le composant
+    local parentRatioX = parentWidth / self.scaleManager.referenceWidth
+    local parentRatioY = parentHeight / self.scaleManager.referenceHeight
     
-    -- Calcul des dimensions absolues basées sur les dimensions relatives
+    -- Calcul des coordonnées absolues basées sur les positions en pixels et les marges
+    self.x = parentX + (self.pixelX * parentRatioX) + self.margin.left
+    self.y = parentY + (self.pixelY * parentRatioY) + self.margin.top
+    
+    -- Calcul des dimensions absolues basées sur les dimensions en pixels
     -- en tenant compte des marges
-    self.width = (parentWidth * self.relWidth) - self.margin.left - self.margin.right
-    self.height = (parentHeight * self.relHeight) - self.margin.top - self.margin.bottom
+    self.width = (self.pixelWidth * parentRatioX) - self.margin.left - self.margin.right
+    self.height = (self.pixelHeight * parentRatioY) - self.margin.top - self.margin.bottom
 end
 
 -- Vérifie si un point (x, y) est dans les limites du composant

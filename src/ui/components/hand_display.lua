@@ -7,10 +7,10 @@ HandDisplay.__index = HandDisplay
 function HandDisplay.new(params)
     local self = ComponentBase.new({
         id = "hand_display",
-        relX = params.relX or 0,
-        relY = params.relY or 0.7,
-        relWidth = params.relWidth or 1,
-        relHeight = params.relHeight or 0.3,
+        pixelX = params.pixelX or 0,
+        pixelY = params.pixelY or 756,     -- 70% de 1080
+        pixelWidth = params.pixelWidth or 1920,  -- 100% de 1920
+        pixelHeight = params.pixelHeight or 324,  -- 30% de 1080
         margin = params.margin or {top=10, right=10, bottom=10, left=10},
         scaleManager = params.scaleManager
     })
