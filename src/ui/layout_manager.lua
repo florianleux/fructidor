@@ -1,4 +1,4 @@
--- Gestionnaire de mise en page pour les composants UI
+-- Gestionnaire de mise en page pour les composants UI avec positions absolues
 local LayoutManager = {}
 LayoutManager.__index = LayoutManager
 
@@ -8,25 +8,17 @@ function LayoutManager.new(params)
     -- Référence au gestionnaire d'échelle
     self.scaleManager = params.scaleManager
     
-    -- Conteneurs principaux
+    -- Conteneurs principaux avec positions absolues
     self.containers = {
-        -- Zone principale occupant toute la largeur (100%)
+        -- Zone principale 
         main = {
-            relX = 0,
-            relY = 0,
-            relWidth = 1,
-
-            relHeight = 1,
+            x = 0,                  -- Position absolue X
+            y = 0,                  -- Position absolue Y
+            width = self.scaleManager.referenceWidth,    -- Largeur absolue
+            height = self.scaleManager.referenceHeight,  -- Hauteur absolue
             components = {}
         }
-        -- La sidebar a été supprimée
     }
-    
-    -- Positions et dimensions absolues calculées
-    self.x = 0
-    self.y = 0
-    self.width = self.scaleManager.referenceWidth
-    self.height = self.scaleManager.referenceHeight
     
     -- Recalculer immédiatement les limites
     self:recalculateBounds()
@@ -36,16 +28,19 @@ end
 
 -- Calcule les dimensions de tous les conteneurs et leurs composants
 function LayoutManager:recalculateBounds()
-    -- Mettre à jour les dimensions globales
-    self.width = self.scaleManager.referenceWidth
-    self.height = self.scaleManager.referenceHeight
-    
-    -- Calculer les limites de chaque conteneur
+    -- Pour chaque conteneur, calculer les limites de ses composants
     for key, container in pairs(self.containers) do
-        container.x = self.x + (self.width * container.relX)
-        container.y = self.y + (self.height * container.relY)
-        container.width = self.width * container.relWidth
-        container.height = self.height * container.relHeight
+        -- Ajuster les positions et dimensions du conteneur avec l'échelle
+        local scaledX = container.x * self.scaleManager.scale
+        local scaledY = container.y * self.scaleManager.scale
+        local scaledWidth = container.width * self.scaleManager.scale
+        local scaledHeight = container.height * self.scaleManager.scale
+        
+        -- Stocker les valeurs mises à l'échelle pour utilisation interne
+        container.scaledX = scaledX
+        container.scaledY = scaledY
+        container.scaledWidth = scaledWidth
+        container.scaledHeight = scaledHeight
         
         -- Calculer les limites de chaque composant dans ce conteneur
         for _, component in ipairs(container.components) do
@@ -55,6 +50,42 @@ function LayoutManager:recalculateBounds()
             )
         end
     end
+end
+
+-- Permet de positionner un conteneur à des coordonnées absolues
+function LayoutManager:positionContainer(containerKey, x, y, width, height)
+    if self.containers[containerKey] then
+        local container = self.containers[containerKey]
+        container.x = x
+        container.y = y
+        container.width = width
+        container.height = height
+        
+        -- Recalculer immédiatement les limites
+        self:recalculateBounds()
+        
+        return true
+    end
+    return false
+end
+
+-- Crée un nouveau conteneur avec des coordonnées absolues
+function LayoutManager:createContainer(containerKey, x, y, width, height)
+    if not self.containers[containerKey] then
+        self.containers[containerKey] = {
+            x = x or 0,
+            y = y or 0,
+            width = width or self.scaleManager.referenceWidth,
+            height = height or self.scaleManager.referenceHeight,
+            components = {}
+        }
+        
+        -- Recalculer immédiatement les limites
+        self:recalculateBounds()
+        
+        return true
+    end
+    return false
 end
 
 -- Ajoute un composant à un conteneur spécifique
