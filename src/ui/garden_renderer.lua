@@ -12,6 +12,14 @@ local TEXT_SCALE = 0.6        -- Échelle de texte réduite
 
 function GardenRenderer.new()
     local self = setmetatable({}, GardenRenderer)
+    
+    -- Cacher les couleurs pour éviter de les recréer à chaque frame
+    self.colors = {
+        earth = {0.9, 0.8, 0.6, 1},
+        border = {0.7, 0.6, 0.4, 1},
+        text = {0, 0, 0, 1}
+    }
+    
     return self
 end
 
@@ -21,7 +29,7 @@ function GardenRenderer:draw(garden, x, y, cellSize)
     local size = cellSize or CELL_DEFAULT_SIZE
     
     -- Dessiner le fond du jardin
-    love.graphics.setColor(0.9, 0.8, 0.6) -- Couleur terre/sable
+    love.graphics.setColor(unpack(self.colors.earth))
     love.graphics.rectangle("fill", x, y, garden.width * size, garden.height * size)
     
     -- Dessiner les cellules du jardin
@@ -34,7 +42,7 @@ function GardenRenderer:draw(garden, x, y, cellSize)
             local cell = garden.grid[cy][cx]
             
             -- Dessiner le contour de la cellule
-            love.graphics.setColor(0.7, 0.6, 0.4) -- Brun foncé pour les bordures
+            love.graphics.setColor(unpack(self.colors.border))
             love.graphics.rectangle("line", cellX, cellY, size, size)
             
             -- Dessiner le contenu de la cellule
@@ -63,7 +71,7 @@ function GardenRenderer:draw(garden, x, y, cellSize)
                 end
                 
                 -- Afficher les infos de la plante
-                love.graphics.setColor(0, 0, 0)
+                love.graphics.setColor(unpack(self.colors.text))
                 
                 -- Afficher la famille au-dessus
                 local familyText = cell.plant.family:sub(1, 3) -- Abréviation
@@ -79,13 +87,18 @@ function GardenRenderer:draw(garden, x, y, cellSize)
                 love.graphics.print(stageText, cellX + 3, cellY + size - 12, 0, TEXT_SCALE, TEXT_SCALE)
                 
                 -- Afficher les compteurs de soleil et pluie
-                local sunText = "☀️" .. cell.plant.accumulatedSun .. "/" .. cell.plant.sunToFruit
-                local rainText = "🌧️" .. cell.plant.accumulatedRain .. "/" .. cell.plant.rainToFruit
+                local sunNeeded, rainNeeded
                 
                 if cell.plant.growthStage == Constants.GROWTH_STAGE.SEED then
-                    sunText = "☀️" .. cell.plant.accumulatedSun .. "/" .. cell.plant.sunToSprout
-                    rainText = "🌧️" .. cell.plant.accumulatedRain .. "/" .. cell.plant.rainToSprout
+                    sunNeeded = cell.plant.sunToSprout
+                    rainNeeded = cell.plant.rainToSprout
+                else
+                    sunNeeded = cell.plant.sunToFruit
+                    rainNeeded = cell.plant.rainToFruit
                 end
+                
+                local sunText = "☀️" .. cell.plant.accumulatedSun .. "/" .. sunNeeded
+                local rainText = "🌧️" .. cell.plant.accumulatedRain .. "/" .. rainNeeded
                 
                 love.graphics.print(sunText, cellX + 3, cellY + size - 24, 0, TEXT_SCALE, TEXT_SCALE)
                 love.graphics.print(rainText, cellX + 3, cellY + size - 36, 0, TEXT_SCALE, TEXT_SCALE)
