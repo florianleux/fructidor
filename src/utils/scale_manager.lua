@@ -74,6 +74,26 @@ function ScaleManager.scaleUniform(value)
     return value * ScaleManager.scale
 end
 
+-- Convertir des pixels en valeur relative (0-1) sur l'axe X
+function ScaleManager.pixelsToRelativeX(pixels)
+    return pixels / ScaleManager.referenceWidth
+end
+
+-- Convertir des pixels en valeur relative (0-1) sur l'axe Y
+function ScaleManager.pixelsToRelativeY(pixels)
+    return pixels / ScaleManager.referenceHeight
+end
+
+-- Convertir une valeur relative (0-1) en pixels sur l'axe X
+function ScaleManager.relativeToPixelsX(relValue)
+    return relValue * ScaleManager.referenceWidth
+end
+
+-- Convertir une valeur relative (0-1) en pixels sur l'axe Y
+function ScaleManager.relativeToPixelsY(relValue)
+    return relValue * ScaleManager.referenceHeight
+end
+
 -- Application d'une transformation pour dessiner à l'échelle
 function ScaleManager.applyScale()
     if not love.graphics then
