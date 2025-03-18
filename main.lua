@@ -6,6 +6,8 @@ local DependencySetup = require('src.utils.dependency_setup')
 local DependencyContainer = require('src.utils.dependency_container')
 local Garden = require('src.entities.garden')
 local ScaleManager = require('src.utils.scale_manager')
+local UIManager = require('src.ui.ui_manager')
+local GardenRenderer = require('src.ui.garden_renderer')
 
 -- Module principal pour stocker les références localement
 local Game = {
@@ -36,6 +38,9 @@ function love.load(arg)
     -- Créer le jardin
     local garden = Garden.new(3, 2)
     
+    -- Créer les renderers
+    local gardenRenderer = GardenRenderer.new()
+    
     -- Créer les systèmes principaux avec leurs dépendances
     local cardSystem = CardSystem.new({
         scaleManager = ScaleManager
@@ -52,11 +57,30 @@ function love.load(arg)
         scaleManager = ScaleManager
     })
     
+    -- Créer le gestionnaire d'interface utilisateur
+    local uiManager = UIManager.new({
+        gameState = gameState,
+        cardSystem = cardSystem,
+        garden = garden,
+        scaleManager = ScaleManager,
+        dragDrop = dragDrop,
+        gardenRenderer = gardenRenderer,
+        nextTurnCallback = function() 
+            gameState:nextTurn() 
+            -- Mettre à jour l'interface après le changement de tour
+            uiManager:updateComponent("seasonBanner")
+            uiManager:updateComponent("weatherDice")
+            uiManager:updateComponent("gardenDisplay")
+            uiManager:updateComponent("scorePanel")
+        end
+    })
+    
     -- Stocker les références localement 
     Game.gameState = gameState
     Game.cardSystem = cardSystem
     Game.dragDrop = dragDrop
     Game.garden = garden
+    Game.uiManager = uiManager
     
     -- Initialiser le système d'injection de dépendances avec nos instances
     DependencySetup.initialize({
@@ -64,8 +88,15 @@ function love.load(arg)
         cardSystem = cardSystem,
         garden = garden,
         dragDrop = dragDrop,
-        scaleManager = ScaleManager
+        scaleManager = ScaleManager,
+        gardenRenderer = gardenRenderer,
+        uiManager = uiManager
     })
+    
+    -- Piocher quelques cartes pour commencer le jeu
+    for i = 1, 5 do
+        cardSystem:drawCard()
+    end
     
     Game.initialized = true
     print("Initialisation de Fructidor terminée avec succès")
@@ -80,6 +111,9 @@ function love.update(dt)
     
     -- Mettre à jour le système d'animation du drag & drop
     Game.dragDrop:update(dt)
+    
+    -- Mettre à jour l'interface utilisateur
+    Game.uiManager:update(dt)
 end
 
 function love.draw()
@@ -103,7 +137,7 @@ function love.draw()
     end
     
     -- Vérifier que les objets existent avant de les utiliser
-    if not Game.gameState or not Game.cardSystem or not Game.dragDrop then
+    if not Game.gameState or not Game.uiManager then
         love.graphics.setColor(1, 0, 0)
         love.graphics.print("Erreur: Systèmes principaux non initialisés", 20, 20)
         return
@@ -112,11 +146,8 @@ function love.draw()
     -- Appliquer la transformation d'échelle
     ScaleManager.applyScale()
     
-    -- Dessiner l'état du jeu
-    Game.gameState:draw()
-    
-    -- Dessiner les cartes en main
-    Game.cardSystem:drawHand()
+    -- Dessiner l'interface utilisateur (remplace l'ancien code qui appelait Game.gameState:draw())
+    Game.uiManager:draw()
     
     -- Dessiner les effets de surbrillance si une carte est en cours de déplacement
     if not Game.dragDrop:isAnimating() then
@@ -151,11 +182,11 @@ function love.mousepressed(x, y, button)
     local scaledX = x / ScaleManager.scale
     local scaledY = y / ScaleManager.scale
     
-    -- Déléguer au GameState pour gérer les clics sur l'interface
-    Game.gameState:mousepressed(scaledX, scaledY, button)
+    -- Déléguer au gestionnaire d'interface pour gérer les clics
+    local handled = Game.uiManager:mousepressed(scaledX, scaledY, button)
     
-    -- Clic sur une carte en main
-    if button == 1 then
+    -- Si le clic n'a pas été géré par l'interface, vérifier les cartes en main
+    if not handled and button == 1 then
         local card, cardIndex = Game.cardSystem:getCardAt(scaledX, scaledY)
         if card then
             -- Démarrer le drag & drop
@@ -172,13 +203,27 @@ function love.mousereleased(x, y, button)
     local scaledX = x / ScaleManager.scale
     local scaledY = y / ScaleManager.scale
     
-    -- Déléguer au GameState
-    Game.gameState:mousereleased(scaledX, scaledY, button)
+    -- Déléguer au gestionnaire d'interface
+    local handled = Game.uiManager:mousereleased(scaledX, scaledY, button)
     
-    -- Lâcher une carte
+    -- Lâcher une carte si elle était en cours de déplacement
     if button == 1 and not Game.dragDrop:isAnimating() then
         Game.dragDrop:stopDrag(Game.gameState.garden)
     end
+end
+
+function love.mousemoved(x, y, dx, dy)
+    -- Vérifier que le jeu est initialisé
+    if not Game.initialized then return end
+    
+    -- Ajuster les coordonnées à l'échelle
+    local scaledX = x / ScaleManager.scale
+    local scaledY = y / ScaleManager.scale
+    local scaledDX = dx / ScaleManager.scale
+    local scaledDY = dy / ScaleManager.scale
+    
+    -- Déléguer au gestionnaire d'interface
+    Game.uiManager:mousemoved(scaledX, scaledY, scaledDX, scaledDY)
 end
 
 -- Fonction pour gérer le redimensionnement de la fenêtre
