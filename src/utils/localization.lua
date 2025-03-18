@@ -1,5 +1,5 @@
 -- Système de localisation pour Fructidor
-local Constants = require('src.utils.constants')
+local GameConfig = require('src.utils.game_config')
 
 local Localization = {}
 
@@ -13,25 +13,25 @@ Localization.cache = {}
 Localization.translations = {
     ["fr"] = {
         -- Saisons
-        [Constants.SEASON.SPRING] = "Printemps",
-        [Constants.SEASON.SUMMER] = "Été",
-        [Constants.SEASON.AUTUMN] = "Automne",
-        [Constants.SEASON.WINTER] = "Hiver",
+        [GameConfig.SEASON.SPRING] = "Printemps",
+        [GameConfig.SEASON.SUMMER] = "Été",
+        [GameConfig.SEASON.AUTUMN] = "Automne",
+        [GameConfig.SEASON.WINTER] = "Hiver",
         
         -- Familles de plantes
-        [Constants.PLANT_FAMILY.BRASSIKA] = "Brassika",
-        [Constants.PLANT_FAMILY.SOLANA] = "Solana",
-        [Constants.PLANT_FAMILY.FABA] = "Faba",
-        [Constants.PLANT_FAMILY.KUKURBITA] = "Kukurbita",
+        [GameConfig.PLANT_FAMILY.BRASSIKA] = "Brassika",
+        [GameConfig.PLANT_FAMILY.SOLANA] = "Solana",
+        [GameConfig.PLANT_FAMILY.FABA] = "Faba",
+        [GameConfig.PLANT_FAMILY.KUKURBITA] = "Kukurbita",
         
         -- Stades de croissance (mise à jour avec les nouvelles constantes)
-        [Constants.GROWTH_STAGE.SEED] = "Graine",
-        [Constants.GROWTH_STAGE.SPROUT] = "Plant",
-        [Constants.GROWTH_STAGE.FRUIT] = "Fructifié",
+        [GameConfig.GROWTH_STAGE.SEED] = "Graine",
+        [GameConfig.GROWTH_STAGE.SPROUT] = "Plant",
+        [GameConfig.GROWTH_STAGE.FRUIT] = "Fructifié",
         
         -- Types de cartes
-        [Constants.CARD_TYPE.PLANT] = "Plante",
-        [Constants.CARD_TYPE.OBJECT] = "Objet",
+        [GameConfig.CARD_TYPE.PLANT] = "Plante",
+        [GameConfig.CARD_TYPE.OBJECT] = "Objet",
         
         -- Interface utilisateur
         ["ui.tour"] = "Tour",
