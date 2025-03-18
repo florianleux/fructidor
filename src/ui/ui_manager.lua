@@ -59,7 +59,18 @@ function UIManager:createComponents()
     })
     self.layoutManager:addComponent("main", weatherDice)
     
-    -- Affichage du potager
+    -- Panneau de score (intégré au composant principal en haut à droite)
+    local scorePanel = ScorePanel.new({
+        relX = 0.75,
+        relY = 0,
+        relWidth = 0.25,
+        relHeight = 0.15,
+        gameState = self.gameState,
+        scaleManager = self.scaleManager
+    })
+    self.layoutManager:addComponent("main", scorePanel)
+    
+    -- Affichage du potager (agrandi pour utiliser plus d'espace horizontal)
     local gardenDisplay = GardenDisplay.new({
         relX = 0,
         relY = 0.2,
@@ -83,17 +94,6 @@ function UIManager:createComponents()
         scaleManager = self.scaleManager
     })
     self.layoutManager:addComponent("main", handDisplay)
-    
-    -- Panneau de score (partie supérieure de la colonne latérale)
-    local scorePanel = ScorePanel.new({
-        relX = 0,
-        relY = 0,
-        relWidth = 1,
-        relHeight = 0.2,
-        gameState = self.gameState,
-        scaleManager = self.scaleManager
-    })
-    self.layoutManager:addComponent("sidebar", scorePanel)
     
     -- Stocker des références aux composants principaux pour accès rapide
     self.components = {
