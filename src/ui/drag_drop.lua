@@ -1,16 +1,16 @@
 -- Système de Drag & Drop
 local DependencyContainer = require('src.utils.dependency_container')
+local Constants = require('src.utils.constants')
 
 local DragDrop = {}
 DragDrop.__index = DragDrop
 
--- Définition des constantes pour la taille des cartes
-local CARD_WIDTH = 65
-local CARD_HEIGHT = 108
-local CARD_CORNER_RADIUS = 3
-local CARD_HEADER_HEIGHT = 16
-local TEXT_PADDING_X = 27
-local TEXT_LINE_HEIGHT = 11
+-- Utilisation des constantes centralisées
+local CARD_WIDTH = Constants.UI.CARD.WIDTH
+local CARD_HEIGHT = Constants.UI.CARD.HEIGHT
+local CARD_CORNER_RADIUS = Constants.UI.CARD.CORNER_RADIUS
+local CARD_HEADER_HEIGHT = Constants.UI.CARD.HEADER_HEIGHT
+local TEXT_SCALE = Constants.UI.CARD.TEXT_SCALE
 
 -- Constantes d'animation
 local ANIMATION_DURATION = 0.3 -- Durée de l'animation en secondes
@@ -333,7 +333,7 @@ function DragDrop:draw()
                                scaledWidth - 6 * scale, scaledHeaderHeight)
         
         -- Calculer l'échelle du texte pour les cartes redimensionnées
-        local textScale = 0.84 * scale
+        local textScale = TEXT_SCALE * scale
         
         -- Nom et info
         love.graphics.setColor(0, 0, 0)
