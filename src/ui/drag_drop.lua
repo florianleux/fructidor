@@ -4,17 +4,17 @@ local DependencyContainer = require('src.utils.dependency_container')
 local DragDrop = {}
 DragDrop.__index = DragDrop
 
--- Définition des constantes pour la taille des cartes (réduites de 40%)
-local CARD_WIDTH = 65  -- 108 * 0.6
-local CARD_HEIGHT = 108 -- 180 * 0.6
-local CARD_CORNER_RADIUS = 3 -- 5 * 0.6
-local CARD_HEADER_HEIGHT = 16 -- 27 * 0.6
-local TEXT_PADDING_X = 27 -- 45 * 0.6
-local TEXT_LINE_HEIGHT = 11 -- 18 * 0.6
+-- Définition des constantes pour la taille des cartes
+local CARD_WIDTH = 65
+local CARD_HEIGHT = 108
+local CARD_CORNER_RADIUS = 3
+local CARD_HEADER_HEIGHT = 16
+local TEXT_PADDING_X = 27
+local TEXT_LINE_HEIGHT = 11
 
 -- Constantes d'animation
 local ANIMATION_DURATION = 0.3 -- Durée de l'animation en secondes
-local CARD_SCALE_WHEN_DRAGGED = 0.6 -- Taille réduite à 60% (réduction de 40%)
+local CARD_SCALE_WHEN_DRAGGED = 0.6 -- Taille réduite
 local RETURN_ANIMATION_DURATION = 0.3 -- Durée de l'animation de retour en ligne droite
 
 function DragDrop.new(dependencies)
@@ -154,24 +154,41 @@ function DragDrop:stopDrag(garden)
     
     local placed = false
     
-    -- Taille d'une cellule réduite de 40%
-    local cellSize = 42 -- 70 * 0.6
-    local gardenX = 6   -- UI_MARGIN
-    local gardenY = 96  -- GARDEN_TOP_MARGIN
+    -- Récupérer le composant GardenDisplay via le conteneur de dépendances
+    local uiManager = self.dependencies.uiManager or DependencyContainer.tryResolve("UIManager")
+    local gardenDisplay = nil
+    
+    if uiManager and uiManager.components and uiManager.components.gardenDisplay then
+        gardenDisplay = uiManager.components.gardenDisplay
+    end
     
     -- Trouver la cellule sous la carte
     for y = 1, garden.height do
         for x = 1, garden.width do
-            local posX = gardenX + (x-1) * cellSize
-            local posY = gardenY + (y-1) * cellSize
+            local cellX, cellY, isInside
             
-            -- Utiliser le centre de la carte pour la détection
-            local cardCenterX = self.dragging.x
-            local cardCenterY = self.dragging.y
-            
-            if cardCenterX >= posX and cardCenterX < posX + cellSize and
-               cardCenterY >= posY and cardCenterY < posY + cellSize then
+            -- Utiliser les coordonnées du GardenDisplay si disponible
+            if gardenDisplay then
+                cellX, cellY = gardenDisplay:getCellCoordinates(x, y)
+                isInside = self.dragging.x >= cellX and 
+                           self.dragging.x < cellX + gardenDisplay.cellSize and
+                           self.dragging.y >= cellY and 
+                           self.dragging.y < cellY + gardenDisplay.cellSize
+            else
+                -- Fallback avec des valeurs codées en dur (éviter si possible)
+                local cellSize = 42
+                local gardenX = 96 -- Position X estimée du jardin
+                local gardenY = 216 -- Position Y estimée du jardin
                 
+                cellX = gardenX + (x-1) * cellSize
+                cellY = gardenY + (y-1) * cellSize
+                isInside = self.dragging.x >= cellX and 
+                           self.dragging.x < cellX + cellSize and
+                           self.dragging.y >= cellY and 
+                           self.dragging.y < cellY + cellSize
+            end
+            
+            if isInside then
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
                     local cardSystem = self.dependencies.cardSystem or DependencyContainer.tryResolve("CardSystem")
@@ -221,33 +238,55 @@ function DragDrop:updateHighlight(garden, x, y)
     -- Ne pas afficher de surbrillance si une animation est en cours
     if self.moveAnimation.active or not self.dragging then return end
     
-    -- Taille d'une cellule réduite de 40%
-    local cellSize = 42 -- 70 * 0.6
-    local gardenX = 6   -- UI_MARGIN
-    local gardenY = 96  -- GARDEN_TOP_MARGIN
+    -- Récupérer le composant GardenDisplay via le conteneur de dépendances
+    local uiManager = self.dependencies.uiManager or DependencyContainer.tryResolve("UIManager")
+    local gardenDisplay = nil
+    
+    if uiManager and uiManager.components and uiManager.components.gardenDisplay then
+        gardenDisplay = uiManager.components.gardenDisplay
+    end
     
     -- Réinitialiser les surbrillances
     for cy = 1, garden.height do
         for cx = 1, garden.width do
-            local cell = {
-                x = gardenX + (cx-1) * cellSize,
-                y = gardenY + (cy-1) * cellSize,
-                width = cellSize,
-                height = cellSize
-            }
+            local cellX, cellY, cellSize
             
-            local highlight = x >= cell.x and x < cell.x + cell.width and
-                             y >= cell.y and y < cell.y + cell.height and
+            if gardenDisplay then
+                cellX, cellY = gardenDisplay:getCellCoordinates(cx, cy)
+                cellSize = gardenDisplay.cellSize
+            else
+                -- Fallback avec des valeurs codées en dur
+                cellSize = 42
+                local gardenX = 96
+                local gardenY = 216
+                cellX = gardenX + (cx-1) * cellSize
+                cellY = gardenY + (cy-1) * cellSize
+            end
+            
+            local highlight = x >= cellX and x < cellX + cellSize and
+                             y >= cellY and y < cellY + cellSize and
                              not garden.grid[cy][cx].plant
             
             if highlight then
                 love.graphics.setColor(0.8, 0.9, 0.7, 0.6)
-                love.graphics.rectangle("fill", cell.x, cell.y, cell.width, cell.height)
+                love.graphics.rectangle("fill", cellX, cellY, cellSize, cellSize)
                 love.graphics.setColor(0.4, 0.8, 0.4)
-                love.graphics.rectangle("line", cell.x, cell.y, cell.width, cell.height, 2)
+                love.graphics.rectangle("line", cellX, cellY, cellSize, cellSize, 2)
             end
         end
     end
+end
+
+function DragDrop:isDragging()
+    return self.dragging ~= nil
+end
+
+function DragDrop:getDraggingCard()
+    return self.dragging
+end
+
+function DragDrop:getDraggingCardIndex()
+    return self.cardIndex
 end
 
 function DragDrop:isAnimating()

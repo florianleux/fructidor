@@ -1,65 +1,72 @@
--- Composant bannière de saison
+-- Bannière d'affichage de la saison actuelle
 local ComponentBase = require('src.ui.components.component_base')
+local Localization = require('src.utils.localization')
+local Constants = require('src.utils.constants')
 
 local SeasonBanner = setmetatable({}, {__index = ComponentBase})
 SeasonBanner.__index = SeasonBanner
 
 function SeasonBanner.new(params)
-    local self = ComponentBase.new({
-        id = "season_banner",
-        pixelX = params.pixelX or 0,
-        pixelY = params.pixelY or 0,
-        pixelWidth = params.pixelWidth or 1440,  -- 75% de 1920
-        pixelHeight = params.pixelHeight or 54,  -- 5% de 1080
-        margin = params.margin or {top=10, right=10, bottom=0, left=10},
-        scaleManager = params.scaleManager
-    })
+    local self = setmetatable(ComponentBase.new(params), SeasonBanner)
     
-    setmetatable(self, SeasonBanner)
+    -- Paramètres spécifiques à la bannière de saison
+    self.gameState = params.gameState
     
-    -- Couleurs spécifiques par saison
+    -- Couleurs par saison
     self.seasonColors = {
-        Printemps = {0.7, 0.9, 0.7},  -- Vert clair
-        Été = {0.9, 0.9, 0.5},        -- Jaune
-        Automne = {0.9, 0.7, 0.5},    -- Orange
-        Hiver = {0.8, 0.9, 1.0}       -- Bleu clair
+        [Constants.SEASON.SPRING] = {0.7, 0.95, 0.7, 1}, -- Vert clair
+        [Constants.SEASON.SUMMER] = {1, 0.9, 0.4, 1},    -- Jaune soleil
+        [Constants.SEASON.AUTUMN] = {0.95, 0.6, 0.3, 1}, -- Orange automne
+        [Constants.SEASON.WINTER] = {0.8, 0.9, 1, 1}     -- Bleu hiver clair
     }
     
-    -- Référence au gameState pour accéder aux données de saison et tour
-    self.gameState = params.gameState
+    -- Couleur de texte par saison
+    self.textColors = {
+        [Constants.SEASON.SPRING] = {0.2, 0.5, 0.2, 1},  -- Vert foncé
+        [Constants.SEASON.SUMMER] = {0.6, 0.4, 0.1, 1},  -- Marron été
+        [Constants.SEASON.AUTUMN] = {0.5, 0.2, 0.1, 1},  -- Rouge-brun automne
+        [Constants.SEASON.WINTER] = {0.2, 0.3, 0.6, 1}   -- Bleu hiver foncé
+    }
     
     return self
 end
 
 function SeasonBanner:draw()
-    if not self.visible or not self.gameState then return end
+    -- Convertir les coordonnées pixel en coordonnées d'écran
+    local x, y, width, height = self:getScaledBounds()
     
-    -- Couleur de fond selon la saison
-    local bgColor = self.seasonColors[self.gameState.currentSeason] or {0.9, 0.95, 0.9}
-    love.graphics.setColor(bgColor)
-    love.graphics.rectangle("fill", self.x, self.y, self.width, self.height, 5)
+    -- Obtenir la couleur de la saison actuelle
+    local season = self.gameState.currentSeason
+    local backgroundColor = self.seasonColors[season] or {0.9, 0.9, 0.9, 1}
+    local textColor = self.textColors[season] or {0.1, 0.1, 0.1, 1}
     
-    -- Bordure
-    love.graphics.setColor(0.6, 0.6, 0.6)
-    love.graphics.rectangle("line", self.x, self.y, self.width, self.height, 5)
+    -- Dessiner le fond de la bannière
+    love.graphics.setColor(unpack(backgroundColor))
+    love.graphics.rectangle("fill", x, y, width, height, 5)
     
-    -- Texte de la saison
-    love.graphics.setColor(0, 0, 0)
+    -- Dessiner le texte de la saison
+    love.graphics.setColor(unpack(textColor))
     
-    -- Texte centré verticalement
-    local fontSize = 24
-    local textY = self.y + (self.height - fontSize) / 2
+    -- Obtenir le texte de saison localisé
+    local seasonText = Localization.getText(season)
+    local turnInfo = Localization.getText("ui.tour") .. " " .. self.gameState.currentTurn .. "/8"
+    local seasonInfo = Localization.getText("ui.saison_numero") .. " " .. math.ceil(self.gameState.currentTurn/2) .. "/4"
     
-    -- Adapter la taille du texte en fonction de la largeur disponible
-    local seasonText = "Saison: " .. self.gameState.currentSeason .. 
-                      " (" .. math.ceil(self.gameState.currentTurn/2) .. "/4)"
+    -- Dessiner les informations
+    love.graphics.print(seasonText, x + 20, y + 15, 0, 1.5, 1.5)
+    love.graphics.print(turnInfo, x + 20, y + 45, 0, 1, 1)
+    love.graphics.print(seasonInfo, x + 150, y + 45, 0, 1, 1)
     
-    love.graphics.setFont(love.graphics.newFont(fontSize))
-    love.graphics.print(seasonText, self.x + 20, textY)
+    -- Ajouter une bordure décorative
+    love.graphics.setColor(textColor[1], textColor[2], textColor[3], 0.5)
+    love.graphics.rectangle("line", x, y, width, height, 5)
 end
 
-function SeasonBanner:update(dt)
-    -- Pas d'animation ou de logique spécifique pour le moment
+function SeasonBanner:updateSeason()
+    -- Cette méthode est appelée pour mettre à jour la bannière 
+    -- lorsque la saison change dans le GameState
+    -- Pour l'instant, il suffit de laisser le système de dessin récupérer 
+    -- la saison directement depuis gameState à chaque frame
 end
 
 return SeasonBanner

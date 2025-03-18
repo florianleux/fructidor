@@ -1,131 +1,134 @@
--- Composant panneau de score
+-- Panneau d'affichage du score
 local ComponentBase = require('src.ui.components.component_base')
+local Localization = require('src.utils.localization')
 
 local ScorePanel = setmetatable({}, {__index = ComponentBase})
 ScorePanel.__index = ScorePanel
 
 function ScorePanel.new(params)
-    local self = ComponentBase.new({
-        id = "score_panel",
-        pixelX = params.pixelX or 1440,    -- 75% de 1920
-        pixelY = params.pixelY or 0,
-        pixelWidth = params.pixelWidth or 480,  -- 25% de 1920
-        pixelHeight = params.pixelHeight or 162,  -- 15% de 1080
-        margin = params.margin or {top=10, right=10, bottom=10, left=10},
-        scaleManager = params.scaleManager
-    })
+    local self = setmetatable(ComponentBase.new(params), ScorePanel)
     
-    setmetatable(self, ScorePanel)
-    
-    -- Référence au gameState pour accéder aux scores
+    -- Paramètres spécifiques au panneau de score
     self.gameState = params.gameState
     
-    -- Animation de changement de score
-    self.animation = {
-        scoreChange = false,
-        oldScore = 0,
-        newScore = 0,
-        time = 0,
+    -- Variables d'animation
+    self.scoreAnimation = {
+        active = false,
+        previousValue = self.gameState.score,
+        currentValue = self.gameState.score,
+        startTime = 0,
         duration = 0.5
+    }
+    
+    -- Couleurs
+    self.colors = {
+        background = {0.9, 0.92, 0.95, 1},
+        text = {0.1, 0.1, 0.1, 1},
+        progressBg = {0.8, 0.8, 0.8, 1},
+        progressFill = {0.5, 0.8, 0.5, 1},
+        progressText = {0.1, 0.1, 0.1, 1},
+        valorant = {0.3, 0.5, 0.9, 1},
+        florins = {0.9, 0.8, 0.2, 1}
     }
     
     return self
 end
 
 function ScorePanel:draw()
-    if not self.visible or not self.gameState then return end
+    -- Convertir les coordonnées pixel en coordonnées d'écran
+    local x, y, width, height = self:getScaledBounds()
     
-    -- Fond du panneau
-    love.graphics.setColor(0.88, 0.92, 0.95)
-    love.graphics.rectangle("fill", self.x, self.y, self.width, self.height, 5)
-    love.graphics.setColor(0.7, 0.75, 0.8)
-    love.graphics.rectangle("line", self.x, self.y, self.width, self.height, 5)
+    -- Dessiner le fond du panneau
+    love.graphics.setColor(unpack(self.colors.background))
+    love.graphics.rectangle("fill", x, y, width, height, 5)
     
-    -- Affichage du score actuel
-    love.graphics.setColor(0, 0, 0)
-    local fontSize = math.min(36, self.height * 0.4)
-    love.graphics.setFont(love.graphics.newFont(fontSize))
+    -- Dessiner le titre du panneau
+    love.graphics.setColor(unpack(self.colors.text))
+    local titleY = y + 15
+    love.graphics.print(Localization.getText("ui.score_title"), x + 20, titleY, 0, 1.2, 1.2)
     
-    local score = self.gameState.score
-    local objective = self.gameState.objective
-    
-    -- Si une animation de changement de score est en cours
-    if self.animation.scoreChange then
-        local progress = self.animation.time / self.animation.duration
-        if progress > 1 then progress = 1 end
-        
-        -- Interpolation entre l'ancien et le nouveau score
-        score = math.floor(self.animation.oldScore + 
-                (self.animation.newScore - self.animation.oldScore) * progress)
-        
-        -- Effet visuel pendant le changement
-        if progress < 1 then
-            love.graphics.setColor(0, 0.6, 0, 0.7 * (1 - progress))
-            love.graphics.circle("fill", 
-                self.x + self.width * 0.25, 
-                self.y + self.height * 0.5, 
-                self.height * 0.3 * (1 - progress))
-        end
+    -- Dessiner le score actuel et l'objectif
+    local scoreText
+    if self.scoreAnimation.active then
+        scoreText = math.floor(self.scoreAnimation.currentValue)
+    else
+        scoreText = self.gameState.score
     end
     
-    -- Texte du score
-    love.graphics.setColor(0, 0, 0)
-    local scoreText = "Score: " .. score .. "/" .. objective
-    love.graphics.print(scoreText, self.x + 20, self.y + self.height * 0.25)
+    local scoreStr = scoreText .. "/" .. self.gameState.objective
+    local scoreY = titleY + 30
+    love.graphics.setColor(unpack(self.colors.text))
+    love.graphics.print(Localization.getText("ui.score") .. ": " .. scoreStr, x + 20, scoreY, 0, 1, 1)
     
-    -- Barre de progression
-    local barHeight = self.height * 0.2
-    local barY = self.y + self.height * 0.7
-    local maxBarWidth = self.width - 40
+    -- Dessiner la barre de progression
+    local progressY = scoreY + 30
+    local progressWidth = width - 40
+    local progressHeight = 12
     
-    -- Fond de la barre (gris)
-    love.graphics.setColor(0.8, 0.8, 0.8)
-    love.graphics.rectangle("fill", self.x + 20, barY, maxBarWidth, barHeight)
+    -- Fond de la barre
+    love.graphics.setColor(unpack(self.colors.progressBg))
+    love.graphics.rectangle("fill", x + 20, progressY, progressWidth, progressHeight, 3)
     
-    -- Progression actuelle (vert)
-    local progress = math.min(1, score / objective)
-    love.graphics.setColor(0.4, 0.8, 0.4)
-    love.graphics.rectangle("fill", self.x + 20, barY, maxBarWidth * progress, barHeight)
-    
-    -- Bordure de la barre
-    love.graphics.setColor(0.6, 0.6, 0.6)
-    love.graphics.rectangle("line", self.x + 20, barY, maxBarWidth, barHeight)
-    
-    -- Affichage des Florins (monnaie du jeu)
-    if self.gameState.florins then
-        love.graphics.setColor(0, 0, 0)
-        local florinText = "Florins: " .. self.gameState.florins
-        
-        -- Plus petite police pour les florins
-        love.graphics.setFont(love.graphics.newFont(fontSize * 0.7))
-        love.graphics.print(florinText, self.x + 20, self.y + self.height * 0.05)
+    -- Remplissage de la barre
+    local fillRatio
+    if self.scoreAnimation.active then
+        fillRatio = self.scoreAnimation.currentValue / self.gameState.objective
+    else
+        fillRatio = self.gameState.score / self.gameState.objective
     end
+    fillRatio = math.min(1, math.max(0, fillRatio)) -- Entre 0 et 1
+    
+    love.graphics.setColor(unpack(self.colors.progressFill))
+    love.graphics.rectangle("fill", x + 20, progressY, progressWidth * fillRatio, progressHeight, 3)
+    
+    -- Afficher les Florins
+    local florinsY = progressY + 30
+    love.graphics.setColor(unpack(self.colors.florins))
+    love.graphics.print(Localization.getText("ui.florins") .. ": " .. (self.gameState.florins or 0), x + 20, florinsY, 0, 1, 1)
 end
 
 function ScorePanel:update(dt)
-    -- Mise à jour de l'animation de changement de score
-    if self.animation.scoreChange then
-        self.animation.time = self.animation.time + dt
-        if self.animation.time >= self.animation.duration then
-            self.animation.scoreChange = false
-            self.animation.time = 0
-        end
-    else if self.gameState and self.gameState.score ~= self.animation.newScore then
-            -- Détection d'un changement de score
-            self.animation.scoreChange = true
-            self.animation.oldScore = self.animation.newScore
-            self.animation.newScore = self.gameState.score
-            self.animation.time = 0
+    -- Mettre à jour l'animation du score si elle est active
+    if self.scoreAnimation.active then
+        local elapsed = love.timer.getTime() - self.scoreAnimation.startTime
+        local progress = math.min(1, elapsed / self.scoreAnimation.duration)
+        
+        -- Interpolation avec ease-out (ralentit à la fin)
+        local ease = 1 - (1 - progress) * (1 - progress)
+        
+        -- Mettre à jour la valeur courante
+        self.scoreAnimation.currentValue = self.scoreAnimation.previousValue + 
+            (self.gameState.score - self.scoreAnimation.previousValue) * ease
+        
+        -- Fin de l'animation
+        if progress >= 1 then
+            self.scoreAnimation.active = false
+            self.scoreAnimation.currentValue = self.gameState.score
         end
     end
 end
 
--- Déclenche manuellement une animation de changement de score
-function ScorePanel:animateScoreChange(oldScore, newScore)
-    self.animation.scoreChange = true
-    self.animation.oldScore = oldScore
-    self.animation.newScore = newScore
-    self.animation.time = 0
+function ScorePanel:updateScore()
+    -- Méthode appelée lorsque le score change
+    -- Si le score a changé depuis la dernière mise à jour, démarrer une animation
+    if not self.scoreAnimation.active and self.scoreAnimation.currentValue ~= self.gameState.score then
+        self:animateScoreChange(self.scoreAnimation.currentValue)
+    end
+end
+
+function ScorePanel:animateScoreChange(previousScore)
+    -- Si aucun score précédent n'est fourni, utiliser le score actuel
+    previousScore = previousScore or self.scoreAnimation.currentValue
+    
+    -- Configurer l'animation
+    self.scoreAnimation.active = true
+    self.scoreAnimation.previousValue = previousScore
+    self.scoreAnimation.startTime = love.timer.getTime()
+    
+    -- Si l'animation est déjà en cours, continuer à partir de la valeur actuelle
+    if self.scoreAnimation.active then
+        self.scoreAnimation.previousValue = self.scoreAnimation.currentValue
+    end
 end
 
 return ScorePanel

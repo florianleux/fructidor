@@ -1,146 +1,143 @@
--- Gestionnaire de mise en page pour les composants UI
+-- Gestionnaire de mise en page pour les composants d'interface
 local LayoutManager = {}
 LayoutManager.__index = LayoutManager
 
 function LayoutManager.new(params)
     local self = setmetatable({}, LayoutManager)
     
-    -- Référence au gestionnaire d'échelle
+    -- Stocker les dépendances
     self.scaleManager = params.scaleManager
     
-    -- Conteneurs principaux
-    self.containers = {
-        -- Zone principale occupant toute la largeur (100%)
-        main = {
-            relX = 0,
-            relY = 0,
-            relWidth = 1,
-
-            relHeight = 1,
-            components = {}
-        }
-        -- La sidebar a été supprimée
+    -- Structure de données pour les composants
+    -- Organisée par "écran" ou "contexte" pour permettre des interfaces différentes
+    self.components = {
+        main = {}, -- écran principal du jeu
+        hub = {},  -- écran du hub entre les runs
+        menu = {}  -- menu principal (prévu pour l'avenir)
     }
     
-    -- Positions et dimensions absolues calculées
-    self.x = 0
-    self.y = 0
-    self.width = self.scaleManager.referenceWidth
-    self.height = self.scaleManager.referenceHeight
-    
-    -- Recalculer immédiatement les limites
-    self:recalculateBounds()
+    -- Écran actuel
+    self.currentScreen = "main"
     
     return self
 end
 
--- Calcule les dimensions de tous les conteneurs et leurs composants
-function LayoutManager:recalculateBounds()
-    -- Mettre à jour les dimensions globales
-    self.width = self.scaleManager.referenceWidth
-    self.height = self.scaleManager.referenceHeight
-    
-    -- Calculer les limites de chaque conteneur
-    for key, container in pairs(self.containers) do
-        container.x = self.x + (self.width * container.relX)
-        container.y = self.y + (self.height * container.relY)
-        container.width = self.width * container.relWidth
-        container.height = self.height * container.relHeight
-        
-        -- Calculer les limites de chaque composant dans ce conteneur
-        for _, component in ipairs(container.components) do
-            component:calculateBounds(
-                container.x, container.y, 
-                container.width, container.height
-            )
-        end
-    end
-end
-
--- Ajoute un composant à un conteneur spécifique
-function LayoutManager:addComponent(containerKey, component)
-    if self.containers[containerKey] then
-        table.insert(self.containers[containerKey].components, component)
-        
-        -- Calculer immédiatement les limites du nouveau composant
-        local container = self.containers[containerKey]
-        component:calculateBounds(
-            container.x, container.y, 
-            container.width, container.height
-        )
-        
-        return true
-    end
-    return false
-end
-
--- Dessine tous les composants de tous les conteneurs
-function LayoutManager:draw()
-    for _, container in pairs(self.containers) do
-        for _, component in ipairs(container.components) do
-            component:draw()
-        end
+function LayoutManager:addComponent(screenName, component)
+    -- Vérifier que l'écran existe
+    if not self.components[screenName] then
+        self.components[screenName] = {}
     end
     
-    -- Dessin de débogage des limites des conteneurs si demandé
-    if love.keyboard.isDown("f4") then
-        for key, container in pairs(self.containers) do
-            love.graphics.setColor(0.2, 0.2, 0.8, 0.3)
-            love.graphics.rectangle("fill", container.x, container.y, container.width, container.height)
-            love.graphics.setColor(0.2, 0.2, 0.8, 0.7)
-            love.graphics.rectangle("line", container.x, container.y, container.width, container.height)
-            love.graphics.setColor(0, 0, 0, 0.8)
-            love.graphics.print(key, container.x + 5, container.y + 5)
+    -- Ajouter le composant
+    table.insert(self.components[screenName], component)
+end
+
+function LayoutManager:removeComponent(screenName, component)
+    -- Vérifier que l'écran existe
+    if not self.components[screenName] then
+        return
+    end
+    
+    -- Chercher et supprimer le composant
+    for i, comp in ipairs(self.components[screenName]) do
+        if comp == component then
+            table.remove(self.components[screenName], i)
+            return
         end
     end
 end
 
--- Met à jour tous les composants
+function LayoutManager:switchScreen(screenName)
+    -- Vérifier que l'écran existe
+    if self.components[screenName] then
+        self.currentScreen = screenName
+    else
+        print("ERREUR: Tentative de passage à un écran inexistant: " .. screenName)
+    end
+end
+
 function LayoutManager:update(dt)
-    for _, container in pairs(self.containers) do
-        for _, component in ipairs(container.components) do
+    -- Mettre à jour tous les composants de l'écran actuel
+    for _, component in ipairs(self.components[self.currentScreen]) do
+        -- Vérifier que le composant a une méthode update
+        if component.update then
             component:update(dt)
         end
     end
 end
 
--- Transmet les événements souris aux composants
+function LayoutManager:draw()
+    -- Dessiner tous les composants de l'écran actuel
+    -- Les composants sont dessinés dans l'ordre où ils ont été ajoutés
+    for _, component in ipairs(self.components[self.currentScreen]) do
+        -- Vérifier que le composant a une méthode draw
+        if component.draw then
+            component:draw()
+        end
+    end
+end
+
 function LayoutManager:mousepressed(x, y, button)
-    for _, container in pairs(self.containers) do
-        for _, component in ipairs(container.components) do
-            if component:containsPoint(x, y) then
-                if component:mousepressed(x, y, button) then
-                    return true  -- Événement consommé
-                end
+    -- Parcourir les composants dans l'ordre inverse
+    -- pour que ceux au-dessus (ajoutés en dernier) reçoivent les clics en priorité
+    local handled = false
+    
+    -- Itérer de la fin vers le début pour donner la priorité aux éléments de premier plan
+    for i = #self.components[self.currentScreen], 1, -1 do
+        local component = self.components[self.currentScreen][i]
+        
+        -- Vérifier si le composant contient la méthode et si le clic est dans ses limites
+        if component.mousepressed and component:isPointInside(x, y) then
+            local result = component:mousepressed(x, y, button)
+            if result then
+                -- Le composant a géré le clic
+                handled = true
+                break
             end
         end
     end
-    return false
+    
+    return handled
 end
 
 function LayoutManager:mousereleased(x, y, button)
-    for _, container in pairs(self.containers) do
-        for _, component in ipairs(container.components) do
-            if component:containsPoint(x, y) then
-                if component:mousereleased(x, y, button) then
-                    return true  -- Événement consommé
-                end
+    -- Similaire à mousepressed
+    local handled = false
+    
+    for i = #self.components[self.currentScreen], 1, -1 do
+        local component = self.components[self.currentScreen][i]
+        
+        if component.mousereleased and component:isPointInside(x, y) then
+            local result = component:mousereleased(x, y, button)
+            if result then
+                handled = true
+                break
             end
         end
     end
-    return false
+    
+    return handled
 end
 
--- Trouve un composant par son ID
-function LayoutManager:findComponentById(id)
-    for _, container in pairs(self.containers) do
-        for _, component in ipairs(container.components) do
-            if component.id == id then
-                return component
+function LayoutManager:mousemoved(x, y, dx, dy)
+    -- Transmettre les mouvements de la souris aux composants
+    local handled = false
+    
+    for i = #self.components[self.currentScreen], 1, -1 do
+        local component = self.components[self.currentScreen][i]
+        
+        if component.mousemoved then
+            -- Informer le composant du mouvement, qu'il soit à l'intérieur ou non
+            -- Certains composants pourraient avoir besoin de suivre le mouvement global
+            local result = component:mousemoved(x, y, dx, dy)
+            if result then
+                handled = true
+                break
             end
         end
     end
-    return nil
+    
+    return handled
 end
 
 return LayoutManager
