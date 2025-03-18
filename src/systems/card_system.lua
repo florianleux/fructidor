@@ -1,14 +1,14 @@
 -- Système de gestion des cartes
 local Plant = require('src.entities.plant')
 local Constants = require('src.utils.constants')
-local DependencyContainer = require('src.utils.dependency_container')
+local Services = require('src.utils.services')
 
 local CardSystem = {}
 CardSystem.__index = CardSystem
 
--- Définition des constantes pour la taille des cartes
-local CARD_WIDTH = 65
-local CARD_HEIGHT = 108
+-- Utilisation des constantes centralisées
+local CARD_WIDTH = Constants.UI.CARD.WIDTH
+local CARD_HEIGHT = Constants.UI.CARD.HEIGHT
 
 -- Le constructeur prend désormais des dépendances optionnelles
 function CardSystem.new(dependencies)
@@ -16,8 +16,6 @@ function CardSystem.new(dependencies)
     self.deck = {}
     self.hand = {}
     self.discardPile = {}
-    self.draggingCardIndex = nil -- Indice de la carte en cours de déplacement
-    self.cardInAnimation = nil -- Indice de la carte en cours d'animation
     
     -- Stocker les dépendances
     self.dependencies = dependencies or {}
@@ -114,24 +112,11 @@ function CardSystem:playCard(cardIndex, garden, x, y)
     if card.type == Constants.CARD_TYPE.PLANT then
         local plant = Plant.new(card.family, card.color)
         if garden:placePlant(plant, x, y) then
+            -- Retirer la carte de la main
             table.remove(self.hand, cardIndex)
+            
+            -- Ajouter la carte à la défausse
             table.insert(self.discardPile, card)
-            
-            -- Réinitialiser l'indice de la carte en drag si c'était celle-là
-            if self.draggingCardIndex == cardIndex then
-                self.draggingCardIndex = nil
-            elseif self.draggingCardIndex and self.draggingCardIndex > cardIndex then
-                -- Ajuster l'indice si une carte avant celle en déplacement est supprimée
-                self.draggingCardIndex = self.draggingCardIndex - 1
-            end
-            
-            -- Réinitialiser aussi l'indice de la carte en animation si nécessaire
-            if self.cardInAnimation == cardIndex then
-                self.cardInAnimation = nil
-            elseif self.cardInAnimation and self.cardInAnimation > cardIndex then
-                -- Ajuster l'indice si une carte avant celle en animation est supprimée
-                self.cardInAnimation = self.cardInAnimation - 1
-            end
             
             return true
         end
@@ -146,48 +131,15 @@ function CardSystem:getHand()
 end
 
 -- Fonction pour savoir si un point est sur une carte
--- Cette méthode est maintenant utilisée uniquement par le HandDisplay
 function CardSystem:getCardAt(x, y)
-    local cardWidth, cardHeight = CARD_WIDTH, CARD_HEIGHT
-    
     for i = #self.hand, 1, -1 do -- Regarder de haut en bas
-        -- Ignorer les cartes en animation
-        if i ~= self.cardInAnimation then
-            local card = self.hand[i]
-            if x >= card.x - cardWidth/2 and x <= card.x + cardWidth/2 and
-               y >= card.y - cardHeight/2 and y <= card.y + cardHeight/2 then
-                return card, i
-            end
+        local card = self.hand[i]
+        if x >= card.x - CARD_WIDTH/2 and x <= card.x + CARD_WIDTH/2 and
+           y >= card.y - CARD_HEIGHT/2 and y <= card.y + CARD_HEIGHT/2 then
+            return card, i
         end
     end
     return nil
-end
-
--- Définir la carte en cours de déplacement
-function CardSystem:setDraggingCard(index)
-    self.draggingCardIndex = index
-end
-
--- Définir la carte en cours d'animation
-function CardSystem:setCardInAnimation(index)
-    self.cardInAnimation = index
-    -- Désactiver le dragging si c'est la même carte
-    if self.draggingCardIndex == index then
-        self.draggingCardIndex = nil
-    end
-end
-
--- Réinitialiser la carte en animation
-function CardSystem:clearCardInAnimation(index)
-    -- Ne réinitialiser que si l'index est le même que celui qui est actuellement animé
-    if index == nil or self.cardInAnimation == index then
-        self.cardInAnimation = nil
-    end
-end
-
--- Réinitialiser l'état de déplacement
-function CardSystem:resetDragging()
-    self.draggingCardIndex = nil
 end
 
 return CardSystem

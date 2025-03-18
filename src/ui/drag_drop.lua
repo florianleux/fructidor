@@ -58,16 +58,8 @@ function DragDrop:update(dt)
                 self.moveAnimation.currentScale = self.moveAnimation.targetScale
             end
             
-            -- Réinitialiser tout à la fin de l'animation
-            local cardSystem = self.dependencies.cardSystem or Services.get("CardSystem")
-            if cardSystem then
-                cardSystem:clearCardInAnimation(self.cardIndex)
-            end
-            
-            self.dragging = nil
-            self.originalCard = nil
-            self.cardIndex = nil
-            self.moveAnimation.active = false
+            -- Informer le système de cartes que nous avons terminé
+            self:endAnimation()
             
         else
             -- Animation en cours
@@ -139,12 +131,6 @@ function DragDrop:startDrag(card, cardIndex, cardSystem)
     
     -- Initialiser l'échelle réduite directement
     self.moveAnimation.currentScale = CARD_SCALE_WHEN_DRAGGED
-    
-    -- Marquer cette carte comme étant en animation dans le système de cartes
-    local cardSystemToUse = self.dependencies.cardSystem or Services.get("CardSystem")
-    if cardSystemToUse then
-        cardSystemToUse:setCardInAnimation(cardIndex)
-    end
 end
 
 function DragDrop:stopDrag(garden)
@@ -216,22 +202,21 @@ function DragDrop:stopDrag(garden)
         self.moveAnimation.startScale = CARD_SCALE_WHEN_DRAGGED
         self.moveAnimation.targetScale = 1.0
         
-        -- La carte reste masquée dans le cardSystem jusqu'à la fin de l'animation
         return false
     else
         -- Si la carte a été placée, nettoyer immédiatement
-        local cardSystem = self.dependencies.cardSystem or Services.get("CardSystem")
-        if cardSystem then
-            cardSystem:clearCardInAnimation(self.cardIndex)
-        end
-        
-        self.dragging = nil
-        self.originalCard = nil
-        self.cardIndex = nil
-        self.moveAnimation.active = false
-        
+        self:endAnimation()
         return placed
     end
+end
+
+-- Méthode centralisée pour terminer le drag & drop
+function DragDrop:endAnimation()
+    -- Nettoyage des ressources
+    self.dragging = nil
+    self.originalCard = nil
+    self.cardIndex = nil
+    self.moveAnimation.active = false
 end
 
 function DragDrop:updateHighlight(garden, x, y)

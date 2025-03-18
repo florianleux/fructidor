@@ -1,6 +1,8 @@
 -- Composant d'affichage des dés météorologiques et du bouton de fin de tour
 local ComponentBase = require('src.ui.components.component_base')
 local Localization = require('src.utils.localization')
+local Config = require('src.utils.config')
+local Constants = require('src.utils.constants')
 
 local WeatherDice = setmetatable({}, {__index = ComponentBase})
 WeatherDice.__index = WeatherDice
@@ -16,9 +18,13 @@ function WeatherDice.new(params)
     self.diceAnimation = {
         active = false,
         startTime = 0,
-        duration = 0.8,
-        values = {}, -- Valeurs temporaires pendant l'animation
-        finalValues = {} -- Valeurs finales à atteindre
+        duration = 0.6,  -- Durée réduite pour une animation plus vive
+        values = {sun = 0, rain = 0},
+        finalValues = {sun = 0, rain = 0},
+        seasonRange = {
+            sun = {min = -3, max = 8},  -- Plage globale pour toutes les saisons
+            rain = {min = 0, max = 6}
+        }
     }
     
     -- Dimensions visuelles
@@ -111,37 +117,8 @@ function WeatherDice:draw()
 end
 
 function WeatherDice:update(dt)
-    -- Mettre à jour l'animation des dés si elle est active
-    if self.diceAnimation.active then
-        local elapsed = love.timer.getTime() - self.diceAnimation.startTime
-        local progress = math.min(1, elapsed / self.diceAnimation.duration)
-        
-        -- Interpolation avec ease-out (rebond)
-        local ease = math.sin(progress * math.pi / 2)
-        
-        -- Générer des valeurs aléatoires pendant l'animation
-        if progress < 0.7 then
-            -- Phase de roulement rapide
-            local speed = 10 - progress * 10 -- Ralentit progressivement
-            if math.random() < dt * speed then
-                -- Valeurs aléatoires pendant l'animation
-                self.diceAnimation.values.sun = math.random(-3, 8)
-                self.diceAnimation.values.rain = math.random(0, 6)
-            end
-        else
-            -- Phase finale - convergence vers les valeurs finales
-            local finalProgress = (progress - 0.7) / 0.3
-            self.diceAnimation.values.sun = math.floor(self.diceAnimation.finalValues.sun + 0.5)
-            self.diceAnimation.values.rain = math.floor(self.diceAnimation.finalValues.rain + 0.5)
-        end
-        
-        -- Fin de l'animation
-        if progress >= 1 then
-            self.diceAnimation.active = false
-            self.diceAnimation.values.sun = self.diceAnimation.finalValues.sun
-            self.diceAnimation.values.rain = self.diceAnimation.finalValues.rain
-        end
-    end
+    -- Mettre à jour l'animation des dés
+    self:updateDiceAnimation(dt)
     
     -- Vérifier si la souris survole le bouton
     local mouseX, mouseY = love.mouse.getPosition()
@@ -155,7 +132,43 @@ function WeatherDice:update(dt)
     
     -- Vérifier si la souris survole le bouton
     self.buttonHovered = (mouseX >= buttonX and mouseX <= buttonX + self.buttonWidth and
-                           mouseY >= buttonY and mouseY <= buttonY + self.buttonHeight)
+                          mouseY >= buttonY and mouseY <= buttonY + self.buttonHeight)
+end
+
+-- Méthode simplifiée pour l'animation des dés
+function WeatherDice:updateDiceAnimation(dt)
+    if not self.diceAnimation.active then return end
+    
+    local elapsed = love.timer.getTime() - self.diceAnimation.startTime
+    local progress = math.min(1, elapsed / self.diceAnimation.duration)
+    
+    -- Animation en trois phases simples
+    if progress < 0.7 then
+        -- Phase 1 et 2: Valeurs aléatoires avec fréquence réduite progressivement
+        local changeFrequency = 0.3 - (progress * 0.3) -- Diminue de 0.3 à 0.0
+        
+        -- Changer les valeurs aléatoirement avec une fréquence qui diminue
+        if math.random() < changeFrequency then
+            -- Valeurs aléatoires dans les plages définies
+            self.diceAnimation.values.sun = math.random(
+                self.diceAnimation.seasonRange.sun.min, 
+                self.diceAnimation.seasonRange.sun.max
+            )
+            self.diceAnimation.values.rain = math.random(
+                self.diceAnimation.seasonRange.rain.min, 
+                self.diceAnimation.seasonRange.rain.max
+            )
+        end
+    else
+        -- Phase 3: Montrer les valeurs finales
+        self.diceAnimation.values.sun = self.diceAnimation.finalValues.sun
+        self.diceAnimation.values.rain = self.diceAnimation.finalValues.rain
+    end
+    
+    -- Fin de l'animation
+    if progress >= 1 then
+        self.diceAnimation.active = false
+    end
 end
 
 function WeatherDice:mousepressed(x, y, button)
@@ -173,6 +186,15 @@ function WeatherDice:mousepressed(x, y, button)
 end
 
 function WeatherDice:startRolling()
+    -- Configurer la plage de valeurs pour cette saison
+    local seasonData = Config.diceRanges[self.gameState.currentSeason]
+    if seasonData then
+        self.diceAnimation.seasonRange = {
+            sun = seasonData.sun,
+            rain = seasonData.rain
+        }
+    end
+    
     -- Configuration de l'animation
     self.diceAnimation.active = true
     self.diceAnimation.startTime = love.timer.getTime()
@@ -183,10 +205,10 @@ function WeatherDice:startRolling()
         rain = self.gameState.rainDieValue
     }
     
-    -- Initialiser les valeurs temporaires
+    -- Initialiser les valeurs temporaires avec des valeurs aléatoires dans la plage
     self.diceAnimation.values = {
-        sun = math.random(-3, 8),
-        rain = math.random(0, 6)
+        sun = math.random(self.diceAnimation.seasonRange.sun.min, self.diceAnimation.seasonRange.sun.max),
+        rain = math.random(self.diceAnimation.seasonRange.rain.min, self.diceAnimation.seasonRange.rain.max)
     }
 end
 
