@@ -1,7 +1,8 @@
 -- Gestionnaire d'échelle pour adapter l'interface à différentes tailles d'écran
 local ScaleManager = {}
 
--- Dimensions de référence pour la conception (1920x1080 HD)
+-- Les dimensions de référence sont maintenant importées depuis UIConstants
+-- mais on les garde ici aussi pour l'initialisation
 ScaleManager.referenceWidth = 1920
 ScaleManager.referenceHeight = 1080
 
@@ -153,6 +154,19 @@ function ScaleManager.resizeWindow(width, height)
     ScaleManager.scale = math.min(ScaleManager.scaleX, ScaleManager.scaleY)
     
     print("ScaleManager: Redimensionnement à " .. width .. "x" .. height .. " (échelle: " .. ScaleManager.scale .. ")")
+end
+
+-- Fonction utilitaire pour convertir une valeur en pixels vers des valeurs adaptées à l'échelle actuelle
+function ScaleManager.pixelToScale(pixelValue)
+    return pixelValue * ScaleManager.scale
+end
+
+-- Fonction pour récupérer la valeur en pixels d'origine (non mise à l'échelle)
+function ScaleManager.scaleToPixel(scaledValue)
+    if ScaleManager.scale == 0 then
+        return scaledValue -- Éviter division par zéro
+    end
+    return scaledValue / ScaleManager.scale
 end
 
 return ScaleManager
