@@ -13,10 +13,34 @@ Cette version du projet est basée sur les principes KISS (Keep It Simple, Stupi
 ### Améliorations récentes
 
 - **Simplification de l'architecture**: Suppression des couches inutiles et des abstractions excessives
-- **Standardisation de la gestion des dépendances**: Utilisation d'un seul système (Services)
+- **Adoption d'un modèle unique d'injection de dépendances**: Utilisation cohérente de l'injection directe par constructeur
 - **Cohérence de configuration**: Centralisation dans un seul module
 - **Système d'animation simplifié**: Interface plus réactive et code plus maintenable
 - **Tests unitaires clarifiés**: Structure de tests cohérente et extensible
+
+## Gestion des dépendances
+
+Le projet utilise désormais un modèle unifié d'injection de dépendances:
+
+1. Les modules reçoivent leurs dépendances via leurs constructeurs `new()`
+2. Les dépendances sont explicitement passées aux composants qui en ont besoin
+3. Le système global de Services est maintenu pour une transition en douceur, mais est déprécié
+
+Exemple d'utilisation:
+
+```lua
+-- Création d'un module avec ses dépendances
+local cardSystem = CardSystem.new({
+    scaleManager = ScaleManager
+})
+
+-- Injection du module comme dépendance d'un autre module
+local gameState = GameState.new({
+    cardSystem = cardSystem,
+    garden = garden,
+    scaleManager = ScaleManager
+})
+```
 
 ## Comment exécuter le projet
 
@@ -50,5 +74,6 @@ Pour participer au développement:
 
 1. Suivez les règles de nommage et d'organisation du code
 2. Maintenez la simplicité du code en évitant les abstractions excessives
-3. Écrivez des tests pour les nouvelles fonctionnalités
-4. Suivez le processus de contribution défini dans le document `docs/Processus de Contribution pour Fructidor.md`
+3. Utilisez l'injection de dépendances directe via le constructeur
+4. Écrivez des tests pour les nouvelles fonctionnalités
+5. Suivez le processus de contribution défini dans le document `docs/Processus de Contribution pour Fructidor.md`
