@@ -27,11 +27,11 @@ Constants.COLOR = {
   BLUE = "BLUE"
 }
 
--- Stades de croissance des plantes
+-- Stades de croissance des plantes (standardisé)
 Constants.GROWTH_STAGE = {
-  SEED = "SEED",
-  PLANT = "PLANT",
-  FRUITING = "FRUITING"
+  SEED = "SEED",         -- Graine
+  SPROUT = "SPROUT",     -- Pousse (rename pour plus de cohérence)
+  FRUIT = "FRUIT"        -- Fruit (rename pour cohérence avec le renderer)
 }
 
 -- Types de cartes
@@ -69,6 +69,22 @@ Constants.CONSTRAINT_TYPE = {
   FAMILY_BONUS = "FAMILY_BONUS",
   COLOR_BONUS = "COLOR_BONUS",
   TIME_LIMIT = "TIME_LIMIT"
+}
+
+-- Constantes graphiques centralisées
+Constants.UI = {
+  -- Dimensions des cartes (centralisé)
+  CARD = {
+    WIDTH = 65,
+    HEIGHT = 108,
+    CORNER_RADIUS = 3,
+    HEADER_HEIGHT = 16,
+    TEXT_SCALE = 0.84
+  },
+  -- Couleurs standards (centralisables ultérieurement)
+  COLORS = {
+    -- ... à compléter au besoin
+  }
 }
 
 return Constants
