@@ -12,7 +12,7 @@ local HandDisplay = require('src.ui.components.hand_display')
 function UIManager.new(params)
     local self = setmetatable({}, UIManager)
     
-    -- Obtenir les dépendances
+    -- Obtenir les dépendances par injection directe
     self.gameState = params.gameState
     self.cardSystem = params.cardSystem
     self.dragDrop = params.dragDrop

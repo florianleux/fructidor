@@ -6,9 +6,8 @@ local Garden = require('src.entities.garden')
 local ScaleManager = require('src.utils.scale_manager')
 local UIManager = require('src.ui.ui_manager')
 local GardenRenderer = require('src.ui.garden_renderer')
-local ServiceSetup = require('src.utils.service_setup')
 
--- Module principal pour stocker les références localement
+-- Module principal pour stocker les références globalement accessibles
 local Game = {
     initialized = false,
     initializationError = nil
@@ -31,7 +30,7 @@ function love.load(arg)
         return
     end
     
-    -- Créer les instances principales
+    -- Créer les instances principales en utilisant l'injection de dépendances directe
     local garden = Garden.new(3, 2)
     local gardenRenderer = GardenRenderer.new()
     
@@ -67,23 +66,15 @@ function love.load(arg)
         end
     })
     
+    -- Compléter les dépendances circulaires
+    dragDrop.dependencies.uiManager = uiManager
+    
     -- Stocker les références localement 
     Game.gameState = gameState
     Game.cardSystem = cardSystem
     Game.dragDrop = dragDrop
     Game.garden = garden
     Game.uiManager = uiManager
-    
-    -- Initialiser les services avec nos instances
-    ServiceSetup.initialize({
-        GameState = gameState,
-        CardSystem = cardSystem,
-        Garden = garden,
-        DragDrop = dragDrop,
-        ScaleManager = ScaleManager,
-        GardenRenderer = gardenRenderer,
-        UIManager = uiManager
-    })
     
     -- Piocher quelques cartes pour commencer le jeu
     for i = 1, 5 do
