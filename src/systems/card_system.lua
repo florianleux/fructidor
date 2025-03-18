@@ -1,7 +1,6 @@
 -- Système de gestion des cartes
 local Plant = require('src.entities.plant')
 local Constants = require('src.utils.constants')
-local Services = require('src.utils.services')
 
 local CardSystem = {}
 CardSystem.__index = CardSystem
@@ -10,7 +9,7 @@ CardSystem.__index = CardSystem
 local CARD_WIDTH = Constants.UI.CARD.WIDTH
 local CARD_HEIGHT = Constants.UI.CARD.HEIGHT
 
--- Le constructeur prend désormais des dépendances optionnelles
+-- Le constructeur prend les dépendances via injection
 function CardSystem.new(dependencies)
     local self = setmetatable({}, CardSystem)
     self.deck = {}
