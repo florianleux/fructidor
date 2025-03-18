@@ -7,13 +7,22 @@ GardenDisplay.__index = GardenDisplay
 function GardenDisplay.new(params)
     local self = ComponentBase.new({
         id = "garden_display",
-        relX = params.relX or 0,
-        relY = params.relY or 0.2,
-        relWidth = params.relWidth or 1,
-        relHeight = params.relHeight or 0.5,
+        pixelX = params.pixelX or 96,      -- 5% de 1920
+        pixelY = params.pixelY or 216,     -- 20% de 1080
+        pixelWidth = params.pixelWidth or 1728,   -- 90% de 1920
+        pixelHeight = params.pixelHeight or 540,  -- 50% de 1080
         margin = params.margin or {top=10, right=10, bottom=10, left=10},
         scaleManager = params.scaleManager
     })
+    
+    -- Pour la compatibilité avec l'ancien système
+    if params.relX or params.relY or params.relWidth or params.relHeight then
+        -- Les valeurs relatives seront converties en pixels dans ComponentBase.new
+        self.pixelX = params.relX and math.floor(params.relX * self.scaleManager.referenceWidth) or self.pixelX
+        self.pixelY = params.relY and math.floor(params.relY * self.scaleManager.referenceHeight) or self.pixelY
+        self.pixelWidth = params.relWidth and math.floor(params.relWidth * self.scaleManager.referenceWidth) or self.pixelWidth
+        self.pixelHeight = params.relHeight and math.floor(params.relHeight * self.scaleManager.referenceHeight) or self.pixelHeight
+    end
     
     setmetatable(self, GardenDisplay)
     
