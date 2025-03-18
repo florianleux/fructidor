@@ -1,4 +1,4 @@
--- Bannière d'affichage de la saison actuelle
+-- Bannière d'affichage de la saison actuelle simplifiée
 local ComponentBase = require('src.ui.components.component_base')
 local Localization = require('src.utils.localization')
 local Constants = require('src.utils.constants')
@@ -32,9 +32,6 @@ function SeasonBanner.new(params)
 end
 
 function SeasonBanner:draw()
-    -- Convertir les coordonnées pixel en coordonnées d'écran
-    local x, y, width, height = self:getScaledBounds()
-    
     -- Obtenir la couleur de la saison actuelle
     local season = self.gameState.currentSeason
     local backgroundColor = self.seasonColors[season] or {0.9, 0.9, 0.9, 1}
@@ -42,7 +39,7 @@ function SeasonBanner:draw()
     
     -- Dessiner le fond de la bannière
     love.graphics.setColor(unpack(backgroundColor))
-    love.graphics.rectangle("fill", x, y, width, height, 5)
+    love.graphics.rectangle("fill", self.x, self.y, self.width, self.height, 5)
     
     -- Dessiner le texte de la saison
     love.graphics.setColor(unpack(textColor))
@@ -53,13 +50,13 @@ function SeasonBanner:draw()
     local seasonInfo = Localization.getText("ui.saison_numero") .. " " .. math.ceil(self.gameState.currentTurn/2) .. "/4"
     
     -- Dessiner les informations
-    love.graphics.print(seasonText, x + 20, y + 15, 0, 1.5, 1.5)
-    love.graphics.print(turnInfo, x + 20, y + 45, 0, 1, 1)
-    love.graphics.print(seasonInfo, x + 150, y + 45, 0, 1, 1)
+    love.graphics.print(seasonText, self.x + 20, self.y + 15, 0, 1.5, 1.5)
+    love.graphics.print(turnInfo, self.x + 20, self.y + 45, 0, 1, 1)
+    love.graphics.print(seasonInfo, self.x + 150, self.y + 45, 0, 1, 1)
     
     -- Ajouter une bordure décorative
     love.graphics.setColor(textColor[1], textColor[2], textColor[3], 0.5)
-    love.graphics.rectangle("line", x, y, width, height, 5)
+    love.graphics.rectangle("line", self.x, self.y, self.width, self.height, 5)
 end
 
 function SeasonBanner:updateSeason()
