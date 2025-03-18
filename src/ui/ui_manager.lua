@@ -127,7 +127,7 @@ end
 
 function UIManager:mousemoved(x, y, dx, dy)
     -- Transmettre l'événement au gestionnaire de mise en page
-    -- (à implémenter dans layout_manager.lua)
+    return self.layoutManager:mousemoved(x, y, dx, dy)
 end
 
 -- Méthode pour actualiser un composant spécifique
@@ -139,6 +139,12 @@ function UIManager:updateComponent(componentId)
             component:updateHand()
         elseif componentId == "gardenDisplay" and component.updateGarden then
             component:updateGarden()
+        elseif componentId == "seasonBanner" and component.updateSeason then
+            component:updateSeason()
+        elseif componentId == "weatherDice" and component.updateDice then
+            component:updateDice()
+        elseif componentId == "scorePanel" and component.updateScore then
+            component:updateScore()
         end
     end
 end
@@ -150,7 +156,7 @@ function UIManager:triggerAnimation(componentId, animationType, ...)
         if componentId == "scorePanel" and animationType == "scoreChange" and component.animateScoreChange then
             component:animateScoreChange(...)
         elseif componentId == "weatherDice" and animationType == "rolling" and component.startRolling then
-            component:startRolling()
+            component:startRolling(...)
         end
     end
 end
