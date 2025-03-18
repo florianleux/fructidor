@@ -6,6 +6,7 @@ local DependencySetup = require('src.utils.dependency_setup')
 local DependencyContainer = require('src.utils.dependency_container')
 local Garden = require('src.entities.garden')
 local ScaleManager = require('src.utils.scale_manager')
+local GardenRenderer = require('src.ui.garden_renderer')
 
 -- Module principal pour stocker les références localement
 local Game = {
@@ -31,10 +32,14 @@ function love.load(arg)
     end
     
     -- Créer les instances principales avec leurs dépendances mutuelles
-    -- Nous créons d'abord toutes les instances, puis nous les relions ensemble
     
     -- Créer le jardin
     local garden = Garden.new(3, 2)
+    
+    -- Créer le renderer du jardin avec une position absolue
+    local gardenRenderer = GardenRenderer.new()
+    -- Positionner le jardin en coordonnées absolues (marge de 6px, décalage vertical de 96px)
+    gardenRenderer:setPosition(6, 96)
     
     -- Créer les systèmes principaux avec leurs dépendances
     local cardSystem = CardSystem.new({
@@ -44,6 +49,7 @@ function love.load(arg)
     local gameState = GameState.new({
         cardSystem = cardSystem,
         garden = garden,
+        gardenRenderer = gardenRenderer,
         scaleManager = ScaleManager
     })
     
@@ -57,6 +63,7 @@ function love.load(arg)
     Game.cardSystem = cardSystem
     Game.dragDrop = dragDrop
     Game.garden = garden
+    Game.gardenRenderer = gardenRenderer
     
     -- Initialiser le système d'injection de dépendances avec nos instances
     DependencySetup.initialize({
@@ -64,6 +71,7 @@ function love.load(arg)
         cardSystem = cardSystem,
         garden = garden,
         dragDrop = dragDrop,
+        gardenRenderer = gardenRenderer,
         scaleManager = ScaleManager
     })
     
@@ -115,6 +123,9 @@ function love.draw()
     -- Dessiner l'état du jeu
     Game.gameState:draw()
     
+    -- Dessiner le jardin avec le renderer dédié
+    Game.gardenRenderer:draw(Game.garden)
+    
     -- Dessiner les cartes en main
     Game.cardSystem:drawHand()
     
@@ -123,7 +134,29 @@ function love.draw()
         -- Utiliser les coordonnées ajustées à l'échelle
         local mouseX = love.mouse.getX() / ScaleManager.scale
         local mouseY = love.mouse.getY() / ScaleManager.scale
-        Game.dragDrop:updateHighlight(Game.gameState.garden, mouseX, mouseY)
+        
+        -- Vérifier si la souris est sur le jardin
+        if Game.gardenRenderer:containsPoint(Game.garden, mouseX, mouseY) then
+            local gridX, gridY = Game.gardenRenderer:getGridCoordinates(mouseX, mouseY)
+            -- Fonction de surbrillance adaptée au positionnement absolu
+            if gridX >= 1 and gridX <= Game.garden.width and 
+               gridY >= 1 and gridY <= Game.garden.height then
+                
+                -- Calculer les coordonnées de la cellule survolée
+                local cellX = Game.gardenRenderer.x + (gridX - 1) * Game.gardenRenderer.cellSize
+                local cellY = Game.gardenRenderer.y + (gridY - 1) * Game.gardenRenderer.cellSize
+                
+                -- Afficher la surbrillance si la cellule est vide
+                if not Game.garden.grid[gridY][gridX].plant then
+                    love.graphics.setColor(0.8, 0.9, 0.7, 0.6)
+                    love.graphics.rectangle("fill", cellX, cellY, 
+                        Game.gardenRenderer.cellSize, Game.gardenRenderer.cellSize)
+                    love.graphics.setColor(0.4, 0.8, 0.4)
+                    love.graphics.rectangle("line", cellX, cellY, 
+                        Game.gardenRenderer.cellSize, Game.gardenRenderer.cellSize, 2)
+                end
+            end
+        end
     end
     
     -- Dessiner la carte en cours de déplacement ou d'animation (au-dessus de tout)
@@ -177,7 +210,17 @@ function love.mousereleased(x, y, button)
     
     -- Lâcher une carte
     if button == 1 and not Game.dragDrop:isAnimating() then
-        Game.dragDrop:stopDrag(Game.gameState.garden)
+        if Game.gardenRenderer:containsPoint(Game.garden, scaledX, scaledY) then
+            local gridX, gridY = Game.gardenRenderer:getGridCoordinates(scaledX, scaledY)
+            if gridX >= 1 and gridX <= Game.garden.width and gridY >= 1 and gridY <= Game.garden.height then
+                -- Utiliser le cardSystem pour placer la carte
+                Game.cardSystem:playCardAt(Game.dragDrop, Game.garden, gridX, gridY)
+                return
+            end
+        end
+        
+        -- Si la carte n'a pas été déposée sur le jardin, la retourner
+        Game.dragDrop:stopDrag(Game.garden)
     end
 end
 
