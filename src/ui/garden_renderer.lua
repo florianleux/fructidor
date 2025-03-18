@@ -12,13 +12,26 @@ local TEXT_SCALE = 0.6        -- Échelle de texte réduite
 
 function GardenRenderer.new()
     local self = setmetatable({}, GardenRenderer)
+    -- Par défaut, position en haut à gauche
+    self.x = 0
+    self.y = 0
+    self.cellSize = CELL_DEFAULT_SIZE
     return self
 end
 
+-- Méthode pour définir la position absolue du jardin
+function GardenRenderer:setPosition(x, y, cellSize)
+    self.x = x or self.x
+    self.y = y or self.y
+    self.cellSize = cellSize or self.cellSize
+end
+
 -- Méthode pour dessiner le jardin avec les plantes
-function GardenRenderer:draw(garden, x, y, cellSize)
-    -- Utiliser la taille fournie ou la taille par défaut
-    local size = cellSize or CELL_DEFAULT_SIZE
+function GardenRenderer:draw(garden)
+    -- Utiliser la position absolue stockée
+    local x = self.x
+    local y = self.y
+    local size = self.cellSize
     
     -- Dessiner le fond du jardin
     love.graphics.setColor(0.9, 0.8, 0.6) -- Couleur terre/sable
@@ -97,6 +110,19 @@ function GardenRenderer:draw(garden, x, y, cellSize)
             end
         end
     end
+end
+
+-- Conversion de coordonnées screen en coordonnées de grille
+function GardenRenderer:getGridCoordinates(screenX, screenY)
+    local gridX = math.floor((screenX - self.x) / self.cellSize) + 1
+    local gridY = math.floor((screenY - self.y) / self.cellSize) + 1
+    return gridX, gridY
+end
+
+-- Vérifier si les coordonnées écran sont dans le jardin
+function GardenRenderer:containsPoint(garden, screenX, screenY)
+    local gridX, gridY = self:getGridCoordinates(screenX, screenY)
+    return gridX >= 1 and gridX <= garden.width and gridY >= 1 and gridY <= garden.height
 end
 
 return GardenRenderer
