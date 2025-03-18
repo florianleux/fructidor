@@ -1,4 +1,4 @@
--- Gestionnaire de mise en page pour les composants d'interface
+-- Gestionnaire de mise en page simplifié pour les composants d'interface
 local LayoutManager = {}
 LayoutManager.__index = LayoutManager
 
@@ -8,8 +8,7 @@ function LayoutManager.new(params)
     -- Stocker les dépendances
     self.scaleManager = params.scaleManager
     
-    -- Structure de données pour les composants
-    -- Organisée par "écran" ou "contexte" pour permettre des interfaces différentes
+    -- Structure de données simplifiée pour les composants
     self.components = {
         main = {}, -- écran principal du jeu
         hub = {},  -- écran du hub entre les runs
@@ -59,7 +58,6 @@ end
 function LayoutManager:update(dt)
     -- Mettre à jour tous les composants de l'écran actuel
     for _, component in ipairs(self.components[self.currentScreen]) do
-        -- Vérifier que le composant a une méthode update
         if component.update then
             component:update(dt)
         end
@@ -68,9 +66,7 @@ end
 
 function LayoutManager:draw()
     -- Dessiner tous les composants de l'écran actuel
-    -- Les composants sont dessinés dans l'ordre où ils ont été ajoutés
     for _, component in ipairs(self.components[self.currentScreen]) do
-        -- Vérifier que le composant a une méthode draw
         if component.draw then
             component:draw()
         end
@@ -78,19 +74,15 @@ function LayoutManager:draw()
 end
 
 function LayoutManager:mousepressed(x, y, button)
-    -- Parcourir les composants dans l'ordre inverse
-    -- pour que ceux au-dessus (ajoutés en dernier) reçoivent les clics en priorité
+    -- Parcourir les composants dans l'ordre inverse pour priorité au premier plan
     local handled = false
     
-    -- Itérer de la fin vers le début pour donner la priorité aux éléments de premier plan
     for i = #self.components[self.currentScreen], 1, -1 do
         local component = self.components[self.currentScreen][i]
         
-        -- Vérifier si le composant contient la méthode et si le clic est dans ses limites
         if component.mousepressed and component:isPointInside(x, y) then
             local result = component:mousepressed(x, y, button)
             if result then
-                -- Le composant a géré le clic
                 handled = true
                 break
             end
@@ -127,8 +119,6 @@ function LayoutManager:mousemoved(x, y, dx, dy)
         local component = self.components[self.currentScreen][i]
         
         if component.mousemoved then
-            -- Informer le composant du mouvement, qu'il soit à l'intérieur ou non
-            -- Certains composants pourraient avoir besoin de suivre le mouvement global
             local result = component:mousemoved(x, y, dx, dy)
             if result then
                 handled = true
