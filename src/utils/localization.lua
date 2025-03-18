@@ -6,6 +6,9 @@ local Localization = {}
 -- Langue courante (par défaut: français)
 Localization.currentLanguage = "fr"
 
+-- Cache des traductions pour éviter des recherches répétées
+Localization.cache = {}
+
 -- Dictionnaires des traductions
 Localization.translations = {
     ["fr"] = {
@@ -21,10 +24,10 @@ Localization.translations = {
         [Constants.PLANT_FAMILY.FABA] = "Faba",
         [Constants.PLANT_FAMILY.KUKURBITA] = "Kukurbita",
         
-        -- Stades de croissance
+        -- Stades de croissance (mise à jour avec les nouvelles constantes)
         [Constants.GROWTH_STAGE.SEED] = "Graine",
-        [Constants.GROWTH_STAGE.PLANT] = "Plant",
-        [Constants.GROWTH_STAGE.FRUITING] = "Fructifié",
+        [Constants.GROWTH_STAGE.SPROUT] = "Plant",
+        [Constants.GROWTH_STAGE.FRUIT] = "Fructifié",
         
         -- Types de cartes
         [Constants.CARD_TYPE.PLANT] = "Plante",
@@ -33,15 +36,20 @@ Localization.translations = {
         -- Interface utilisateur
         ["ui.tour"] = "Tour",
         ["ui.saison"] = "Saison",
+        ["ui.saison_numero"] = "Saison", 
         ["ui.soleil"] = "Soleil",
         ["ui.pluie"] = "Pluie",
         ["ui.score"] = "Score",
+        ["ui.score_title"] = "Score",
         ["ui.fin_tour"] = "Fin du tour",
         ["ui.points"] = "pts",
+        ["ui.florins"] = "Florins",
         
         -- Textes d'erreur et d'information
         ["error.dependency_not_found"] = "Dépendance non trouvée",
+        ["error.initialization_failed"] = "Échec d'initialisation",
         ["info.turn_completed"] = "Tour terminé",
+        ["info.loading"] = "Chargement en cours...",
         
         -- Nom des saisons au format numérique
         ["season.1"] = "Printemps",
@@ -54,9 +62,17 @@ Localization.translations = {
 
 -- Fonction pour obtenir la traduction d'une clé
 function Localization.getText(key)
+    -- Vérifier si la traduction est en cache
+    local cacheKey = Localization.currentLanguage .. "_" .. tostring(key)
+    if Localization.cache[cacheKey] then
+        return Localization.cache[cacheKey]
+    end
+    
     local currentDict = Localization.translations[Localization.currentLanguage]
     
     if currentDict and currentDict[key] then
+        -- Mettre en cache pour accès futur
+        Localization.cache[cacheKey] = currentDict[key]
         return currentDict[key]
     end
     
@@ -68,9 +84,16 @@ end
 function Localization.setLanguage(languageCode)
     if Localization.translations[languageCode] then
         Localization.currentLanguage = languageCode
+        -- Vider le cache lors d'un changement de langue
+        Localization.cache = {}
         return true
     end
     return false
+end
+
+-- Fonction pour réinitialiser le cache (utile lors de changements dynamiques)
+function Localization.clearCache()
+    Localization.cache = {}
 end
 
 return Localization
