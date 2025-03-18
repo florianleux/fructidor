@@ -1,9 +1,9 @@
 -- Gestionnaire d'échelle pour adapter l'interface à différentes tailles d'écran
 local ScaleManager = {}
 
--- Dimensions de référence pour la conception (initialement 800x600)
-ScaleManager.referenceWidth = 800
-ScaleManager.referenceHeight = 600
+-- Dimensions de référence pour la conception (1920x1080 HD)
+ScaleManager.referenceWidth = 1920
+ScaleManager.referenceHeight = 1080
 
 -- Facteurs d'échelle calculés au démarrage
 ScaleManager.scaleX = 1.0
