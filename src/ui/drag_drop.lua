@@ -17,6 +17,8 @@ function DragDrop.new(dependencies)
     -- Stocker les dépendances
     self.dependencies = dependencies or {}
     self.scaleManager = self.dependencies.scaleManager
+    self.cardSystem = self.dependencies.cardSystem
+    -- Note: uiManager sera injecté après sa création (dépendance circulaire)
     
     -- Animation simplifiée
     self.animation = {
@@ -69,7 +71,7 @@ function DragDrop:startDrag(card, cardIndex, cardSystem)
     self.originalCard = card
     self.cardIndex = cardIndex
     
-    -- Stocker référence au système de cartes
+    -- Stocker référence au système de cartes si fourni
     if cardSystem then
         self.dependencies.cardSystem = cardSystem
     end
@@ -94,9 +96,9 @@ function DragDrop:stopDrag(garden)
     end
     
     local placed = false
-    local uiManager = self.dependencies.uiManager
     
-    -- Récupérer le GardenDisplay
+    -- Récupérer le GardenDisplay via l'UIManager injecté
+    local uiManager = self.dependencies.uiManager
     local gardenDisplay = uiManager and uiManager.components and uiManager.components.gardenDisplay
     
     -- Trouver la cellule sous la carte
@@ -128,9 +130,8 @@ function DragDrop:stopDrag(garden)
             if isInside then
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
-                    local cardSystem = self.dependencies.cardSystem
-                    if self.cardIndex and cardSystem then
-                        placed = cardSystem:playCard(self.cardIndex, garden, x, y)
+                    if self.cardIndex and self.dependencies.cardSystem then
+                        placed = self.dependencies.cardSystem:playCard(self.cardIndex, garden, x, y)
                     end
                 end
                 
