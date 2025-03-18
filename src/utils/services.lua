@@ -1,40 +1,30 @@
--- Services - Système de gestion des dépendances simplifié pour Fructidor
--- Ce module est déprécié et sera supprimé dans une version future.
+-- Ce fichier est maintenu uniquement pour compatibilité
+-- et sera supprimé dans une version future.
+--
+-- AVIS IMPORTANT: Ce module est déprécié et ne doit plus être utilisé.
 -- Utilisez l'injection de dépendances directe à la place.
 
+local warning = [[
+ATTENTION: Le module Services est déprécié.
+Utilisez l'injection de dépendances directe via les constructeurs à la place.
+]]
+
+print(warning)
+
+-- Stub minimal pour éviter les erreurs dans le code existant
 local Services = {
-    -- Stockage des services
     _services = {},
-    
-    -- Indique si les services ont été initialisés
     initialized = false
 }
 
--- Initialise les services avec les instances fournies
-function Services.initialize(instances)
-    for name, instance in pairs(instances) do
-        Services._services[name] = instance
-    end
-    Services.initialized = true
+function Services.get()
+    print(warning)
+    return nil
+end
+
+function Services.initialize()
+    print(warning)
     return true
-end
-
--- Récupère un service par son nom
-function Services.get(name)
-    return Services._services[name]
-end
-
--- Enregistre un service
-function Services.register(name, service)
-    Services._services[name] = service
-    return service
-end
-
--- Réinitialise tous les services (utile pour les tests)
-function Services.resetAll()
-    Services._services = {}
-    Services.initialized = false
-    return Services
 end
 
 return Services
