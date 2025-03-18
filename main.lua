@@ -7,6 +7,7 @@ local Garden = require('src.entities.garden')
 local ScaleManager = require('src.utils.scale_manager')
 local UIManager = require('src.ui.ui_manager')
 local GardenRenderer = require('src.ui.garden_renderer')
+local ServiceSetup = require('src.utils.service_setup')
 
 -- Module principal pour stocker les références localement
 local Game = {
@@ -81,8 +82,8 @@ function love.load(arg)
     Game.garden = garden
     Game.uiManager = uiManager
     
-    -- Initialiser le système de services simplifié avec nos instances
-    Services.initialize({
+    -- Initialiser le système de services avec nos instances
+    ServiceSetup.initialize({
         GameState = gameState,
         CardSystem = cardSystem,
         Garden = garden,

@@ -1,56 +1,14 @@
--- Configuration du conteneur d'injection de dépendances
-local DependencyContainer = require('src.utils.dependency_container')
-local PlantRenderer = require('src.ui.plant_renderer')
-local GardenRenderer = require('src.ui.garden_renderer')
-local CardRenderer = require('src.ui.card_renderer')
+-- Ce fichier est déprécié et sera supprimé.
+-- Utilisez plutôt src.utils.service_setup pour l'initialisation des services.
 
--- Module pour initialiser toutes les dépendances au démarrage de l'application
-local DependencySetup = {}
+-- Redirection vers le nouveau système
+local ServiceSetup = require('src.utils.service_setup')
 
--- Fonction d'initialisation à appeler une seule fois au démarrage
-function DependencySetup.initialize(systems)
-    systems = systems or {}
-    
-    -- Enregistrer les renderers en tant que singletons
-    DependencyContainer.register("PlantRenderer", function()
-        return PlantRenderer.new()
-    end)
-    
-    DependencyContainer.register("GardenRenderer", function()
-        return GardenRenderer.new()
-    end)
-    
-    DependencyContainer.register("CardRenderer", function()
-        return CardRenderer.new()
-    end)
-    
-    -- Enregistrer les instances des systèmes principales si fournies
-    if systems.garden then
-        DependencyContainer.registerInstance("Garden", systems.garden)
+local DependencySetup = {
+    initialize = function(systems)
+        print("AVERTISSEMENT: L'utilisation de DependencySetup est dépréciée. Veuillez utiliser ServiceSetup à la place.")
+        return ServiceSetup.initialize(systems)
     end
-    
-    if systems.cardSystem then
-        DependencyContainer.registerInstance("CardSystem", systems.cardSystem)
-    end
-    
-    if systems.gameState then
-        DependencyContainer.registerInstance("GameState", systems.gameState)
-    end
-    
-    if systems.dragDrop then
-        DependencyContainer.registerInstance("DragDrop", systems.dragDrop)
-    end
-    
-    -- Enregistrer le ScaleManager s'il est fourni et initialisé
-    if systems.scaleManager then
-        if systems.scaleManager.initialized then
-            DependencyContainer.registerInstance("ScaleManager", systems.scaleManager)
-        else
-            print("AVERTISSEMENT: ScaleManager fourni mais non initialisé")
-        end
-    end
-    
-    return true
-end
+}
 
 return DependencySetup
