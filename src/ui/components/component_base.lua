@@ -50,11 +50,27 @@ function ComponentBase:calculateBounds(parentX, parentY, parentWidth, parentHeig
     self.height = (self.pixelHeight * parentRatioY) - self.margin.top - self.margin.bottom
 end
 
+-- Retourne les dimensions et positions calculées pour l'affichage
+function ComponentBase:getScaledBounds()
+    -- Si les dimensions n'ont pas encore été calculées, utiliser les valeurs par défaut
+    if self.width == 0 or self.height == 0 then
+        -- Valeurs de base sans parent spécifique
+        self:calculateBounds(0, 0, self.scaleManager.referenceWidth, self.scaleManager.referenceHeight)
+    end
+    
+    return self.x, self.y, self.width, self.height
+end
+
 -- Vérifie si un point (x, y) est dans les limites du composant
 function ComponentBase:containsPoint(x, y)
     return self.visible and 
            x >= self.x and x <= self.x + self.width and
            y >= self.y and y <= self.y + self.height
+end
+
+-- Alias de containsPoint pour maintenir la compatibilité avec le code existant
+function ComponentBase:isPointInside(x, y)
+    return self:containsPoint(x, y)
 end
 
 -- Méthode de dessin à implémenter par les classes dérivées

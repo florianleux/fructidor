@@ -5,13 +5,12 @@ local Localization = require('src.utils.localization')
 local CardRenderer = {}
 CardRenderer.__index = CardRenderer
 
--- Réduction de 40% des dimensions originales
--- Définition des constantes pour la taille des cartes (108%)
-local CARD_WIDTH = 65  -- 108 * 0.6 (réduit de 40%)
-local CARD_HEIGHT = 108 -- 180 * 0.6 (réduit de 40%)
-local CARD_CORNER_RADIUS = 3 -- 5 * 0.6
-local CARD_HEADER_HEIGHT = 16 -- 27 * 0.6
-local TEXT_SCALE = 0.84 -- 1.4 * 0.6
+-- Utilisation des constantes centralisées
+local CARD_WIDTH = Constants.UI.CARD.WIDTH
+local CARD_HEIGHT = Constants.UI.CARD.HEIGHT
+local CARD_CORNER_RADIUS = Constants.UI.CARD.CORNER_RADIUS
+local CARD_HEADER_HEIGHT = Constants.UI.CARD.HEADER_HEIGHT
+local TEXT_SCALE = Constants.UI.CARD.TEXT_SCALE
 
 function CardRenderer.new()
     local self = setmetatable({}, CardRenderer)
