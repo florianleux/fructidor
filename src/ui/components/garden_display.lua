@@ -80,8 +80,7 @@ function GardenDisplay:draw()
         
         if cellX >= 1 and cellX <= self.garden.width and cellY >= 1 and cellY <= self.garden.height then
             -- Dessiner la surbrillance sur la cellule ciblée
-            local cellScreenX = self.gardenX + (cellX - 1) * (self.cellSize + self.cellSpacing)
-            local cellScreenY = self.gardenY + (cellY - 1) * (self.cellSize + self.cellSpacing)
+            local cellScreenX, cellScreenY = self:getCellCoordinates(cellX, cellY)
             
             love.graphics.setColor(unpack(self.colors.highlight))
             love.graphics.rectangle("fill", cellScreenX, cellScreenY, self.cellSize, self.cellSize, 3)
@@ -93,8 +92,7 @@ function GardenDisplay:drawBasicGarden()
     -- Dessiner la grille de base du jardin (utilisé si gardenRenderer n'est pas disponible)
     for y = 1, self.garden.height do
         for x = 1, self.garden.width do
-            local cellX = self.gardenX + (x - 1) * (self.cellSize + self.cellSpacing)
-            local cellY = self.gardenY + (y - 1) * (self.cellSize + self.cellSpacing)
+            local cellX, cellY = self:getCellCoordinates(x, y)
             
             -- Fond de la cellule
             love.graphics.setColor(unpack(self.colors.cellBackground))
@@ -122,6 +120,14 @@ function GardenDisplay:drawBasicGarden()
             end
         end
     end
+end
+
+function GardenDisplay:getCellCoordinates(gridX, gridY)
+    -- Convertir les coordonnées de la grille en coordonnées d'écran
+    local cellX = self.gardenX + (gridX - 1) * (self.cellSize + self.cellSpacing)
+    local cellY = self.gardenY + (gridY - 1) * (self.cellSize + self.cellSpacing)
+    
+    return cellX, cellY
 end
 
 function GardenDisplay:getCellAt(x, y)
