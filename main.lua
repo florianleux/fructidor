@@ -146,16 +146,8 @@ function love.draw()
     -- Appliquer la transformation d'échelle
     ScaleManager.applyScale()
     
-    -- Dessiner l'interface utilisateur (remplace l'ancien code qui appelait Game.gameState:draw())
+    -- Dessiner l'interface utilisateur
     Game.uiManager:draw()
-    
-    -- Dessiner les effets de surbrillance si une carte est en cours de déplacement
-    if not Game.dragDrop:isAnimating() then
-        -- Utiliser les coordonnées ajustées à l'échelle
-        local mouseX = love.mouse.getX() / ScaleManager.scale
-        local mouseY = love.mouse.getY() / ScaleManager.scale
-        Game.dragDrop:updateHighlight(Game.gameState.garden, mouseX, mouseY)
-    end
     
     -- Dessiner la carte en cours de déplacement ou d'animation (au-dessus de tout)
     Game.dragDrop:draw()
@@ -183,16 +175,11 @@ function love.mousepressed(x, y, button)
     local scaledY = y / ScaleManager.scale
     
     -- Déléguer au gestionnaire d'interface pour gérer les clics
-    local handled = Game.uiManager:mousepressed(scaledX, scaledY, button)
+    -- Cette méthode retourne true si le clic a été géré par un composant UI
+    Game.uiManager:mousepressed(scaledX, scaledY, button)
     
-    -- Si le clic n'a pas été géré par l'interface, vérifier les cartes en main
-    if not handled and button == 1 then
-        local card, cardIndex = Game.cardSystem:getCardAt(scaledX, scaledY)
-        if card then
-            -- Démarrer le drag & drop
-            Game.dragDrop:startDrag(card, cardIndex, Game.cardSystem)
-        end
-    end
+    -- Note: La gestion des clics sur les cartes est maintenant
+    -- entièrement gérée par le composant HandDisplay
 end
 
 function love.mousereleased(x, y, button)
@@ -204,7 +191,7 @@ function love.mousereleased(x, y, button)
     local scaledY = y / ScaleManager.scale
     
     -- Déléguer au gestionnaire d'interface
-    local handled = Game.uiManager:mousereleased(scaledX, scaledY, button)
+    Game.uiManager:mousereleased(scaledX, scaledY, button)
     
     -- Lâcher une carte si elle était en cours de déplacement
     if button == 1 and not Game.dragDrop:isAnimating() then
