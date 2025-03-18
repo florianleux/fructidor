@@ -36,11 +36,22 @@ function UIManager.new(params)
 end
 
 function UIManager:createComponents()
-    -- Bannière de saison (en haut de l'écran principal)
+    -- Panneau de score (repositionné en haut à droite)
+    local scorePanel = ScorePanel.new({
+        relX = 0.75,       -- Déplacé en haut à droite
+        relY = 0,
+        relWidth = 0.25,   -- Conserve la même largeur
+        relHeight = 0.15,  -- Légèrement réduit en hauteur
+        gameState = self.gameState,
+        scaleManager = self.scaleManager
+    })
+    self.layoutManager:addComponent("main", scorePanel)
+    
+    -- Bannière de saison (en haut à gauche)
     local seasonBanner = SeasonBanner.new({
         relX = 0,
         relY = 0,
-        relWidth = 1,
+        relWidth = 0.75,   -- Redimensionné pour laisser de la place au score panel
         relHeight = 0.07,
         gameState = self.gameState,
         scaleManager = self.scaleManager
@@ -72,10 +83,10 @@ function UIManager:createComponents()
     
     -- Affichage du potager (agrandi pour utiliser plus d'espace horizontal)
     local gardenDisplay = GardenDisplay.new({
-        relX = 0,
+        relX = 0.05,      -- Centré horizontalement
         relY = 0.2,
-        relWidth = 1,
-        relHeight = 0.5,
+        relWidth = 0.9,   -- Utilise plus d'espace horizontal
+        relHeight = 0.55, -- Légèrement plus grand pour profiter de l'espace
         garden = self.garden,
         gardenRenderer = self.gardenRenderer,
         dragDrop = self.dragDrop,

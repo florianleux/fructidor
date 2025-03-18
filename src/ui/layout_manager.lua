@@ -15,6 +15,7 @@ function LayoutManager.new(params)
             relX = 0,
             relY = 0,
             relWidth = 1,
+
             relHeight = 1,
             components = {}
         }
