@@ -6,9 +6,8 @@ local Garden = require('src.entities.garden')
 local ScaleManager = require('src.utils.scale_manager')
 local UIManager = require('src.ui.ui_manager')
 local GardenRenderer = require('src.ui.garden_renderer')
-local Services = require('src.utils.services') -- Maintenu pour compatibilité
 
--- Module principal pour stocker les références localement
+-- Module principal pour stocker les références globalement accessibles
 local Game = {
     initialized = false,
     initializationError = nil
@@ -67,7 +66,7 @@ function love.load(arg)
         end
     })
     
-    -- Compléter les dépendances manquantes
+    -- Compléter les dépendances circulaires
     dragDrop.dependencies.uiManager = uiManager
     
     -- Stocker les références localement 
@@ -76,18 +75,6 @@ function love.load(arg)
     Game.dragDrop = dragDrop
     Game.garden = garden
     Game.uiManager = uiManager
-    
-    -- Initialiser les services pour la compatibilité avec le code existant
-    -- Cette partie sera éventuellement supprimée dans une future version
-    Services.initialize({
-        GameState = gameState,
-        CardSystem = cardSystem,
-        Garden = garden,
-        DragDrop = dragDrop,
-        ScaleManager = ScaleManager,
-        GardenRenderer = gardenRenderer,
-        UIManager = uiManager
-    })
     
     -- Piocher quelques cartes pour commencer le jeu
     for i = 1, 5 do
