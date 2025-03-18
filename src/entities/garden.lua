@@ -1,5 +1,5 @@
 -- Entité Jardin (grille de jeu)
-local Constants = require('src.utils.constants')
+local GameConfig = require('src.utils.game_config')
 
 local Garden = {}
 Garden.__index = Garden
@@ -17,7 +17,7 @@ function Garden.new(width, height)
             self.grid[y][x] = {
                 plant = nil, 
                 object = nil, 
-                state = Constants.CELL_STATE.EMPTY
+                state = GameConfig.CELL_STATE.EMPTY
             }
         end
     end
@@ -34,7 +34,7 @@ function Garden:placePlant(plant, x, y)
             
             -- On place la plante dans la grille
             self.grid[y][x].plant = plant
-            self.grid[y][x].state = Constants.CELL_STATE.OCCUPIED
+            self.grid[y][x].state = GameConfig.CELL_STATE.OCCUPIED
             return true
         end
     end
@@ -79,10 +79,10 @@ end
 function Garden:harvestPlant(x, y)
     if x > 0 and x <= self.width and y > 0 and y <= self.height then
         local cell = self.grid[y][x]
-        if cell.plant and cell.plant.growthStage == Constants.GROWTH_STAGE.FRUIT then
+        if cell.plant and cell.plant.growthStage == GameConfig.GROWTH_STAGE.FRUIT then
             local score = cell.plant:harvest()
             cell.plant = nil
-            cell.state = Constants.CELL_STATE.EMPTY
+            cell.state = GameConfig.CELL_STATE.EMPTY
             return score
         end
     end
