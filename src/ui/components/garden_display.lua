@@ -1,239 +1,188 @@
--- Composant d'affichage du potager
+-- Composant d'affichage du jardin
 local ComponentBase = require('src.ui.components.component_base')
 
 local GardenDisplay = setmetatable({}, {__index = ComponentBase})
 GardenDisplay.__index = GardenDisplay
 
 function GardenDisplay.new(params)
-    local self = ComponentBase.new({
-        id = "garden_display",
-        pixelX = params.pixelX or 96,      -- 5% de 1920
-        pixelY = params.pixelY or 216,     -- 20% de 1080
-        pixelWidth = params.pixelWidth or 1728,   -- 90% de 1920
-        pixelHeight = params.pixelHeight or 540,  -- 50% de 1080
-        margin = params.margin or {top=10, right=10, bottom=10, left=10},
-        scaleManager = params.scaleManager
-    })
+    local self = setmetatable(ComponentBase.new(params), GardenDisplay)
     
-    setmetatable(self, GardenDisplay)
-    
-    -- Référence au jardin
+    -- Paramètres spécifiques à l'affichage du jardin
     self.garden = params.garden
-    
-    -- Référence au renderer du jardin (optionnel)
     self.gardenRenderer = params.gardenRenderer
-    
-    -- Référence au système de drag & drop
     self.dragDrop = params.dragDrop
     
-    -- Couleurs du sol du jardin
-    self.soilColor = {0.91, 0.82, 0.69}  -- Marron clair
-    self.soilBorderColor = {0.8, 0.7, 0.6}  -- Marron plus foncé
+    -- Taille des cellules du jardin
+    self.cellSize = 70
     
-    -- Grille de cellules calculée
-    self.cells = {}
+    -- Espacement entre les cellules
+    self.cellSpacing = 5
     
-    -- Définir les tailles proportionnellement à l'espace disponible
-    self:calculateCellDimensions()
+    -- Position et dimensions du jardin à l'écran
+    self.gardenX = 0
+    self.gardenY = 0
+    self.gardenWidth = 0
+    self.gardenHeight = 0
+    
+    -- Couleurs
+    self.colors = {
+        background = {0.95, 0.9, 0.8, 1}, -- Couleur terre claire
+        cellBorder = {0.6, 0.45, 0.3, 1}, -- Marron pour les bordures
+        cellBackground = {0.85, 0.75, 0.6, 1}, -- Terre pour les cellules
+        grid = {0.7, 0.6, 0.4, 1}, -- Lignes de grille
+        highlight = {0.8, 1, 0.8, 0.3} -- Surbrillance pour les cellules ciblées
+    }
+    
+    -- Calculer les dimensions du jardin
+    self:calculateGardenDimensions()
     
     return self
 end
 
--- Calcule les dimensions des cellules du jardin en fonction de l'espace disponible
-function GardenDisplay:calculateCellDimensions()
-    if not self.garden then return end
+function GardenDisplay:calculateGardenDimensions()
+    -- Calculer la largeur et hauteur totales du jardin
+    self.gardenWidth = self.garden.width * (self.cellSize + self.cellSpacing) - self.cellSpacing
+    self.gardenHeight = self.garden.height * (self.cellSize + self.cellSpacing) - self.cellSpacing
     
-    local availableWidth = self.width
-    local availableHeight = self.height
-    
-    -- Calculer la taille optimale des cellules en fonction des dimensions du jardin
-    local cellWidth = availableWidth / self.garden.width
-    local cellHeight = availableHeight / self.garden.height
-    
-    -- Utiliser la plus petite dimension pour des cellules carrées
-    self.cellSize = math.min(cellWidth, cellHeight)
-    
-    -- Calculer l'offset pour centrer le jardin
-    self.offsetX = (availableWidth - (self.cellSize * self.garden.width)) / 2
-    self.offsetY = (availableHeight - (self.cellSize * self.garden.height)) / 2
-    
-    -- Recalculer les positions de toutes les cellules
-    self.cells = {}
-    for y = 1, self.garden.height do
-        self.cells[y] = {}
-        for x = 1, self.garden.width do
-            local cellX = self.x + self.offsetX + (x-1) * self.cellSize
-            local cellY = self.y + self.offsetY + (y-1) * self.cellSize
-            
-            self.cells[y][x] = {
-                x = cellX,
-                y = cellY,
-                width = self.cellSize,
-                height = self.cellSize
-            }
-        end
-    end
-end
-
--- Convertit les coordonnées écran en coordonnées de cellule
-function GardenDisplay:screenToCell(screenX, screenY)
-    for y = 1, self.garden.height do
-        for x = 1, self.garden.width do
-            local cell = self.cells[y][x]
-            if screenX >= cell.x and screenX < cell.x + cell.width and
-               screenY >= cell.y and screenY < cell.y + cell.height then
-                return x, y
-            end
-        end
-    end
-    return nil, nil
-end
-
--- Détermine si un point est dans les limites du jardin
-function GardenDisplay:containsPoint(x, y)
-    if not self.visible then return false end
-    
-    local result = ComponentBase.containsPoint(self, x, y)
-    if result then
-        -- Vérifier si le point est spécifiquement dans une cellule
-        local cellX, cellY = self:screenToCell(x, y)
-        return cellX ~= nil and cellY ~= nil
-    end
-    return false
+    -- Calculer la position pour centrer le jardin dans le composant
+    local x, y, width, height = self:getScaledBounds()
+    self.gardenX = x + (width - self.gardenWidth) / 2
+    self.gardenY = y + (height - self.gardenHeight) / 2
 end
 
 function GardenDisplay:draw()
-    if not self.visible or not self.garden then return end
+    -- Mettre à jour les dimensions si nécessaire
+    self:calculateGardenDimensions()
     
-    -- Dessiner le fond du jardin
-    love.graphics.setColor(0.82, 0.70, 0.55)  -- Couleur terre plus foncée
-    love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
+    -- Coordonnées et dimensions
+    local x, y, width, height = self:getScaledBounds()
     
-    -- Recalculer les dimensions si nécessaire
-    if #self.cells == 0 or self.cells[1] == nil or #self.cells[1] == 0 then
-        self:calculateCellDimensions()
+    -- Dessiner le fond du composant
+    love.graphics.setColor(unpack(self.colors.background))
+    love.graphics.rectangle("fill", x, y, width, height, 5)
+    
+    -- Utiliser le renderer de jardin pour dessiner le jardin
+    if self.gardenRenderer then
+        self.gardenRenderer:draw(self.garden, self.gardenX, self.gardenY, self.cellSize, self.cellSpacing)
+    else
+        -- Dessiner un jardin de base si le renderer n'est pas disponible
+        self:drawBasicGarden()
     end
     
-    -- Dessiner toutes les cellules
+    -- Dessiner les surbrillances pour le drag & drop si nécessaire
+    if self.dragDrop and self.dragDrop:isDragging() then
+        local mouseX, mouseY = love.mouse.getPosition()
+        mouseX = mouseX / (self.scaleManager.scale or 1)
+        mouseY = mouseY / (self.scaleManager.scale or 1)
+        
+        -- Vérifier quelle cellule est survolée
+        local cellX, cellY = self:getCellAt(mouseX, mouseY)
+        
+        if cellX >= 1 and cellX <= self.garden.width and cellY >= 1 and cellY <= self.garden.height then
+            -- Dessiner la surbrillance sur la cellule ciblée
+            local cellScreenX = self.gardenX + (cellX - 1) * (self.cellSize + self.cellSpacing)
+            local cellScreenY = self.gardenY + (cellY - 1) * (self.cellSize + self.cellSpacing)
+            
+            love.graphics.setColor(unpack(self.colors.highlight))
+            love.graphics.rectangle("fill", cellScreenX, cellScreenY, self.cellSize, self.cellSize, 3)
+        end
+    end
+end
+
+function GardenDisplay:drawBasicGarden()
+    -- Dessiner la grille de base du jardin (utilisé si gardenRenderer n'est pas disponible)
     for y = 1, self.garden.height do
         for x = 1, self.garden.width do
-            local cell = self.cells[y][x]
+            local cellX = self.gardenX + (x - 1) * (self.cellSize + self.cellSpacing)
+            local cellY = self.gardenY + (y - 1) * (self.cellSize + self.cellSpacing)
             
-            -- Fond de la cellule (terre)
-            love.graphics.setColor(self.soilColor)
-            love.graphics.rectangle("fill", cell.x, cell.y, cell.width, cell.height)
+            -- Fond de la cellule
+            love.graphics.setColor(unpack(self.colors.cellBackground))
+            love.graphics.rectangle("fill", cellX, cellY, self.cellSize, self.cellSize, 3)
             
             -- Bordure de la cellule
-            love.graphics.setColor(self.soilBorderColor)
-            love.graphics.rectangle("line", cell.x, cell.y, cell.width, cell.height)
+            love.graphics.setColor(unpack(self.colors.cellBorder))
+            love.graphics.rectangle("line", cellX, cellY, self.cellSize, self.cellSize, 3)
             
-            -- Si nous avons un renderer de jardin, l'utiliser pour dessiner le contenu de la cellule
-            if self.gardenRenderer then
-                self.gardenRenderer:drawCell(x, y, cell.x, cell.y, cell.width, cell.height)
-            else
-                -- Dessin de base si pas de renderer spécifique
-                local plantInfo = self.garden:getPlantAt(x, y)
-                if plantInfo then
-                    -- Dessiner une représentation simple de la plante
-                    if plantInfo.growthStage == "graine" then
-                        love.graphics.setColor(0.6, 0.4, 0.2)  -- Marron
-                        love.graphics.circle("fill", cell.x + cell.width/2, cell.y + cell.height/2, cell.width/10)
-                    elseif plantInfo.growthStage == "plant" then
-                        love.graphics.setColor(0.5, 0.8, 0.3)  -- Vert clair
-                        love.graphics.circle("fill", cell.x + cell.width/2, cell.y + cell.height/2, cell.width/5)
-                    elseif plantInfo.growthStage == "fructifié" then
-                        love.graphics.setColor(0.3, 0.7, 0.3)  -- Vert plus foncé
-                        love.graphics.circle("fill", cell.x + cell.width/2, cell.y + cell.height/2, cell.width/4)
-                        
-                        -- Indiquer qu'elle est prête à être récoltée
-                        love.graphics.setColor(1, 1, 0)  -- Jaune
-                        love.graphics.circle("line", cell.x + cell.width/2, cell.y + cell.height/2, cell.width/3)
-                    end
-                    
-                    -- Texte d'information
-                    love.graphics.setColor(0, 0, 0)
-                    love.graphics.setFont(love.graphics.newFont(math.max(8, cell.width/10)))
-                    love.graphics.printf(plantInfo.family, cell.x, cell.y + cell.height/4, cell.width, "center")
-                    love.graphics.printf(plantInfo.growthStage, cell.x, cell.y + cell.height/2, cell.width, "center")
-                end
+            -- Si la cellule contient une plante, afficher une représentation simple
+            local cell = self.garden.grid[y][x]
+            if cell and cell.plant then
+                love.graphics.setColor(0.5, 0.8, 0.5) -- Vert pour les plantes
+                love.graphics.rectangle("fill", cellX + 10, cellY + 10, self.cellSize - 20, self.cellSize - 20, 2)
                 
-                -- Dessiner l'objet s'il y en a un
-                local objectInfo = self.garden:getObjectAt(x, y)
-                if objectInfo then
-                    love.graphics.setColor(0.9, 0.8, 0.7)  -- Beige
-                    love.graphics.rectangle("fill", cell.x + cell.width/4, cell.y + cell.width/4, 
-                                           cell.width/2, cell.height/2)
-                    love.graphics.setColor(0, 0, 0)
-                    love.graphics.setFont(love.graphics.newFont(math.max(8, cell.width/12)))
-                    love.graphics.printf(objectInfo.name, cell.x, cell.y + 3*cell.height/4, cell.width, "center")
-                end
+                -- Afficher le stade de croissance
+                love.graphics.setColor(0, 0, 0)
+                love.graphics.print(cell.plant.growthStage, cellX + self.cellSize/2 - 5, cellY + self.cellSize/2 - 5)
             end
             
-            -- Surbrillance des cellules pour le drag & drop
-            if self.dragDrop and self.dragDrop:isHighlighted(x, y) then
-                local canPlace = self.dragDrop:canPlaceAtCell(x, y)
-                
-                -- Couleur selon si on peut placer ou non
-                if canPlace then
-                    love.graphics.setColor(0, 1, 0, 0.3)  -- Vert transparent (OK)
-                else
-                    love.graphics.setColor(1, 0, 0, 0.3)  -- Rouge transparent (impossible)
-                end
-                
-                love.graphics.rectangle("fill", cell.x, cell.y, cell.width, cell.height)
-                love.graphics.setColor(canPlace and {0, 1, 0, 0.7} or {1, 0, 0, 0.7})
-                love.graphics.rectangle("line", cell.x, cell.y, cell.width, cell.height)
+            -- Si la cellule contient un objet, afficher une représentation simple
+            if cell and cell.object then
+                love.graphics.setColor(0.8, 0.7, 0.5) -- Marron clair pour les objets
+                love.graphics.rectangle("fill", cellX + 15, cellY + 15, self.cellSize - 30, self.cellSize - 30, 2)
             end
         end
     end
-    
-    -- Dessiner les bordures extérieures plus épaisses
-    love.graphics.setColor(0.6, 0.5, 0.4)
-    love.graphics.setLineWidth(3)
-    local gardenX = self.x + self.offsetX
-    local gardenY = self.y + self.offsetY
-    local gardenWidth = self.cellSize * self.garden.width
-    local gardenHeight = self.cellSize * self.garden.height
-    love.graphics.rectangle("line", gardenX, gardenY, gardenWidth, gardenHeight)
-    love.graphics.setLineWidth(1)
 end
 
-function GardenDisplay:update(dt)
-    -- Pas d'animation spécifique pour le moment
-end
-
-function GardenDisplay:calculateBounds(parentX, parentY, parentWidth, parentHeight)
-    -- Appeler la méthode de la classe parente
-    ComponentBase.calculateBounds(self, parentX, parentY, parentWidth, parentHeight)
+function GardenDisplay:getCellAt(x, y)
+    -- Vérifier si les coordonnées sont dans les limites du jardin
+    if x < self.gardenX or y < self.gardenY or x > self.gardenX + self.gardenWidth or y > self.gardenY + self.gardenHeight then
+        return nil, nil
+    end
     
-    -- Recalculer les dimensions des cellules après le repositionnement
-    self:calculateCellDimensions()
+    -- Calculer les indices de la cellule
+    local cellX = math.floor((x - self.gardenX) / (self.cellSize + self.cellSpacing)) + 1
+    local cellY = math.floor((y - self.gardenY) / (self.cellSize + self.cellSpacing)) + 1
+    
+    -- Vérifier que les indices sont valides
+    if cellX >= 1 and cellX <= self.garden.width and cellY >= 1 and cellY <= self.garden.height then
+        return cellX, cellY
+    else
+        return nil, nil
+    end
 end
 
 function GardenDisplay:mousepressed(x, y, button)
-    if not self.visible or not self.garden then return false end
+    -- Vérifier si le clic est sur une cellule
+    local cellX, cellY = self:getCellAt(x, y)
     
-    local cellX, cellY = self:screenToCell(x, y)
-    if not cellX or not cellY then return false end
-    
-    if button == 1 then
-        -- Clic gauche: Récolter une plante si elle est prête
-        local plantInfo = self.garden:getPlantAt(cellX, cellY)
-        if plantInfo and plantInfo.growthStage == "fructifié" then
-            self.garden:harvestPlant(cellX, cellY)
-            return true
-        end
-    elseif button == 2 then
-        -- Clic droit: Afficher des informations détaillées
-        local plantInfo = self.garden:getPlantAt(cellX, cellY)
-        if plantInfo then
-            -- TODO: Afficher une infobulle ou un panneau d'information
-            print("Plante en (" .. cellX .. "," .. cellY .. "): " .. plantInfo.family)
-            return true
+    if cellX and cellY and button == 1 then
+        -- Traiter le clic sur la cellule
+        local cell = self.garden.grid[cellY][cellX]
+        
+        -- Si la carte en cours de déplacement peut être placée ici
+        if self.dragDrop and self.dragDrop:isDragging() then
+            local card = self.dragDrop:getDraggingCard()
+            
+            -- Vérifier si on peut placer la carte ici
+            -- Cette logique serait normalement dans le système de jeu
+            if card and card.type == "plant" and not cell.plant then
+                -- Logique pour placer une plante
+                return true -- Le clic a été traité
+            elseif card and card.type == "object" and not cell.object then
+                -- Logique pour placer un objet
+                return true -- Le clic a été traité
+            end
+        else
+            -- Si une plante est à maturité, la récolter
+            if cell.plant and cell.plant.growthStage == "mature" then
+                -- Logique pour récolter la plante
+                return true -- Le clic a été traité
+            end
         end
     end
     
-    return false
+    return false -- Le clic n'a pas été traité
+end
+
+function GardenDisplay:updateGarden()
+    -- Cette méthode est appelée pour rafraîchir l'affichage du jardin
+    -- quand son contenu change (nouvelle plante, plante récoltée, etc.)
+    
+    -- Pour l'instant, il suffit de laisser le système de dessin récupérer 
+    -- les données directement depuis le jardin à chaque frame
+    
+    -- Si besoin d'optimisation, on pourrait implémenter un cache ici
 end
 
 return GardenDisplay
