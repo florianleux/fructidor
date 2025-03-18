@@ -28,10 +28,13 @@ end
 function Garden:placePlant(plant, x, y)
     if x > 0 and x <= self.width and y > 0 and y <= self.height then
         if not self.grid[y][x].plant then
-            self.grid[y][x].plant = plant
-            self.grid[y][x].state = Constants.CELL_STATE.OCCUPIED
+            -- On définit les coordonnées dans l'objet Plant lui-même
             plant.posX = x
             plant.posY = y
+            
+            -- On place la plante dans la grille
+            self.grid[y][x].plant = plant
+            self.grid[y][x].state = Constants.CELL_STATE.OCCUPIED
             return true
         end
     end
@@ -70,6 +73,20 @@ function Garden:getAdjacentCells(x, y)
     end
     
     return adjacent
+end
+
+-- Récolter une plante
+function Garden:harvestPlant(x, y)
+    if x > 0 and x <= self.width and y > 0 and y <= self.height then
+        local cell = self.grid[y][x]
+        if cell.plant and cell.plant.growthStage == Constants.GROWTH_STAGE.FRUIT then
+            local score = cell.plant:harvest()
+            cell.plant = nil
+            cell.state = Constants.CELL_STATE.EMPTY
+            return score
+        end
+    end
+    return 0
 end
 
 return Garden
