@@ -1,57 +1,29 @@
--- Configuration du jeu
-local Constants = require('src.utils.constants')
+-- src/utils/config.lua
+-- COMPATIBILITÉ: Ce module est maintenu pour la rétrocompatibilité et redirige vers game_config.lua
 
+local GameConfig = require('src.utils.game_config')
+
+-- Message avertissant de la dépréciation
+print("AVERTISSEMENT: Le module 'config.lua' est déprécié. Utilisez 'game_config.lua' à la place.")
+
+-- Créer une structure qui imite l'ancien format de config
 return {
     -- Paramètres généraux
-    baseTurnsPerLevel = 8,
-    seasonsPerLevel = 4,
-    turnsPerSeason = 2,
+    baseTurnsPerLevel = GameConfig.GAME_PARAMS.baseTurnsPerLevel,
+    seasonsPerLevel = GameConfig.GAME_PARAMS.seasonsPerLevel,
+    turnsPerSeason = GameConfig.GAME_PARAMS.turnsPerSeason,
     
     -- Plages de dés par saison
-    diceRanges = {
-        [Constants.SEASON.SPRING] = {
-            sun = {min = -1, max = 5},
-            rain = {min = 2, max = 6}
-        },
-        [Constants.SEASON.SUMMER] = {
-            sun = {min = 3, max = 8},
-            rain = {min = 0, max = 4}
-        },
-        [Constants.SEASON.AUTUMN] = {
-            sun = {min = -2, max = 4},
-            rain = {min = 1, max = 6}
-        },
-        [Constants.SEASON.WINTER] = {
-            sun = {min = -3, max = 2},
-            rain = {min = 0, max = 4}
-        }
-    },
+    diceRanges = GameConfig.DICE_RANGES,
     
     -- Objectifs et récompenses
-    baseScoreObjective = 100,
+    baseScoreObjective = GameConfig.GAME_PARAMS.baseScoreObjective,
     
     -- Paramètres jeu
-    initialDeckSize = 15,
-    initialHandSize = 5,
-    initialGardenSize = {width = 3, height = 2},
+    initialDeckSize = GameConfig.GAME_PARAMS.initialDeckSize,
+    initialHandSize = GameConfig.GAME_PARAMS.initialHandSize,
+    initialGardenSize = GameConfig.GAME_PARAMS.initialGardenSize,
     
     -- Propriétés plantes
-    plantConfigs = {
-        [Constants.PLANT_FAMILY.BRASSIKA] = {
-            frostThreshold = -5,
-            sunToSprout = 3,
-            rainToSprout = 4,
-            sunToFruit = 6,
-            rainToFruit = 8,
-            baseScore = 20
-        },
-        [Constants.PLANT_FAMILY.SOLANA] = {
-            frostThreshold = -2,
-            sunToSprout = 5,
-            rainToSprout = 3,
-            sunToFruit = 10,
-            rainToFruit = 6,
-            baseScore = 30
-        }
-    }
+    plantConfigs = GameConfig.PLANT_CONFIG
 }
