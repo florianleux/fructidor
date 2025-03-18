@@ -1,4 +1,4 @@
--- Gestionnaire d'interface utilisateur
+-- Gestionnaire d'interface utilisateur simplifié
 local UIManager = {}
 UIManager.__index = UIManager
 
@@ -36,12 +36,16 @@ function UIManager.new(params)
 end
 
 function UIManager:createComponents()
-    -- Panneau de score (repositionné en haut à droite)
+    -- Définir les dimensions de base (basées sur une résolution de 1920x1080)
+    local width = love.graphics.getWidth() / (self.scaleManager.scale or 1)
+    local height = love.graphics.getHeight() / (self.scaleManager.scale or 1)
+    
+    -- Panneau de score (en haut à droite)
     local scorePanel = ScorePanel.new({
-        pixelX = 1440,    -- 75% de 1920
-        pixelY = 0,
-        pixelWidth = 480, -- 25% de 1920
-        pixelHeight = 162, -- 15% de 1080
+        x = width * 0.75,
+        y = 0,
+        width = width * 0.25,
+        height = height * 0.15,
         gameState = self.gameState,
         scaleManager = self.scaleManager
     })
@@ -49,10 +53,10 @@ function UIManager:createComponents()
     
     -- Bannière de saison (en haut à gauche)
     local seasonBanner = SeasonBanner.new({
-        pixelX = 0,
-        pixelY = 0,
-        pixelWidth = 1440, -- 75% de 1920
-        pixelHeight = 76,  -- 7% de 1080
+        x = 0,
+        y = 0,
+        width = width * 0.75,
+        height = height * 0.07,
         gameState = self.gameState,
         scaleManager = self.scaleManager
     })
@@ -60,22 +64,22 @@ function UIManager:createComponents()
     
     -- Composant dés météo et bouton fin de tour
     local weatherDice = WeatherDice.new({
-        pixelX = 192,     -- 10% de 1920
-        pixelY = 97,      -- 9% de 1080
-        pixelWidth = 1536, -- 80% de 1920
-        pixelHeight = 86,  -- 8% de 1080
+        x = width * 0.1,
+        y = height * 0.09,
+        width = width * 0.8,
+        height = height * 0.08,
         gameState = self.gameState,
         endTurnCallback = self.nextTurnCallback,
         scaleManager = self.scaleManager
     })
     self.layoutManager:addComponent("main", weatherDice)
     
-    -- Affichage du potager (agrandi pour utiliser plus d'espace horizontal)
+    -- Affichage du potager
     local gardenDisplay = GardenDisplay.new({
-        pixelX = 96,      -- 5% de 1920
-        pixelY = 216,     -- 20% de 1080
-        pixelWidth = 1728, -- 90% de 1920
-        pixelHeight = 594, -- 55% de 1080
+        x = width * 0.05,
+        y = height * 0.2,
+        width = width * 0.9,
+        height = height * 0.55,
         garden = self.garden,
         gardenRenderer = self.gardenRenderer,
         dragDrop = self.dragDrop,
@@ -85,10 +89,10 @@ function UIManager:createComponents()
     
     -- Affichage de la main du joueur
     local handDisplay = HandDisplay.new({
-        pixelX = 0,
-        pixelY = 810,     -- 75% de 1080
-        pixelWidth = 1920, -- 100% de 1920
-        pixelHeight = 270, -- 25% de 1080
+        x = 0,
+        y = height * 0.75,
+        width = width,
+        height = height * 0.25,
         cardSystem = self.cardSystem,
         dragDrop = self.dragDrop,
         scaleManager = self.scaleManager
@@ -149,7 +153,7 @@ function UIManager:updateComponent(componentId)
     end
 end
 
--- Méthode pour déclencher une animation (comme un changement de score)
+-- Méthode simplifiée pour les animations
 function UIManager:triggerAnimation(componentId, animationType, ...)
     local component = self.components[componentId]
     if component then
