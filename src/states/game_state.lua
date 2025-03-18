@@ -40,20 +40,6 @@ function GameState:update(dt)
     -- sont conduites par les événements ou les actions du joueur
 end
 
--- La méthode draw a été supprimée car le dessin est maintenant géré par les composants UI
-
-function GameState:mousepressed(x, y, button)
-    -- Cette méthode est conservée pour la compatibilité, mais elle est maintenant vide
-    -- car les interactions souris sont gérées par les composants UI
-    return false
-end
-
-function GameState:mousereleased(x, y, button)
-    -- Cette méthode est conservée pour la compatibilité, mais elle est maintenant vide
-    -- car les interactions souris sont gérées par les composants UI
-    return false
-end
-
 function GameState:rollDice()
     -- Utiliser directement les constantes pour accéder aux plages de dés
     local seasonData = Config.diceRanges[self.currentSeason]
