@@ -1,5 +1,4 @@
 -- Système de Drag & Drop simplifié
-local Services = require('src.utils.services')
 local Constants = require('src.utils.game_config')
 
 local DragDrop = {}
@@ -95,9 +94,9 @@ function DragDrop:stopDrag(garden)
     end
     
     local placed = false
+    local uiManager = self.dependencies.uiManager
     
     -- Récupérer le GardenDisplay
-    local uiManager = self.dependencies.uiManager or Services.get("UIManager")
     local gardenDisplay = uiManager and uiManager.components and uiManager.components.gardenDisplay
     
     -- Trouver la cellule sous la carte
@@ -129,7 +128,7 @@ function DragDrop:stopDrag(garden)
             if isInside then
                 -- Tenter de placer la plante
                 if not garden.grid[y][x].plant then
-                    local cardSystem = self.dependencies.cardSystem or Services.get("CardSystem")
+                    local cardSystem = self.dependencies.cardSystem
                     if self.cardIndex and cardSystem then
                         placed = cardSystem:playCard(self.cardIndex, garden, x, y)
                     end
