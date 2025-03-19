@@ -1,5 +1,6 @@
--- Système de Drag & Drop simplifié
-local Constants = require('src.utils.game_config')
+-- Système de Drag & Drop
+-- Mise à jour pour compatibilité avec l'architecture unifiée KISS
+local GameConfig = require('src.utils.game_config')
 
 local DragDrop = {}
 DragDrop.__index = DragDrop
@@ -97,24 +98,31 @@ function DragDrop:stopDrag(garden)
     
     local placed = false
     
-    -- Récupérer le GardenDisplay via l'UIManager injecté
+    -- Récupérer le GardenComponent via l'UIManager injecté
     local uiManager = self.dependencies.uiManager
-    local gardenDisplay = uiManager and uiManager.components and uiManager.components.gardenDisplay
+    
+    -- Utiliser le nouveau système de composants unifiés
+    local gardenComponent = uiManager and uiManager.components and uiManager.components.garden
+    
+    -- Si le composant n'est pas trouvé, essayer l'ancien nom pour compatibilité
+    if not gardenComponent and uiManager and uiManager.components and uiManager.components.gardenDisplay then
+        gardenComponent = uiManager.components.gardenDisplay
+    end
     
     -- Trouver la cellule sous la carte
     for y = 1, garden.height do
         for x = 1, garden.width do
             local cellX, cellY, isInside
             
-            if gardenDisplay then
-                cellX, cellY = gardenDisplay:getCellCoordinates(x, y)
-                local cellSize = gardenDisplay.cellSize
+            if gardenComponent then
+                cellX, cellY = gardenComponent:getCellCoordinates(x, y)
+                local cellSize = gardenComponent.cellSize
                 isInside = self.dragging.x >= cellX and 
                            self.dragging.x < cellX + cellSize and
                            self.dragging.y >= cellY and 
                            self.dragging.y < cellY + cellSize
             else
-                -- Fallback simple si gardenDisplay n'est pas disponible
+                -- Fallback simple si gardenComponent n'est pas disponible
                 local cellSize = 70
                 local gardenX = 100
                 local gardenY = 200
@@ -186,8 +194,8 @@ function DragDrop:draw()
     -- Dessiner la carte en cours de déplacement ou d'animation
     if self.dragging then
         local scale = self.animation.scale
-        local w = Constants.UI.CARD.WIDTH * scale
-        local h = Constants.UI.CARD.HEIGHT * scale
+        local w = GameConfig.UI.CARD.WIDTH * scale
+        local h = GameConfig.UI.CARD.HEIGHT * scale
         
         -- Dessiner une ombre
         love.graphics.setColor(0, 0, 0, 0.2)

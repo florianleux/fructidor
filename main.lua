@@ -5,7 +5,6 @@ local DragDrop = require('src.ui.drag_drop')
 local Garden = require('src.entities.garden')
 local ScaleManager = require('src.utils.scale_manager')
 local UIManager = require('src.ui.ui_manager')
-local GardenRenderer = require('src.ui.garden_renderer')
 
 -- Module principal pour stocker les références globalement accessibles
 local Game = {
@@ -32,7 +31,6 @@ function love.load(arg)
     
     -- Créer les instances principales en utilisant l'injection de dépendances directe
     local garden = Garden.new(3, 2)
-    local gardenRenderer = GardenRenderer.new()
     
     local cardSystem = CardSystem.new({
         scaleManager = ScaleManager
@@ -55,13 +53,12 @@ function love.load(arg)
         garden = garden,
         scaleManager = ScaleManager,
         dragDrop = dragDrop,
-        gardenRenderer = gardenRenderer,
         nextTurnCallback = function() 
             gameState:nextTurn() 
             -- Mettre à jour l'interface après le changement de tour
             uiManager:updateComponent("seasonBanner")
             uiManager:updateComponent("weatherDice")
-            uiManager:updateComponent("gardenDisplay")
+            uiManager:updateComponent("garden")
             uiManager:updateComponent("scorePanel")
         end
     })
