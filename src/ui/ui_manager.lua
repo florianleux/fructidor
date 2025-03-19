@@ -35,6 +35,9 @@ function UIManager:createComponents()
     local width = love.graphics.getWidth() / (self.scaleManager.scale or 1)
     local height = love.graphics.getHeight() / (self.scaleManager.scale or 1)
     
+    -- Ajuster l'espace pour la main de cartes
+    local cardHandHeight = height * 0.25
+    
     -- Créer les composants principaux
     self.components.scorePanel = ScorePanel.new({
         x = width * 0.75,
@@ -64,22 +67,24 @@ function UIManager:createComponents()
         scaleManager = self.scaleManager
     })
     
+    -- Réduire la hauteur du jardin et le placer plus haut pour éviter le chevauchement
     self.components.gardenDisplay = GardenDisplay.new({
         x = width * 0.05,
         y = height * 0.2,
         width = width * 0.9,
-        height = height * 0.55,
+        height = height * 0.45, -- Réduit de 0.55 à 0.45
         garden = self.garden,
         gardenRenderer = self.gardenRenderer,
         dragDrop = self.dragDrop,
         scaleManager = self.scaleManager
     })
     
+    -- Créer une zone claire pour la main de cartes
     self.components.handDisplay = HandDisplay.new({
         x = 0,
-        y = height * 0.75,
+        y = height * 0.7, -- Monter de 0.75 à 0.7
         width = width,
-        height = height * 0.25,
+        height = height * 0.3, -- Augmenter de 0.25 à 0.3
         cardSystem = self.cardSystem,
         dragDrop = self.dragDrop,
         scaleManager = self.scaleManager
