@@ -1,7 +1,7 @@
 -- Bannière d'affichage de la saison actuelle simplifiée
 local ComponentBase = require('src.ui.components.component_base')
 local Localization = require('src.utils.localization')
-local Constants = require('src.utils.constants')
+local GameConfig = require('src.utils.game_config')
 
 local SeasonBanner = setmetatable({}, {__index = ComponentBase})
 SeasonBanner.__index = SeasonBanner
@@ -14,18 +14,18 @@ function SeasonBanner.new(params)
     
     -- Couleurs par saison
     self.seasonColors = {
-        [Constants.SEASON.SPRING] = {0.7, 0.95, 0.7, 1}, -- Vert clair
-        [Constants.SEASON.SUMMER] = {1, 0.9, 0.4, 1},    -- Jaune soleil
-        [Constants.SEASON.AUTUMN] = {0.95, 0.6, 0.3, 1}, -- Orange automne
-        [Constants.SEASON.WINTER] = {0.8, 0.9, 1, 1}     -- Bleu hiver clair
+        [GameConfig.SEASON.SPRING] = {0.7, 0.95, 0.7, 1}, -- Vert clair
+        [GameConfig.SEASON.SUMMER] = {1, 0.9, 0.4, 1},    -- Jaune soleil
+        [GameConfig.SEASON.AUTUMN] = {0.95, 0.6, 0.3, 1}, -- Orange automne
+        [GameConfig.SEASON.WINTER] = {0.8, 0.9, 1, 1}     -- Bleu hiver clair
     }
     
     -- Couleur de texte par saison
     self.textColors = {
-        [Constants.SEASON.SPRING] = {0.2, 0.5, 0.2, 1},  -- Vert foncé
-        [Constants.SEASON.SUMMER] = {0.6, 0.4, 0.1, 1},  -- Marron été
-        [Constants.SEASON.AUTUMN] = {0.5, 0.2, 0.1, 1},  -- Rouge-brun automne
-        [Constants.SEASON.WINTER] = {0.2, 0.3, 0.6, 1}   -- Bleu hiver foncé
+        [GameConfig.SEASON.SPRING] = {0.2, 0.5, 0.2, 1},  -- Vert foncé
+        [GameConfig.SEASON.SUMMER] = {0.6, 0.4, 0.1, 1},  -- Marron été
+        [GameConfig.SEASON.AUTUMN] = {0.5, 0.2, 0.1, 1},  -- Rouge-brun automne
+        [GameConfig.SEASON.WINTER] = {0.2, 0.3, 0.6, 1}   -- Bleu hiver foncé
     }
     
     return self
