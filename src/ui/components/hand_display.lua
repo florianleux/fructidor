@@ -15,6 +15,9 @@ function HandDisplay.new(params)
     self.cardWidth = 80
     self.cardHeight = 120
     
+    -- Z-index pour s'assurer que les cartes apparaissent au-dessus du potager
+    self.zIndex = params.zIndex or 10
+    
     -- Couleurs
     self.colors = {
         background = {0.9, 0.9, 0.9, 1},
@@ -62,13 +65,10 @@ function HandDisplay:draw()
     end
     
     -- Positionner les cartes en arc vertical (style éventail)
-    -- Augmenter le z-index pour que les cartes soient au-dessus du potager
-    love.graphics.setDepth(10)
-    
-    -- Calculer les positions des cartes en arc vertical
+    -- Calcul des positions des cartes en arc vertical
     local centerX = x + width / 2
     local bottomY = y + height - 20  -- Position en bas de la zone
-    local arcHeight = height * 0.7   -- Hauteur de l'arc
+    local arcHeight = height * 0.6   -- Hauteur de l'arc
     local cardSpacing = math.min(self.cardWidth * 0.7, width / (#hand + 1))
     local totalWidth = cardSpacing * (#hand - 1)
     local startX = centerX - totalWidth / 2
@@ -76,14 +76,32 @@ function HandDisplay:draw()
     -- Réinitialiser les positions des cartes
     self.cardPositions = {}
     
-    -- Dessiner chaque carte
-    for i, card in ipairs(hand) do
+    -- Dessiner chaque carte - en commençant par les cartes des extrémités pour que le centre soit au-dessus
+    -- Déterminer l'ordre de dessin (du côté vers le centre)
+    local drawOrder = {}
+    local numCards = #hand
+    
+    -- Remplir l'ordre de dessin pour que les cartes centrales soient dessinées en dernier
+    for i = 1, numCards do
+        -- Calculer la distance au centre (0 = centre, 1 = extrémité)
+        local distanceToCenter = math.abs((i - 0.5) / numCards - 0.5) * 2
+        table.insert(drawOrder, {index = i, distance = distanceToCenter})
+    end
+    
+    -- Trier par distance (les plus proches du centre en dernier)
+    table.sort(drawOrder, function(a, b) return a.distance > b.distance end)
+    
+    -- Dessiner les cartes selon l'ordre calculé
+    for _, item in ipairs(drawOrder) do
+        local i = item.index
+        local card = hand[i]
+        
         -- Calculer la position en x pour cette carte (distribution uniforme)
         local cardX = startX + (i - 1) * cardSpacing
         
         -- Calculer la hauteur en fonction de la position (arc vertical)
         -- Les cartes au centre sont plus hautes (plus éloignées du bas)
-        local normalizedPos = (cardX - startX) / totalWidth
+        local normalizedPos = (i - 1) / math.max(1, #hand - 1)  -- 0 à 1
         local cardOffsetY = arcHeight * math.sin(math.pi * normalizedPos)
         local cardY = bottomY - self.cardHeight + cardOffsetY
         
@@ -110,9 +128,6 @@ function HandDisplay:draw()
             self:drawCard(card, cardX, cardY, rotation, i == self.hoveredCard)
         end
     end
-    
-    -- Réinitialiser la profondeur
-    love.graphics.setDepth(0)
 end
 
 function HandDisplay:drawCard(card, x, y, rotation, isHovered)
