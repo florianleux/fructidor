@@ -1,36 +1,33 @@
 # Fichiers à supprimer
 
-Ce document liste les fichiers qui deviendront obsolètes lorsque la migration vers l'architecture unifiée KISS sera complétée.
+Ce document liste les fichiers qui sont devenus obsolètes suite à la migration vers l'architecture unifiée KISS. Ces fichiers peuvent maintenant être supprimés, car leurs fonctionnalités ont été intégrées dans les nouveaux composants.
 
-## Renderers séparés
+## Renderers séparés - Prêts à supprimer
 
-Ces fichiers de rendu séparés seront remplacés par les composants unifiés :
+- [x] `src/ui/garden_renderer.lua` *(remplacé par garden_component.lua)*
+- [x] `src/ui/card_renderer.lua` *(remplacé par card_component.lua)*
+- [x] `src/ui/plant_renderer.lua` *(fichier vide, concept intégré dans les composants)*
+- [x] `src/ui/layout_manager.lua` *(fichier vide, fonctionnalité intégrée dans ComponentBase)*
 
-- [ ] `src/ui/garden_renderer.lua` *(remplacé par garden_component.lua)*
-- [ ] `src/ui/card_renderer.lua` *(remplacé par card_component.lua)*
-- [ ] `src/ui/plant_renderer.lua` *(fichier vide, concept intégré dans les composants)*
-- [ ] `src/ui/layout_manager.lua` *(fichier vide, fonctionnalité intégrée dans ComponentBase)*
+## Composants remplacés - Prêts à supprimer
 
-## Composants à migrer et renommer
+- [x] `src/ui/components/garden_display.lua` *(remplacé par garden_component.lua)*
+- [x] `src/ui/components/season_banner.lua` *(remplacé par season_component.lua)*
+- [x] `src/ui/components/weather_dice.lua` *(remplacé par weather_component.lua)*
+- [x] `src/ui/components/score_panel.lua` *(remplacé par score_component.lua)*
+- [x] `src/ui/components/hand_display.lua` *(remplacé par hand_component.lua)*
 
-- [ ] `src/ui/components/garden_display.lua` *(remplacé par garden_component.lua)*
-- [ ] `src/ui/components/season_banner.lua` *(remplacé par season_component.lua)*
-- [ ] `src/ui/components/weather_dice.lua` *(remplacé par weather_component.lua)*
-- [ ] `src/ui/components/score_panel.lua` *(remplacé par score_component.lua)*
-- [ ] `src/ui/components/hand_display.lua` *(remplacé par hand_component.lua)*
+## Migration effectuée
 
-## Processus de migration
+La migration vers l'architecture unifiée KISS a été complétée avec succès. Tous les renderers et composants ont été remplacés par leurs équivalents unifiés, et toutes les références dans le code ont été mises à jour, notamment dans :
 
-1. Créer les nouveaux composants unifiés avec le suffixe `_component.lua`
-2. Mettre à jour les références dans UIManager et autres fichiers
-3. Tester la fonctionnalité pour s'assurer que tout fonctionne correctement
-4. Supprimer les anciens fichiers une fois que toutes les références ont été mises à jour
+1. `UIManager` - Mise à jour pour utiliser la nouvelle architecture
+2. `main.lua` - Suppression des références aux renderers séparés
+3. `DragDrop` - Adaptation pour travailler avec les nouveaux noms de composants
 
-## Consignes pour la revue
+## Bénéfices
 
-Lors de la revue de cette PR, veuillez vérifier les points suivants :
-
-- Tous les composants suivent bien le nouveau modèle d'architecture KISS
-- Les comportements et fonctionnalités existants ont été préservés
-- Les fichiers obsolètes ont bien été supprimés
-- Aucune référence orpheline ne subsiste dans le code
+- Architecture plus simple, cohérente et facile à maintenir
+- Réduction du nombre de fichiers (10 fichiers remplacés par 6 nouveaux composants)
+- Meilleure séparation des préoccupations
+- Association explicite entre modèles et composants
