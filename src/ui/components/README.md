@@ -62,10 +62,27 @@ end
 |-----------|-----------------|-------------|
 | `GardenComponent` | `Garden` | Affichage et interaction avec le jardin (grille, plantes) |
 | `CardComponent` | `Card` | Rendu et interaction avec une carte individuelle |
+| `HandComponent` | `CardSystem` | Affichage et gestion de la main du joueur |
 | `SeasonComponent` | `GameState` | Affichage de la saison actuelle et des tours |
 | `WeatherComponent` | `GameState` | Dés météorologiques et bouton fin de tour |
 | `ScoreComponent` | `GameState` | Affichage du score et des objectifs |
-| `HandComponent` | `CardSystem` | Affichage et gestion de la main du joueur |
+
+## Association Modèle-Composant
+
+Chaque composant est explicitement associé à un modèle via sa propriété `model` :
+
+```lua
+-- Dans le constructeur du composant
+self.model = params.model
+
+-- Pour compatibilité avec l'ancienne architecture (exemple)
+self.gameState = self.model -- Alias pour faciliter la transition
+```
+
+Cette approche permet :
+- Une clarification des relations entre composants et données
+- Une simplification des tests en isolant le modèle
+- Une meilleure séparation des responsabilités
 
 ## Avantages de cette architecture
 
@@ -89,3 +106,11 @@ Le `UIManager` instancie et gère les composants UI, en leur fournissant:
 3. Utiliser les callbacks pour la communication entre composants
 4. Conserver la logique métier dans les modèles, pas dans les composants UI
 5. Implémenter les méthodes d'événements uniquement si nécessaire
+
+## Transition depuis l'ancienne architecture
+
+Pour la transition depuis l'architecture précédente :
+1. Les renderers séparés sont fusionnés dans les composants
+2. Les anciens composants sont renommés et adaptés au nouveau modèle
+3. Un alias temporaire est conservé (comme `self.gameState = self.model`) pour faciliter la transition
+4. Les méthodes de rafraîchissement sont renommées avec un préfixe `refresh*`
