@@ -9,14 +9,15 @@ Ces fichiers de rendu séparés seront remplacés par les composants unifiés :
 - [ ] `src/ui/garden_renderer.lua` *(remplacé par garden_component.lua)*
 - [ ] `src/ui/card_renderer.lua` *(remplacé par card_component.lua)*
 - [ ] `src/ui/plant_renderer.lua` *(fichier vide, concept intégré dans les composants)*
+- [ ] `src/ui/layout_manager.lua` *(fichier vide, fonctionnalité intégrée dans ComponentBase)*
 
 ## Composants à migrer et renommer
 
 - [ ] `src/ui/components/garden_display.lua` *(remplacé par garden_component.lua)*
-- [ ] `src/ui/components/season_banner.lua` *(à renommer en season_component.lua)*
-- [ ] `src/ui/components/weather_dice.lua` *(à renommer en weather_component.lua)*
-- [ ] `src/ui/components/score_panel.lua` *(à renommer en score_component.lua)*
-- [ ] `src/ui/components/hand_display.lua` *(à renommer en hand_component.lua)*
+- [ ] `src/ui/components/season_banner.lua` *(remplacé par season_component.lua)*
+- [ ] `src/ui/components/weather_dice.lua` *(remplacé par weather_component.lua)*
+- [ ] `src/ui/components/score_panel.lua` *(remplacé par score_component.lua)*
+- [ ] `src/ui/components/hand_display.lua` *(remplacé par hand_component.lua)*
 
 ## Processus de migration
 
