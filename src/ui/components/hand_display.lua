@@ -61,26 +61,30 @@ function HandDisplay:draw()
         return
     end
     
-    -- Calculer les positions des cartes en arc de cercle
-    local centerX = x + width / 2
+    -- Calculer les positions des cartes en disposition horizontale
+    -- Place les cartes côte à côte avec un léger chevauchement si nécessaire
     local cardSpacing = math.min(self.cardWidth + 10, width / (#hand + 1))
-    local radius = height * 0.8
-    local arcWidth = cardSpacing * (#hand - 1)
-    local startAngle = -math.pi / 2 - math.atan2(arcWidth/2, radius)
-    local endAngle = -math.pi / 2 + math.atan2(arcWidth/2, radius)
+    local totalWidth = cardSpacing * (#hand - 1) + self.cardWidth
+    local startX = x + (width - totalWidth) / 2
+    local baseY = y + height - self.cardHeight - 20  -- Positionnement en bas
+    
+    -- Valeurs d'élévation pour l'arc
+    local maxElevation = 40
     
     -- Réinitialiser les positions des cartes
     self.cardPositions = {}
     
     -- Dessiner chaque carte
     for i, card in ipairs(hand) do
-        -- Calculer l'angle pour cette carte
-        local t = (i - 1) / math.max(1, #hand - 1)
-        local angle = startAngle + t * (endAngle - startAngle)
+        -- Calculer la position horizontale de la carte
+        local normalizedPosition = (#hand > 1) and ((i - 1) / (#hand - 1) * 2 - 1) or 0
+        local elevation = maxElevation * (1 - math.abs(normalizedPosition))
         
-        -- Calculer la position de la carte sur l'arc de cercle
-        local cardX = centerX + radius * math.sin(angle) - self.cardWidth/2
-        local cardY = y + height - 30 - self.cardHeight - radius * (1 - math.cos(angle))
+        local cardX = startX + (i - 1) * cardSpacing
+        local cardY = baseY - elevation
+        
+        -- Rotation légère pour l'effet d'arc
+        local rotation = normalizedPosition * 0.2
         
         -- Stocker la position pour la détection de survol
         self.cardPositions[i] = {
@@ -89,15 +93,15 @@ function HandDisplay:draw()
             width = self.cardWidth,
             height = self.cardHeight,
             card = card,
-            index = i
+            index = i,
+            rotation = rotation
         }
         
         -- Si cette carte est en train d'être déplacée, ne pas l'afficher ici
         if self.dragDrop and self.dragDrop:isDragging() and i == self.dragDrop:getDraggingCardIndex() then
             -- Sauter cette carte
         else
-            -- Dessiner la carte, avec une légère rotation selon sa position
-            local rotation = (angle + math.pi/2) * 0.3
+            -- Dessiner la carte avec sa rotation
             self:drawCard(card, cardX, cardY, rotation, i == self.hoveredCard)
         end
     end
@@ -181,8 +185,8 @@ end
 function HandDisplay:update(dt)
     -- Mettre à jour l'état du survol de carte
     local mouseX, mouseY = love.mouse.getPosition()
-    mouseX = mouseX / (self.scaleManager.scale or 1)
-    mouseY = mouseY / (self.scaleManager.scale or 1)
+    mouseX = mouseX / (self.scaleManager and self.scaleManager.scale or 1)
+    mouseY = mouseY / (self.scaleManager and self.scaleManager.scale or 1)
     
     -- Réinitialiser l'état de survol
     self.hoveredCard = nil
@@ -191,7 +195,8 @@ function HandDisplay:update(dt)
     for i, pos in ipairs(self.cardPositions) do
         -- Si cette carte est en train d'être déplacée, ne pas considérer le survol
         if not (self.dragDrop and self.dragDrop:isDragging() and i == self.dragDrop:getDraggingCardIndex()) then
-            -- Vérifier si le point est dans le rectangle de la carte
+            -- Pour la détection précise, il faudrait prendre en compte la rotation
+            -- Mais pour simplifier, nous utilisons le rectangle englobant
             if mouseX >= pos.x and mouseX <= pos.x + pos.width and
                mouseY >= pos.y and mouseY <= pos.y + pos.height then
                 self.hoveredCard = i
