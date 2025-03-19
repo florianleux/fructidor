@@ -68,13 +68,14 @@ function GardenDisplay:draw()
     -- Dessiner les surbrillances pour le drag & drop si nécessaire
     if self.dragDrop and self.dragDrop:isDragging() then
         local mouseX, mouseY = love.mouse.getPosition()
-        mouseX = mouseX / (self.scaleManager.scale or 1)
-        mouseY = mouseY / (self.scaleManager.scale or 1)
+        mouseX = mouseX / (self.scaleManager and self.scaleManager.scale or 1)
+        mouseY = mouseY / (self.scaleManager and self.scaleManager.scale or 1)
         
         -- Vérifier quelle cellule est survolée
         local cellX, cellY = self:getCellAt(mouseX, mouseY)
         
-        if cellX >= 1 and cellX <= self.garden.width and cellY >= 1 and cellY <= self.garden.height then
+        -- FIX: Vérifier que cellX et cellY ne sont pas nil avant la comparaison
+        if cellX and cellY and cellX >= 1 and cellX <= self.garden.width and cellY >= 1 and cellY <= self.garden.height then
             -- Dessiner la surbrillance sur la cellule ciblée
             local cellScreenX, cellScreenY = self:getCellCoordinates(cellX, cellY)
             
