@@ -1,13 +1,14 @@
--- Gestionnaire d'interface utilisateur simplifié
+-- Gestionnaire d'interface utilisateur
+-- Utilise la nouvelle architecture unifiée KISS des composants
 local UIManager = {}
 UIManager.__index = UIManager
 
--- Importer les composants
-local SeasonBanner = require('src.ui.components.season_banner')
-local WeatherDice = require('src.ui.components.weather_dice')
-local GardenDisplay = require('src.ui.components.garden_display')
-local ScorePanel = require('src.ui.components.score_panel')
-local HandDisplay = require('src.ui.components.hand_display')
+-- Importer les composants unifiés
+local SeasonComponent = require('src.ui.components.season_component')
+local WeatherComponent = require('src.ui.components.weather_component')
+local GardenComponent = require('src.ui.components.garden_component')
+local ScoreComponent = require('src.ui.components.score_component')
+local HandComponent = require('src.ui.components.hand_component')
 
 function UIManager.new(params)
     local self = setmetatable({}, UIManager)
@@ -18,10 +19,9 @@ function UIManager.new(params)
     self.dragDrop = params.dragDrop
     self.garden = params.garden
     self.scaleManager = params.scaleManager
-    self.gardenRenderer = params.gardenRenderer
     self.nextTurnCallback = params.nextTurnCallback
     
-    -- Conteneur simplifié pour les composants
+    -- Conteneur pour les composants
     self.components = {}
     
     -- Créer les composants d'interface
@@ -38,54 +38,58 @@ function UIManager:createComponents()
     -- Ajuster l'espace pour la main de cartes
     local cardHandHeight = height * 0.25
     
-    -- Créer les composants principaux
-    self.components.scorePanel = ScorePanel.new({
+    -- Créer les composants principaux avec le modèle KISS
+    self.components.scorePanel = ScoreComponent.new({
         x = width * 0.75,
         y = 0,
         width = width * 0.25,
         height = height * 0.15,
-        gameState = self.gameState,
+        model = self.gameState, -- Référence au modèle
         scaleManager = self.scaleManager
     })
     
-    self.components.seasonBanner = SeasonBanner.new({
+    self.components.seasonBanner = SeasonComponent.new({
         x = 0,
         y = 0,
         width = width * 0.75,
         height = height * 0.07,
-        gameState = self.gameState,
+        model = self.gameState, -- Référence au modèle
         scaleManager = self.scaleManager
     })
     
-    self.components.weatherDice = WeatherDice.new({
+    self.components.weatherDice = WeatherComponent.new({
         x = width * 0.1,
         y = height * 0.09,
         width = width * 0.8,
         height = height * 0.08,
-        gameState = self.gameState,
+        model = self.gameState, -- Référence au modèle
         endTurnCallback = self.nextTurnCallback,
         scaleManager = self.scaleManager
     })
     
-    -- Réduire la hauteur du jardin et le placer plus haut pour éviter le chevauchement
-    self.components.gardenDisplay = GardenDisplay.new({
+    -- Composant jardin unifié
+    self.components.garden = GardenComponent.new({
         x = width * 0.05,
         y = height * 0.2,
         width = width * 0.9,
-        height = height * 0.45, -- Réduit de 0.55 à 0.45
-        garden = self.garden,
-        gardenRenderer = self.gardenRenderer,
+        height = height * 0.45,
+        model = self.garden, -- Référence au modèle
         dragDrop = self.dragDrop,
-        scaleManager = self.scaleManager
+        scaleManager = self.scaleManager,
+        onHarvest = function(score)
+            -- Callback pour mettre à jour le score lors d'une récolte
+            self.gameState:addScore(score)
+            self.components.scorePanel:refreshScore(score)
+        end
     })
     
-    -- Créer une zone claire pour la main de cartes
-    self.components.handDisplay = HandDisplay.new({
+    -- Composant main unifié
+    self.components.hand = HandComponent.new({
         x = 0,
-        y = height * 0.7, -- Monter de 0.75 à 0.7
+        y = height * 0.7,
         width = width,
-        height = height * 0.3, -- Augmenter de 0.25 à 0.3
-        cardSystem = self.cardSystem,
+        height = height * 0.3,
+        model = self.cardSystem, -- Référence au modèle
         dragDrop = self.dragDrop,
         scaleManager = self.scaleManager
     })
@@ -149,19 +153,31 @@ end
 function UIManager:updateComponent(componentId)
     local component = self.components[componentId]
     if component then
-        -- Appeler une méthode spécifique si elle existe
-        if componentId == "handDisplay" and component.updateHand then
-            component:updateHand()
-        elseif componentId == "gardenDisplay" and component.updateGarden then
-            component:updateGarden()
-        elseif componentId == "seasonBanner" and component.updateSeason then
-            component:updateSeason()
-        elseif componentId == "weatherDice" and component.updateDice then
-            component:updateDice()
-        elseif componentId == "scorePanel" and component.updateScore then
-            component:updateScore()
+        -- Utiliser les méthodes refresh* standardisées de l'architecture unifiée
+        if componentId == "hand" and component.refreshHand then
+            component:refreshHand()
+        elseif componentId == "garden" and component.refreshGarden then
+            component:refreshGarden()
+        elseif componentId == "seasonBanner" and component.refreshSeason then
+            component:refreshSeason()
+        elseif componentId == "weatherDice" and component.refreshDice then
+            component:refreshDice()
+        elseif componentId == "scorePanel" and component.refreshScore then
+            component:refreshScore()
         end
     end
+end
+
+-- Pour rétrocompatibilité: mapper les anciens IDs vers les nouveaux
+local legacyComponentMap = {
+    handDisplay = "hand",
+    gardenDisplay = "garden"
+}
+
+-- Méthode de compatibilité avec l'ancien système
+function UIManager:getLegacyComponent(componentId)
+    local newId = legacyComponentMap[componentId] or componentId
+    return self.components[newId]
 end
 
 return UIManager
