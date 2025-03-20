@@ -2,19 +2,25 @@
 -- Suit le modèle d'architecture KISS à deux niveaux
 local ComponentBase = require('src.ui.components.component_base')
 
-local HandComponent = setmetatable({}, {__index = ComponentBase})
+local HandComponent = {}
 HandComponent.__index = HandComponent
 
 function HandComponent.new(params)
-    local self = setmetatable(ComponentBase.new(params), HandComponent)
+    -- Ne pas utiliser l'héritage par setmetatable pour éviter les problèmes de surcharge
+    local self = {}
+    setmetatable(self, HandComponent)
     
-    -- Modèle associé (cardSystem)
-    self.model = params.cardSystem
+    -- Attributs de base (copier explicitement ComponentBase)
+    self.x = params.x or 0
+    self.y = params.y or 0
+    self.width = params.width or 100
+    self.height = params.height or 100
+    self.visible = params.visible ~= false
+    self.id = params.id or "hand"
+    self.scaleManager = params.scaleManager
     
-    -- Alias pour faciliter la transition du code existant
-    self.cardSystem = self.model
-    
-    -- Dépendances
+    -- IMPORTANT: Références directes sans l'ajout d'une couche indirecte
+    self.cardSystem = params.model or params.cardSystem
     self.dragDrop = params.dragDrop
     
     -- Dimensions des cartes
@@ -46,7 +52,16 @@ function HandComponent.new(params)
     self.hoveredCard = nil
     self.cardPositions = {} -- Stocke les positions des cartes pour détection survol
     
+    print("HandComponent initialisé, cardSystem:", tostring(self.cardSystem))
+    
     return self
+end
+
+-- Implémentation des méthodes de ComponentBase
+function HandComponent:containsPoint(x, y)
+    return self.visible and 
+           x >= self.x and x <= self.x + self.width and
+           y >= self.y and y <= self.y + self.height
 end
 
 function HandComponent:draw()
@@ -56,14 +71,15 @@ function HandComponent:draw()
     love.graphics.setColor(unpack(self.colors.background))
     love.graphics.rectangle("fill", self.x, self.y, self.width, self.height, 5)
     
-    -- Debug: afficher la référence au cardSystem
-    print("HandComponent:draw() - self.cardSystem: " .. tostring(self.cardSystem))
+    if not self.cardSystem then
+        love.graphics.setColor(1, 0, 0, 1)
+        love.graphics.print("Erreur: cardSystem est nil", self.x + 10, self.y + 10)
+        return
+    end
     
-    -- Récupérer les cartes en main depuis le système de cartes
-    local hand = self.cardSystem and self.cardSystem:getHand() or {}
-    
-    -- Debug: afficher le nombre de cartes
-    print("HandComponent: " .. #hand .. " cartes en main")
+    -- Récupérer les cartes en main
+    local hand = self.cardSystem:getHand()
+    print("HandComponent:draw - cartes en main:", #hand)
     
     -- Si aucune carte, afficher un message
     if #hand == 0 then
@@ -86,9 +102,6 @@ function HandComponent:draw()
     
     -- Dessiner chaque carte
     for i, card in ipairs(hand) do
-        -- Debug: afficher informations sur chaque carte
-        print("Carte " .. i .. ": " .. (card.name or "sans nom") .. ", type: " .. tostring(card.type))
-        
         -- Calculer la position de la carte sur un arc
         local normalizedPosition = (#hand > 1) and ((i - 1) / (#hand - 1) * 2 - 1) or 0
         local elevation = maxElevation * (1 - math.abs(normalizedPosition))
@@ -248,19 +261,27 @@ function HandComponent:mousepressed(x, y, button)
     return false -- Le clic n'a pas été traité
 end
 
--- Méthode pour rafraîchir l'affichage quand la main change
 function HandComponent:refreshHand()
-    -- Cette méthode peut être appelée quand la main du joueur change
-    -- mais n'a pas besoin d'implémentation spécifique car les données
-    -- sont récupérées directement depuis le cardSystem à chaque frame
-    print("refreshHand() appelé")
-    
-    -- Debug: afficher la référence au cardSystem
+    -- Simple vérification pour s'assurer que cardSystem est accessible
     if self.cardSystem then
-        print("HandComponent:refreshHand - cardSystem présent, cartes: " .. #self.cardSystem:getHand())
+        local count = #self.cardSystem:getHand()
+        print("HandComponent:refreshHand - cardSystem OK, " .. count .. " cartes")
     else
-        print("HandComponent:refreshHand - cardSystem absent!")
+        print("HandComponent:refreshHand - ERREUR cardSystem nil")
     end
+end
+
+-- Implémentation manquante de ComponentBase
+function HandComponent:getBounds()
+    return self.x, self.y, self.width, self.height
+end
+
+function HandComponent:mousereleased(x, y, button)
+    return false
+end
+
+function HandComponent:mousemoved(x, y, dx, dy)
+    return false
 end
 
 return HandComponent
