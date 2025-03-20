@@ -71,8 +71,8 @@ function UIManager:createComponents()
     self.components.garden = GardenComponent.new({
         x = width * 0.05,
         y = height * 0.2,
-        width = width * 0.9,
-        height = height * 0.45,
+        width = 800,
+        height = height * 400,
         model = self.garden, -- Référence au modèle
         dragDrop = self.dragDrop,
         scaleManager = self.scaleManager,

@@ -140,11 +140,11 @@ GameConfig.PLANT_CONFIG = {
 GameConfig.UI = {
   -- Dimensions des cartes
   CARD = {
-    WIDTH = 65,
-    HEIGHT = 108,
+    WIDTH = 120,
+    HEIGHT = 200,
     CORNER_RADIUS = 3,
     HEADER_HEIGHT = 16,
-    TEXT_SCALE = 0.84
+    TEXT_SCALE = 1.5
   },
   -- Palette de couleurs pour les différents éléments d'interface
   COLORS = {
