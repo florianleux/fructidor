@@ -104,6 +104,14 @@ function CardHand:drawCards(deck, count)
     end
 end
 
+-- Draw hand
+function CardHand:draw()
+    -- Draw each card from bottom to top
+    for i = 1, #self.cards do
+        self.cards[i]:draw()
+    end
+end
+
 -- Update hand state
 function CardHand:update(dt)
     for _, card in ipairs(self.cards) do
