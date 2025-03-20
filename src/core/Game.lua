@@ -11,13 +11,7 @@ Game.__index = Game
 
 -- Import components
 local GameState = require("src/core/GameState")
-local Garden = require("src/elements/board/Garden")
-local CardHand = require("src/elements/cards/CardHand")
-local Deck = require("src/elements/cards/Deck")
-local RoundBoard = require("src/elements/board/RoundBoard")
-local ScoreBoard = require("src/elements/board/ScoreBoard")
-local SunDie = require("src/elements/dice/SunDie")
-local RainDie = require("src/elements/dice/RainDie")
+local GameLevel = require("src/elements/level/GameLevel")
 local color = require("utils/convertColor")
 
 -- Constructor
@@ -27,14 +21,8 @@ function Game:new()
     -- Game state
     self.gameState = GameState:new()
     
-    -- Game components
-    self.garden = nil
-    self.cardHand = nil
-    self.deck = nil
-    self.roundBoard = nil
-    self.scoreBoard = nil
-    self.sunDie = nil
-    self.rainDie = nil
+    -- Game level
+    self.currentLevel = nil
     
     -- Screen dimensions
     self.width = DEFAULT_WINDOW_WIDTH
@@ -45,23 +33,15 @@ end
 
 -- Initialize game components
 function Game:initialize()
-    -- Create game components
-    self.garden = Garden:new(3, 2) -- 3x2 grid
-    self.cardHand = CardHand:new(5) -- 5 cards max
-    self.deck = Deck:new()
-    self.roundBoard = RoundBoard:new()
-    self.scoreBoard = ScoreBoard:new()
-    self.sunDie = SunDie:new()
-    self.rainDie = RainDie:new()
+    -- Create game level
+    self.currentLevel = GameLevel:new()
+    self.currentLevel:initialize("normal")
     
     -- Place components on screen
     self:placeComponents()
     
     -- Initialize game state
     self.gameState:changeState("gameplay")
-    
-    -- Deal initial cards
-    self.cardHand:drawCards(self.deck, 5)
 end
 
 -- Position components on screen
@@ -69,21 +49,8 @@ function Game:placeComponents()
     -- Get screen dimensions
     self.width, self.height = love.graphics.getDimensions()
     
-    -- Center the garden
-    self.garden:setPosition(self.width / 2, self.height / 2)
-    
-    -- Place score in top left
-    self.scoreBoard:setPosition(20, 20)
-    
-    -- Place round board in top center
-    self.roundBoard:setPosition(self.width / 2, 50)
-    
-    -- Place dice below round board
-    self.sunDie:setPosition(self.width / 2 - 30, 120)
-    self.rainDie:setPosition(self.width / 2 + 30, 120)
-    
-    -- Place card hand at bottom
-    self.cardHand:setPosition(self.width / 2, self.height - 100)
+    -- Position level components
+    self.currentLevel:setPosition(self.width, self.height)
 end
 
 -- Update game state and components
@@ -92,13 +59,8 @@ function Game:update(dt)
     local currentState = self.gameState:getCurrentState()
     
     if currentState == "gameplay" then
-        -- Update all components
-        self.garden:update(dt)
-        self.cardHand:update(dt)
-        self.roundBoard:update(dt)
-        self.sunDie:update(dt)
-        self.rainDie:update(dt)
-        self.scoreBoard:update(dt)
+        -- Update level
+        self.currentLevel:update(dt)
     end
     
     -- Handle window resize
@@ -122,13 +84,8 @@ function Game:draw()
     local currentState = self.gameState:getCurrentState()
     
     if currentState == "gameplay" then
-        -- Draw all components
-        self.garden:draw()
-        self.cardHand:draw()
-        self.roundBoard:draw()
-        self.sunDie:draw()
-        self.rainDie:draw()
-        self.scoreBoard:draw()
+        -- Draw level
+        self.currentLevel:draw()
     end
 end
 
@@ -136,6 +93,9 @@ end
 function Game:keypressed(key)
     if key == "escape" then
         love.event.quit()
+    elseif key == "n" and self.gameState:getCurrentState() == "gameplay" then
+        -- Debug: advance to next round
+        self.currentLevel:nextRound()
     end
 end
 
@@ -145,18 +105,8 @@ function Game:mousepressed(x, y, button)
     local currentState = self.gameState:getCurrentState()
     
     if currentState == "gameplay" then
-        -- Check if clicked on garden
-        self.garden:mousepressed(x, y, button)
-        
-        -- Check if clicked on card
-        self.cardHand:mousepressed(x, y, button)
-        
-        -- Check if clicked on dice
-        self.sunDie:mousepressed(x, y, button)
-        self.rainDie:mousepressed(x, y, button)
-        
-        -- Check if clicked on round board
-        self.roundBoard:mousepressed(x, y, button)
+        -- Forward to level
+        self.currentLevel:mousepressed(x, y, button)
     end
 end
 
@@ -166,11 +116,8 @@ function Game:mousereleased(x, y, button)
     local currentState = self.gameState:getCurrentState()
     
     if currentState == "gameplay" then
-        -- Check if released on garden
-        self.garden:mousereleased(x, y, button)
-        
-        -- Check if released on card
-        self.cardHand:mousereleased(x, y, button)
+        -- Forward to level
+        self.currentLevel:mousereleased(x, y, button)
     end
 end
 
