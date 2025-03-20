@@ -6,6 +6,7 @@ local CARD_SPACING = 30                -- Horizontal spacing between cards
 local CARD_ARC_RADIUS = 400            -- Radius of the arc for card layout
 local CARD_ARC_ANGLE = math.pi / 4     -- Angle of the arc (45 degrees)
 local CARD_ROTATION_MAX = math.pi / 12 -- Maximum card rotation (15 degrees)
+local CARD_Y_FACTOR = 8                -- Facteur de réduction pour la position Y (évite de placer les cartes trop haut)
 
 -- CardHand manages the player's current hand of cards
 local CardHand = {}
@@ -80,7 +81,8 @@ function CardHand:arrangeCards()
 
         -- Calculate position on arc
         local cardX = self.x + math.sin(angle) * CARD_ARC_RADIUS
-        local cardY = self.y - math.cos(angle) * CARD_ARC_RADIUS
+        -- Réduction du facteur vertical pour garder les cartes plus proches de self.y
+        local cardY = self.y - math.cos(angle) * (CARD_ARC_RADIUS / CARD_Y_FACTOR)
 
         -- Position card
         card:setPosition(cardX, cardY)
