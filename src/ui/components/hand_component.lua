@@ -1,12 +1,10 @@
 -- Composant unifié d'affichage de la main du joueur
--- Suit le modèle d'architecture KISS à deux niveaux
 local ComponentBase = require('src.ui.components.component_base')
 
 local HandComponent = {}
 HandComponent.__index = HandComponent
 
 function HandComponent.new(params)
-    -- Ne pas utiliser l'héritage par setmetatable pour éviter les problèmes de surcharge
     local self = {}
     setmetatable(self, HandComponent)
     
@@ -52,16 +50,7 @@ function HandComponent.new(params)
     self.hoveredCard = nil
     self.cardPositions = {} -- Stocke les positions des cartes pour détection survol
     
-    print("HandComponent initialisé, cardSystem:", tostring(self.cardSystem))
-    
     return self
-end
-
--- Implémentation des méthodes de ComponentBase
-function HandComponent:containsPoint(x, y)
-    return self.visible and 
-           x >= self.x and x <= self.x + self.width and
-           y >= self.y and y <= self.y + self.height
 end
 
 function HandComponent:draw()
@@ -79,7 +68,6 @@ function HandComponent:draw()
     
     -- Récupérer les cartes en main
     local hand = self.cardSystem:getHand()
-    print("HandComponent:draw - cartes en main:", #hand)
     
     -- Si aucune carte, afficher un message
     if #hand == 0 then
@@ -271,7 +259,13 @@ function HandComponent:refreshHand()
     end
 end
 
--- Implémentation manquante de ComponentBase
+-- Implémentation des méthodes de ComponentBase
+function HandComponent:containsPoint(x, y)
+    return self.visible and 
+           x >= self.x and x <= self.x + self.width and
+           y >= self.y and y <= self.y + self.height
+end
+
 function HandComponent:getBounds()
     return self.x, self.y, self.width, self.height
 end
