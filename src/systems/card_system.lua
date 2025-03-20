@@ -24,6 +24,8 @@ function CardSystem.new(dependencies)
     self:initializeDeck()
     self:drawInitialHand()
     
+    print("CardSystem initialisé - " .. #self.hand .. " cartes en main")
+    
     return self
 end
 
@@ -73,7 +75,6 @@ function CardSystem:initializeDeck()
     -- Mélanger le deck
     self:shuffleDeck()
     
-    -- Debug: afficher le nombre de cartes dans le deck
     print("Deck initialisé avec " .. #self.deck .. " cartes")
 end
 
@@ -95,18 +96,17 @@ function CardSystem:drawCard()
     if #self.deck > 0 then
         local card = table.remove(self.deck)
         table.insert(self.hand, card)
-        print("Carte piochée: " .. (card.name or "sans nom")) -- Debug
         return card
     end
     return nil
 end
 
 function CardSystem:drawInitialHand()
-    print("Pioche initiale de 5 cartes") -- Debug
+    print("Pioche initiale de 5 cartes")
     for i = 1, 5 do
         self:drawCard()
     end
-    print("Main initiale: " .. #self.hand .. " cartes") -- Debug
+    print("Main initiale: " .. #self.hand .. " cartes")
 end
 
 function CardSystem:playCard(cardIndex, garden, x, y)
@@ -134,7 +134,6 @@ end
 
 -- Getter pour récupérer la main
 function CardSystem:getHand()
-    print("getHand() appelé: " .. #self.hand .. " cartes") -- Debug
     return self.hand
 end
 
