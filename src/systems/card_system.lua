@@ -34,7 +34,7 @@ function CardSystem:initializeDeck()
             id = "brassika_" .. i,
             type = GameConfig.CARD_TYPE.PLANT,
             family = GameConfig.PLANT_FAMILY.BRASSIKA,
-            name = "Brassika", -- Nom pour l'affichage
+            name = "Brassika", -- Nom explicite pour l'affichage
             color = {0.7, 0.85, 0.7}, -- Vert pâle
             sunToSprout = 3,
             rainToSprout = 4,
@@ -55,7 +55,7 @@ function CardSystem:initializeDeck()
             id = "solana_" .. i,
             type = GameConfig.CARD_TYPE.PLANT,
             family = GameConfig.PLANT_FAMILY.SOLANA,
-            name = "Solana", -- Nom pour l'affichage
+            name = "Solana", -- Nom explicite pour l'affichage
             color = {0.9, 0.7, 0.5}, -- Orange pâle
             sunToSprout = 5,
             rainToSprout = 3,
@@ -72,6 +72,9 @@ function CardSystem:initializeDeck()
     
     -- Mélanger le deck
     self:shuffleDeck()
+    
+    -- Debug: afficher le nombre de cartes dans le deck
+    print("Deck initialisé avec " .. #self.deck .. " cartes")
 end
 
 function CardSystem:shuffleDeck()
@@ -92,15 +95,18 @@ function CardSystem:drawCard()
     if #self.deck > 0 then
         local card = table.remove(self.deck)
         table.insert(self.hand, card)
+        print("Carte piochée: " .. (card.name or "sans nom")) -- Debug
         return card
     end
     return nil
 end
 
 function CardSystem:drawInitialHand()
+    print("Pioche initiale de 5 cartes") -- Debug
     for i = 1, 5 do
         self:drawCard()
     end
+    print("Main initiale: " .. #self.hand .. " cartes") -- Debug
 end
 
 function CardSystem:playCard(cardIndex, garden, x, y)
@@ -128,6 +134,7 @@ end
 
 -- Getter pour récupérer la main
 function CardSystem:getHand()
+    print("getHand() appelé: " .. #self.hand .. " cartes") -- Debug
     return self.hand
 end
 
