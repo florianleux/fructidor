@@ -1,20 +1,35 @@
 -- Composant unifié du panneau de score
--- Suit le modèle d'architecture KISS à deux niveaux
 local ComponentBase = require('src.ui.components.component_base')
 local Localization = require('src.utils.localization')
 
-local ScoreComponent = setmetatable({}, {__index = ComponentBase})
+local ScoreComponent = {}
 ScoreComponent.__index = ScoreComponent
 
 function ScoreComponent.new(params)
-    local self = setmetatable(ComponentBase.new(params), ScoreComponent)
+    local self = {}
+    setmetatable(self, ScoreComponent)
     
-    -- Modèle associé (gameState)
+    -- Attributs de base (copier explicitement ComponentBase)
+    self.x = params.x or 0
+    self.y = params.y or 0
+    self.width = params.width or 100
+    self.height = params.height or 100
+    self.visible = params.visible ~= false
+    self.id = params.id or "score"
+    self.scaleManager = params.scaleManager
+    
+    -- Référence directe au modèle
     self.model = params.model
     
     -- Vérifier que le modèle est présent
     if not self.model then
-        error("ScoreComponent: le modèle GameState est requis")
+        print("ScoreComponent: ATTENTION - modèle GameState manquant")
+        -- Valeurs par défaut pour éviter les erreurs
+        self.model = {
+            score = 0,
+            objective = 100,
+            florins = 0
+        }
     end
     
     -- Variables d'animation
@@ -43,6 +58,13 @@ end
 
 function ScoreComponent:draw()
     if not self.visible then return end
+    
+    -- Vérifier que le modèle existe
+    if not self.model then
+        love.graphics.setColor(1, 0, 0, 1)
+        love.graphics.print("Erreur: modèle Score absent", self.x + 10, self.y + 10)
+        return
+    end
     
     -- Dessiner le fond du panneau
     love.graphics.setColor(unpack(self.colors.background))
@@ -146,6 +168,29 @@ function ScoreComponent:animateScoreChange(previousScore)
     if self.scoreAnimation.active then
         self.scoreAnimation.previousValue = self.scoreAnimation.currentValue
     end
+end
+
+-- Implémentation des méthodes ComponentBase requises
+function ScoreComponent:containsPoint(x, y)
+    return self.visible and 
+           x >= self.x and x <= self.x + self.width and
+           y >= self.y and y <= self.y + self.height
+end
+
+function ScoreComponent:getBounds()
+    return self.x, self.y, self.width, self.height
+end
+
+function ScoreComponent:mousepressed(x, y, button)
+    return false
+end
+
+function ScoreComponent:mousereleased(x, y, button)
+    return false
+end
+
+function ScoreComponent:mousemoved(x, y, dx, dy)
+    return false
 end
 
 return ScoreComponent

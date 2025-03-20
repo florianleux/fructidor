@@ -1,20 +1,26 @@
 -- Composant unifié des dés météorologiques
--- Suit le modèle d'architecture KISS à deux niveaux
 local ComponentBase = require('src.ui.components.component_base')
 local Localization = require('src.utils.localization')
 local GameConfig = require('src.utils.game_config')
 
-local WeatherComponent = setmetatable({}, {__index = ComponentBase})
+local WeatherComponent = {}
 WeatherComponent.__index = WeatherComponent
 
 function WeatherComponent.new(params)
-    local self = setmetatable(ComponentBase.new(params), WeatherComponent)
+    local self = {}
+    setmetatable(self, WeatherComponent)
     
-    -- Modèle associé (gameState)
-    self.model = params.gameState
+    -- Attributs de base (copier explicitement ComponentBase)
+    self.x = params.x or 0
+    self.y = params.y or 0
+    self.width = params.width or 100
+    self.height = params.height or 100
+    self.visible = params.visible ~= false
+    self.id = params.id or "weather"
+    self.scaleManager = params.scaleManager
     
-    -- Alias pour faciliter la transition du code existant
-    self.gameState = self.model
+    -- Référence directe au gameState
+    self.gameState = params.model or params.gameState
     
     -- Initialisation d'un gameState par défaut si nécessaire
     if not self.gameState then
@@ -70,6 +76,13 @@ end
 
 function WeatherComponent:draw()
     if not self.visible then return end
+    
+    -- Vérifier que gameState existe
+    if not self.gameState then
+        love.graphics.setColor(1, 0, 0, 1)
+        love.graphics.print("Erreur: gameState est nil", self.x + 10, self.y + 10)
+        return
+    end
     
     -- Dessiner le fond
     love.graphics.setColor(unpack(self.colors.background))
@@ -271,6 +284,25 @@ function WeatherComponent:refreshDice()
             rain = self.gameState.rainDieValue
         }
     end
+end
+
+-- Implémentation des méthodes ComponentBase requises
+function WeatherComponent:containsPoint(x, y)
+    return self.visible and 
+           x >= self.x and x <= self.x + self.width and
+           y >= self.y and y <= self.y + self.height
+end
+
+function WeatherComponent:getBounds()
+    return self.x, self.y, self.width, self.height
+end
+
+function WeatherComponent:mousereleased(x, y, button)
+    return false
+end
+
+function WeatherComponent:mousemoved(x, y, dx, dy)
+    return false
 end
 
 return WeatherComponent

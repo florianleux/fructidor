@@ -1,20 +1,26 @@
 -- Composant unifié d'affichage de saison
--- Suit le modèle d'architecture KISS à deux niveaux
 local ComponentBase = require('src.ui.components.component_base')
 local Localization = require('src.utils.localization')
 local GameConfig = require('src.utils.game_config')
 
-local SeasonComponent = setmetatable({}, {__index = ComponentBase})
+local SeasonComponent = {}
 SeasonComponent.__index = SeasonComponent
 
 function SeasonComponent.new(params)
-    local self = setmetatable(ComponentBase.new(params), SeasonComponent)
+    local self = {}
+    setmetatable(self, SeasonComponent)
     
-    -- Modèle associé (gameState)
-    self.model = params.gameState
+    -- Attributs de base (copier explicitement ComponentBase)
+    self.x = params.x or 0
+    self.y = params.y or 0
+    self.width = params.width or 100
+    self.height = params.height or 100
+    self.visible = params.visible ~= false
+    self.id = params.id or "season"
+    self.scaleManager = params.scaleManager
     
-    -- Alias pour faciliter la transition du code existant
-    self.gameState = self.model
+    -- Référence directe au gameState
+    self.gameState = params.model or params.gameState
     
     -- Initialisation d'un gameState par défaut si nécessaire
     if not self.gameState then
@@ -42,10 +48,10 @@ function SeasonComponent.new(params)
     
     -- Icônes pour chaque saison (optionnel)
     self.seasonIcons = {
-        [GameConfig.SEASON.SPRING] = "🌱", -- Pousse
-        [GameConfig.SEASON.SUMMER] = "☀️", -- Soleil
-        [GameConfig.SEASON.AUTUMN] = "🍂", -- Feuille
-        [GameConfig.SEASON.WINTER] = "❄️"  -- Flocon
+        [GameConfig.SEASON.SPRING] = "\240\159\140\ 177", -- Pousse
+        [GameConfig.SEASON.SUMMER] = "\226\152\128\239\184\143", -- Soleil
+        [GameConfig.SEASON.AUTUMN] = "\240\159\141\130", -- Feuille
+        [GameConfig.SEASON.WINTER] = "\226\157\132\239\184\143"  -- Flocon
     }
     
     return self
@@ -112,16 +118,37 @@ function SeasonComponent:drawTurnIndicators(color)
     end
 end
 
--- Méthode pour les interactions avec la souris (survol sur les indicateurs de tour)
+-- Méthode pour les interactions avec la souris
 function SeasonComponent:mousemoved(x, y, dx, dy)
     -- On pourrait implémenter un hover sur les indicateurs de tour
     -- pour afficher des informations supplémentaires
     return false
 end
 
--- Méthode explicite pour mettre à jour le composant (pourrait être appelée quand la saison change)
+-- Méthode explicite pour mettre à jour le composant
+function SeasonComponent:refreshSeason()
+    -- Méthode appelée quand la saison change
+    -- Pas besoin d'implémentation spécifique car nous lisons directement le gameState
+    print("SeasonComponent:refreshSeason - Saison mise à jour")
+end
+
+-- Implémentation des méthodes de ComponentBase
+function SeasonComponent:containsPoint(x, y)
+    return self.visible and 
+           x >= self.x and x <= self.x + self.width and
+           y >= self.y and y <= self.y + self.height
+end
+
+function SeasonComponent:getBounds()
+    return self.x, self.y, self.width, self.height
+end
+
 function SeasonComponent:update(dt)
-    -- Logique d'animation ou de mise à jour si nécessaire
+    -- Rien à mettre à jour
+end
+
+function SeasonComponent:mousereleased(x, y, button)
+    return false
 end
 
 return SeasonComponent
