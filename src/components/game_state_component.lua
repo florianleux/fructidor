@@ -27,8 +27,8 @@ end
 function GameStateComponent:createStarterDeck()
     local deck = {}
     
-    -- Add some basic plant cards
-    for i = 1, 3 do
+    -- Add Brassika cards (résistant au gel, croissance rapide)
+    for i = 1, 4 do
         table.insert(deck, {
             id = "brassika_" .. i,
             type = "plant",
@@ -38,7 +38,8 @@ function GameStateComponent:createStarterDeck()
         })
     end
     
-    for i = 1, 2 do
+    -- Add Solana cards (vulnérable au gel, grands besoins en soleil, score élevé)
+    for i = 1, 3 do
         table.insert(deck, {
             id = "solana_" .. i,
             type = "plant",
@@ -47,21 +48,6 @@ function GameStateComponent:createStarterDeck()
             color = "Red"
         })
     end
-    
-    -- Add some object cards
-    table.insert(deck, {
-        id = "paillage_1",
-        type = "object",
-        name = "Paillage",
-        objectType = "combinable"
-    })
-    
-    table.insert(deck, {
-        id = "tuteur_1",
-        type = "object",
-        name = "Tuteur",
-        objectType = "combinable"
-    })
     
     -- Shuffle the deck
     for i = #deck, 2, -1 do
