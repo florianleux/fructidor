@@ -10,9 +10,9 @@ function ScoreComponent.new(params)
     local self = setmetatable(ComponentBase.new(params), ScoreComponent)
     
     -- Modèle associé (gameState)
-    self.model = params.model or params.gameState
+    self.model = params.model
     
-    -- S'assurer que le modèle est assigné correctement
+    -- Vérifier que le modèle est présent
     if not self.model then
         error("ScoreComponent: le modèle GameState est requis")
     end
