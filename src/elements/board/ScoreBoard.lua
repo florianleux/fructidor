@@ -2,7 +2,7 @@
 
 -- Constants
 local BOARD_WIDTH = 200                -- Board width
-local BOARD_HEIGHT = 80                -- Board height
+local BOARD_HEIGHT = 60                -- Board height (reduced without florins)
 local BOARD_BACKGROUND_COLOR = "#e0e8f0"  -- Background color
 local BOARD_BORDER_COLOR = "#888888"   -- Border color
 local BOARD_BORDER_WIDTH = 2           -- Border width
@@ -33,7 +33,6 @@ function ScoreBoard:new()
     -- Score tracking
     self.currentScore = 0
     self.targetScore = 100
-    self.florins = 25
     
     return self
 end
@@ -47,20 +46,6 @@ end
 -- Add points to score
 function ScoreBoard:addScore(points)
     self.currentScore = self.currentScore + points
-end
-
--- Add florins (currency)
-function ScoreBoard:addFlorins(amount)
-    self.florins = self.florins + amount
-end
-
--- Spend florins
-function ScoreBoard:spendFlorins(amount)
-    if amount <= self.florins then
-        self.florins = self.florins - amount
-        return true
-    end
-    return false  -- Not enough florins
 end
 
 -- Set target score
@@ -136,14 +121,6 @@ function ScoreBoard:draw()
         self.y + 35,
         progressWidth,
         PROGRESS_BAR_HEIGHT
-    )
-    
-    -- Draw florins
-    love.graphics.setColor(color.hex(TEXT_COLOR))
-    love.graphics.print(
-        "Florins: " .. self.florins,
-        self.x + 10,
-        self.y + 55
     )
     
     -- Reset color
