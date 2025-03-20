@@ -34,6 +34,7 @@ function CardSystem:initializeDeck()
             id = "brassika_" .. i,
             type = GameConfig.CARD_TYPE.PLANT,
             family = GameConfig.PLANT_FAMILY.BRASSIKA,
+            name = "Brassika", -- Nom pour l'affichage
             color = {0.7, 0.85, 0.7}, -- Vert pâle
             sunToSprout = 3,
             rainToSprout = 4,
@@ -54,6 +55,7 @@ function CardSystem:initializeDeck()
             id = "solana_" .. i,
             type = GameConfig.CARD_TYPE.PLANT,
             family = GameConfig.PLANT_FAMILY.SOLANA,
+            name = "Solana", -- Nom pour l'affichage
             color = {0.9, 0.7, 0.5}, -- Orange pâle
             sunToSprout = 5,
             rainToSprout = 3,
