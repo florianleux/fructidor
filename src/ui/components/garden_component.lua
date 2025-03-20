@@ -3,20 +3,30 @@
 local ComponentBase = require('src.ui.components.component_base')
 local GameConfig = require('src.utils.game_config')
 
-local GardenComponent = setmetatable({}, {__index = ComponentBase})
+local GardenComponent = {}
 GardenComponent.__index = GardenComponent
 
 -- Constantes de rendu
 local TEXT_SCALE = 0.6 -- Échelle de texte réduite
 
 function GardenComponent.new(params)
-    local self = setmetatable(ComponentBase.new(params), GardenComponent)
+    -- Ne pas utiliser l'héritage par setmetatable pour éviter les problèmes
+    local self = {}
+    setmetatable(self, GardenComponent)
     
-    -- Modèle associé (jardin)
-    self.model = params.garden
+    -- Attributs de base (copier explicitement ComponentBase)
+    self.x = params.x or 0
+    self.y = params.y or 0
+    self.width = params.width or 100
+    self.height = params.height or 100
+    self.visible = params.visible ~= false
+    self.id = params.id or "garden"
+    self.scaleManager = params.scaleManager
     
-    -- Alias pour faciliter la transition du code existant
-    self.garden = self.model
+    -- IMPORTANT: Références directes sans l'ajout d'une couche indirecte
+    self.garden = params.model or params.garden
+    self.dragDrop = params.dragDrop
+    self.onHarvest = params.onHarvest
     
     -- Initialiser un jardin par défaut si nécessaire
     if not self.garden then
@@ -38,9 +48,6 @@ function GardenComponent.new(params)
             end
         end
     end
-    
-    -- Dépendances
-    self.dragDrop = params.dragDrop
     
     -- Taille des cellules du jardin
     self.cellSize = params.cellSize or 70
@@ -69,8 +76,17 @@ function GardenComponent.new(params)
     -- Calculer les dimensions du jardin
     self:calculateGardenDimensions()
     
+    print("GardenComponent initialisé, garden:", tostring(self.garden))
+    
     return self
 end
+
+-- Méthode explicite pour rafraîchir le composant
+function GardenComponent:refreshGarden()
+    print("GardenComponent:refreshGarden() - Mise à jour du composant jardin")
+    -- Recalculer les dimensions
+    self:calculateGardenDimensions()
+ end
 
 function GardenComponent:calculateGardenDimensions()
     -- Calculer la largeur et hauteur totales du jardin
@@ -83,6 +99,13 @@ function GardenComponent:calculateGardenDimensions()
 end
 
 function GardenComponent:draw()
+    -- Vérifier si le jardiin existe
+    if not self.garden then
+        love.graphics.setColor(1, 0, 0, 1)
+        love.graphics.print("Erreur: garden est nil", self.x + 10, self.y + 10)
+        return
+    end
+    
     -- Mettre à jour les dimensions
     self:calculateGardenDimensions()
     
@@ -105,9 +128,14 @@ function GardenComponent:draw()
             
             -- Dessiner le contenu de la cellule
             local cell = self.garden.grid[cy][cx]
-            if cell.plant then
+            if cell and cell.plant then
                 -- Dessiner la plante en utilisant sa couleur
-                love.graphics.setColor(cell.plant.color[1], cell.plant.color[2], cell.plant.color[3])
+                if type(cell.plant.color) == "table" then
+                    love.graphics.setColor(cell.plant.color[1], cell.plant.color[2], cell.plant.color[3])
+                else
+                    -- Fallback sur vert si la couleur n'est pas une table
+                    love.graphics.setColor(0.5, 0.8, 0.5)
+                end
                 
                 -- Dessiner en fonction du stade de croissance
                 if cell.plant.growthStage == GameConfig.GROWTH_STAGE.SEED then
@@ -157,15 +185,15 @@ function GardenComponent:draw()
                     rainNeeded = cell.plant.rainToFruit
                 end
                 
-                local sunText = "☀️" .. cell.plant.accumulatedSun .. "/" .. sunNeeded
-                local rainText = "🌧️" .. cell.plant.accumulatedRain .. "/" .. rainNeeded
+                local sunText = "\226\152\128\239\184\143" .. cell.plant.accumulatedSun .. "/" .. sunNeeded
+                local rainText = "\240\159\140\167\239\184\143" .. cell.plant.accumulatedRain .. "/" .. rainNeeded
                 
                 love.graphics.print(sunText, cellX + 3, cellY + self.cellSize - 24, 0, TEXT_SCALE, TEXT_SCALE)
                 love.graphics.print(rainText, cellX + 3, cellY + self.cellSize - 36, 0, TEXT_SCALE, TEXT_SCALE)
             end
             
             -- Dessiner un objet s'il existe
-            if cell.object then
+            if cell and cell.object then
                 -- TODO: implémenter dessin des objets
             end
         end
@@ -251,6 +279,25 @@ function GardenComponent:mousepressed(x, y, button)
     end
     
     return false -- Le clic n'a pas été traité
+end
+
+-- Implémentation manquante de ComponentBase
+function GardenComponent:getBounds()
+    return self.x, self.y, self.width, self.height
+end
+
+function GardenComponent:containsPoint(x, y)
+    return self.visible and 
+           x >= self.x and x <= self.x + self.width and
+           y >= self.y and y <= self.y + self.height
+end
+
+function GardenComponent:mousereleased(x, y, button)
+    return false
+end
+
+function GardenComponent:mousemoved(x, y, dx, dy)
+    return false
 end
 
 return GardenComponent

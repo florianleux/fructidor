@@ -140,6 +140,12 @@ function DragDrop:stopDrag(garden)
                 if not garden.grid[y][x].plant then
                     if self.cardIndex and self.dependencies.cardSystem then
                         placed = self.dependencies.cardSystem:playCard(self.cardIndex, garden, x, y)
+                        
+                        -- CORRECTION: Forcer la mise à jour du GardenComponent après placement
+                        if placed and uiManager then
+                            print("Plante placée en (", x, ",", y, ") - Mise à jour du composant garden")
+                            uiManager:updateComponent("garden")
+                        end
                     end
                 end
                 
