@@ -16,6 +16,14 @@ function SeasonComponent.new(params)
     -- Alias pour faciliter la transition du code existant
     self.gameState = self.model
     
+    -- Initialisation d'un gameState par défaut si nécessaire
+    if not self.gameState then
+        self.gameState = {
+            currentSeason = GameConfig.SEASON.SPRING,
+            currentTurn = 1
+        }
+    end
+    
     -- Couleurs par saison
     self.seasonColors = {
         [GameConfig.SEASON.SPRING] = {0.7, 0.95, 0.7, 1}, -- Vert clair

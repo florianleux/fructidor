@@ -16,6 +16,16 @@ function WeatherComponent.new(params)
     -- Alias pour faciliter la transition du code existant
     self.gameState = self.model
     
+    -- Initialisation d'un gameState par défaut si nécessaire
+    if not self.gameState then
+        self.gameState = {
+            currentTurn = 1,
+            sunDieValue = 0,
+            rainDieValue = 0,
+            currentSeason = GameConfig.SEASON.SPRING
+        }
+    end
+    
     -- Callback pour la fin du tour
     self.endTurnCallback = params.endTurnCallback
     
