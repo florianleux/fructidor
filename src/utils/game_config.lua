@@ -132,5 +132,24 @@ GameConfig.PLANT_CONFIG = {
   }
 }
 
+--[[
+  SECTION 3: UI ET ÉLÉMENTS GRAPHIQUES
+--]]
+
+-- Constantes UI
+GameConfig.UI = {
+  -- Dimensions des cartes
+  CARD = {
+    WIDTH = 120,
+    HEIGHT = 200,
+    CORNER_RADIUS = 3,
+    HEADER_HEIGHT = 16,
+    TEXT_SCALE = 1.5
+  },
+  -- Palette de couleurs pour les différents éléments d'interface
+  COLORS = {
+    -- À compléter selon les besoins
+  }
+}
 
 return GameConfig
