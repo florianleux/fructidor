@@ -1,16 +1,16 @@
 -- src/elements/dice/Die.lua
 
 -- Constants
-local DIE_SIZE = 40                   -- Width and height of the die
-local DIE_BACKGROUND_COLOR = "#ffffff"  -- Die background color
-local DIE_BORDER_COLOR = "#666666"    -- Die border color
-local DIE_BORDER_WIDTH = 2           -- Border width
-local DIE_CORNER_RADIUS = 6           -- Rounded corner radius
-local DIE_TEXT_COLOR = "#333333"      -- Text color for die value
-local DIE_TEXT_SIZE = 24              -- Font size for die value
-local DIE_LABEL_SIZE = 12             -- Font size for die label
-local DIE_MIN_VALUE = 1               -- Minimum value
-local DIE_MAX_VALUE = 6               -- Maximum value
+local DIE_SIZE = 80                    -- Width and height of the die
+local DIE_BACKGROUND_COLOR = "#ffffff" -- Die background color
+local DIE_BORDER_COLOR = "#666666"     -- Die border color
+local DIE_BORDER_WIDTH = 2             -- Border width
+local DIE_CORNER_RADIUS = 6            -- Rounded corner radius
+local DIE_TEXT_COLOR = "#333333"       -- Text color for die value
+local DIE_TEXT_SIZE = 30               -- Font size for die value
+local DIE_LABEL_SIZE = 15              -- Font size for die label
+local DIE_MIN_VALUE = 1                -- Minimum value
+local DIE_MAX_VALUE = 6                -- Maximum value
 
 -- Die is a base class for dice
 local Die = {}
@@ -22,24 +22,24 @@ local color = require("utils/convertColor")
 -- Constructor
 function Die:new(name, minValue, maxValue)
     local self = setmetatable({}, Die)
-    
+
     -- Basic properties
-    self.name = name or "Die"         -- Die name
+    self.name = name or "Die" -- Die name
     self.minValue = minValue or DIE_MIN_VALUE
     self.maxValue = maxValue or DIE_MAX_VALUE
-    
+
     -- Position and size
     self.x = 0
     self.y = 0
     self.size = DIE_SIZE
-    
+
     -- Current value
     self.value = nil
-    
+
     -- Display options
     self.backgroundColor = DIE_BACKGROUND_COLOR
     self.textColor = DIE_TEXT_COLOR
-    
+
     return self
 end
 
@@ -84,7 +84,7 @@ function Die:draw()
         self.size,
         DIE_CORNER_RADIUS
     )
-    
+
     -- Draw die border
     love.graphics.setColor(color.hex(DIE_BORDER_COLOR))
     love.graphics.setLineWidth(DIE_BORDER_WIDTH)
@@ -96,7 +96,7 @@ function Die:draw()
         self.size,
         DIE_CORNER_RADIUS
     )
-    
+
     -- Draw die value
     love.graphics.setColor(color.hex(self.textColor))
     local valueText = self.value or "?"
@@ -107,7 +107,7 @@ function Die:draw()
         self.size,
         "center"
     )
-    
+
     -- Draw die name
     love.graphics.printf(
         self.name,
@@ -116,7 +116,7 @@ function Die:draw()
         self.size,
         "center"
     )
-    
+
     -- Reset color
     love.graphics.setColor(1, 1, 1)
 end
@@ -135,7 +135,7 @@ end
 -- Check if point is on die
 function Die:containsPoint(x, y)
     return x >= self.x - self.size / 2 and x <= self.x + self.size / 2 and
-           y >= self.y - self.size / 2 and y <= self.y + self.size / 2
+        y >= self.y - self.size / 2 and y <= self.y + self.size / 2
 end
 
 return Die
