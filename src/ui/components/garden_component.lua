@@ -18,6 +18,27 @@ function GardenComponent.new(params)
     -- Alias pour faciliter la transition du code existant
     self.garden = self.model
     
+    -- Initialiser un jardin par défaut si nécessaire
+    if not self.garden then
+        self.garden = {
+            width = 3,
+            height = 2,
+            grid = {}
+        }
+        
+        -- Initialiser la grille
+        for y = 1, self.garden.height do
+            self.garden.grid[y] = {}
+            for x = 1, self.garden.width do
+                self.garden.grid[y][x] = {
+                    plant = nil,
+                    object = nil,
+                    state = GameConfig.CELL_STATE.EMPTY
+                }
+            end
+        end
+    end
+    
     -- Dépendances
     self.dragDrop = params.dragDrop
     
