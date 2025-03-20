@@ -1,9 +1,9 @@
 -- src/elements/cards/Deck.lua
 
 -- Constants
-local INITIAL_DECK_SIZE = 20       -- Initial number of cards in deck
-local DEFAULT_BRASSIKA_COUNT = 12   -- Number of Brassika cards
-local DEFAULT_SOLANA_COUNT = 8     -- Number of Solana cards
+local INITIAL_DECK_SIZE = 20      -- Initial number of cards in deck
+local DEFAULT_BRASSIKA_COUNT = 12 -- Number of Brassika cards
+local DEFAULT_SOLANA_COUNT = 8    -- Number of Solana cards
 
 -- Deck represents the player's collection of cards
 local Deck = {}
@@ -15,17 +15,16 @@ local Card = require("src/elements/cards/Card")
 -- Constructor
 function Deck:new()
     local self = setmetatable({}, Deck)
-    
+
     -- Deck properties
-    self.cards = {}  -- Cards in the deck
-    self.discard = {}  -- Discard pile
-    
+    self.cards = {} -- Cards in the deck
+
     -- Initialize deck with starter cards
     self:initializeStarterDeck()
-    
+
     -- Shuffle the deck
     self:shuffle()
-    
+
     return self
 end
 
@@ -35,7 +34,7 @@ function Deck:initializeStarterDeck()
     for i = 1, DEFAULT_BRASSIKA_COUNT do
         table.insert(self.cards, Card:new("plant", "brassika", "Brassika"))
     end
-    
+
     -- Add Solana cards
     for i = 1, DEFAULT_SOLANA_COUNT do
         table.insert(self.cards, Card:new("plant", "solana", "Solana"))
@@ -54,30 +53,14 @@ end
 function Deck:drawCard()
     if #self.cards > 0 then
         return table.remove(self.cards)
-    elseif #self.discard > 0 then
-        -- If deck is empty, shuffle discard pile back into deck
-        self.cards = self.discard
-        self.discard = {}
-        self:shuffle()
-        return table.remove(self.cards)
     else
-        return nil  -- No cards left
+        return nil -- No cards left
     end
-end
-
--- Add a card to the discard pile
-function Deck:discardCard(card)
-    table.insert(self.discard, card)
 end
 
 -- Get number of cards in deck
 function Deck:getCount()
     return #self.cards
-end
-
--- Get number of cards in discard pile
-function Deck:getDiscardCount()
-    return #self.discard
 end
 
 -- Add a card to the top of the deck
