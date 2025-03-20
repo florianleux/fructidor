@@ -56,8 +56,14 @@ function HandComponent:draw()
     love.graphics.setColor(unpack(self.colors.background))
     love.graphics.rectangle("fill", self.x, self.y, self.width, self.height, 5)
     
+    -- Debug: afficher la référence au cardSystem
+    print("HandComponent:draw() - self.cardSystem: " .. tostring(self.cardSystem))
+    
     -- Récupérer les cartes en main depuis le système de cartes
     local hand = self.cardSystem and self.cardSystem:getHand() or {}
+    
+    -- Debug: afficher le nombre de cartes
+    print("HandComponent: " .. #hand .. " cartes en main")
     
     -- Si aucune carte, afficher un message
     if #hand == 0 then
@@ -80,6 +86,9 @@ function HandComponent:draw()
     
     -- Dessiner chaque carte
     for i, card in ipairs(hand) do
+        -- Debug: afficher informations sur chaque carte
+        print("Carte " .. i .. ": " .. (card.name or "sans nom") .. ", type: " .. tostring(card.type))
+        
         -- Calculer la position de la carte sur un arc
         local normalizedPosition = (#hand > 1) and ((i - 1) / (#hand - 1) * 2 - 1) or 0
         local elevation = maxElevation * (1 - math.abs(normalizedPosition))
@@ -170,8 +179,8 @@ function HandComponent:drawCard(card, x, y, rotation, isHovered)
         
         -- Afficher les besoins de la plante
         love.graphics.setColor(unpack(self.colors.cardText))
-        love.graphics.print("☀️" .. card.sunToSprout, 10, 70, 0, 0.6, 0.6)
-        love.graphics.print("🌧️" .. card.rainToSprout, 10, 85, 0, 0.6, 0.6)
+        love.graphics.print("\226\152\128\239\184\143" .. (card.sunToSprout or "?"), 10, 70, 0, 0.6, 0.6)
+        love.graphics.print("\240\159\140\167\239\184\143" .. (card.rainToSprout or "?"), 10, 85, 0, 0.6, 0.6)
     else
         -- Pour les objets, afficher le type d'objet
         love.graphics.print("Objet: " .. (card.objectType or "?"), 5, 20, 0, 0.7, 0.7)
@@ -244,6 +253,14 @@ function HandComponent:refreshHand()
     -- Cette méthode peut être appelée quand la main du joueur change
     -- mais n'a pas besoin d'implémentation spécifique car les données
     -- sont récupérées directement depuis le cardSystem à chaque frame
+    print("refreshHand() appelé")
+    
+    -- Debug: afficher la référence au cardSystem
+    if self.cardSystem then
+        print("HandComponent:refreshHand - cardSystem présent, cartes: " .. #self.cardSystem:getHand())
+    else
+        print("HandComponent:refreshHand - cardSystem absent!")
+    end
 end
 
 return HandComponent
