@@ -1,7 +1,7 @@
 -- src/elements/dice/Die.lua
 
 -- Constants
-local DIE_SIZE = 80                    -- Width and height of the die
+local DIE_SIZE = 60                    -- Width and height of the die
 local DIE_BACKGROUND_COLOR = "#ffffff" -- Die background color
 local DIE_BORDER_COLOR = "#666666"     -- Die border color
 local DIE_BORDER_WIDTH = 2             -- Border width

@@ -77,8 +77,8 @@ function GameLevel:setPosition(width, height)
     self.roundBoard:setPosition(width / 2, 50)
 
     -- Place dice below round board
-    self.sunDie:setPosition(width / 2 - 30, 200)
-    self.rainDie:setPosition(width / 2 + 30, 200)
+    self.sunDie:setPosition(width / 2 - 60, 180)
+    self.rainDie:setPosition(width / 2 + 60, 180)
 
     -- Place card hand at bottom
     self.cardHand:setPosition(width / 2, height)
