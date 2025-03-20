@@ -12,6 +12,6 @@ function love.draw()
     xCenter, yCenter = windowWidth / 2, windowHeight / 2
 
     love.graphics.setColor(color.hex("#FF0000"))
-    love.graphics.rectangle("fill", t.window.width / 2 - 100, t.window.height / 2 - 100, 1000, 200)
+    love.graphics.rectangle("fill", windowWidth / 2 - 100, windowWidth / 2 - 100, 1000, 200)
 end
 
