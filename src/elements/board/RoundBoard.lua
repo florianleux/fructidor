@@ -199,4 +199,11 @@ function RoundBoard:mousepressed(x, y, button)
     -- Currently no interactive behavior
 end
 
+-- Handle mouse release
+function RoundBoard:mousereleased(x, y, button)
+    -- Currently no interactive behavior for mouse release
+    -- Added to ensure interface compatibility
+    return false
+end
+
 return RoundBoard
