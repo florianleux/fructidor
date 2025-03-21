@@ -182,7 +182,7 @@ end
 
 -- Deselect the card
 function Card:move(dx, dy)
-    self.setPosition(self.x + dx, self.y + dy)
+    self:setPosition(self.x + dx, self.y + dy)
 end
 
 return Card
