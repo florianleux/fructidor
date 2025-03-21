@@ -47,6 +47,11 @@ function love.mousepressed(x, y, button, istouch, presses)
     game:mousepressed(x, y, button)
 end
 
+-- Handle mouse move events
+function love.mousemoved(x, y, dx, dy)
+    game:mousemoved(x, y, dx, dy)
+end
+
 -- Handle mouse release events
 function love.mousereleased(x, y, button, istouch, presses)
     game:mousereleased(x, y, button)
