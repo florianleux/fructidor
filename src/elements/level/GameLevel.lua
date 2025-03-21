@@ -132,6 +132,7 @@ function GameLevel:mousepressed(x, y, button)
             end
             card:select()
             self.cardHand.selectedCard = card
+            card:mousepressed(x, y, button)  -- Call card's mousepressed method
             handled = true
             break
         end
@@ -177,10 +178,13 @@ function GameLevel:mousemoved(x, y, dx, dy)
     -- Note: ici nous permettons à plusieurs composants de réagir au mouvement
     -- car il s'agit principalement d'effets visuels (hover)
 
-    -- Mettre à jour hover des cartes
+    -- Mettre à jour hover des cartes et déplacer les cartes sélectionnées
     for _, card in ipairs(self.cardHand.cards) do
         card.isHovered = card:containsPoint(x, y)
-        if card.isSelected and card.isHovered  then card.move(dx, dy) end
+        -- Important: Use colon syntax to call move method on the card object
+        if card.isSelected and card.isClicked then
+            card:move(dx, dy)
+        end
     end
 
     -- Mettre à jour hover des cellules
@@ -202,9 +206,20 @@ function GameLevel:mousereleased(x, y, button)
 
     -- 1. Vérifier les cartes
     if self.cardHand.selectedCard then
-        -- Logique de sélection/désélection uniquement
-        self.cardHand.selectedCard:deselect()
-        self.cardHand.selectedCard = nil
+        -- Call card's mousereleased method first
+        self.cardHand.selectedCard:mousereleased(x, y, button)
+        
+        -- Place the card on a garden cell if hovering over one
+        local cell = self.garden:getCellAtPosition(x, y)
+        if cell and cell:isEmpty() then
+            -- TODO: Implement card placement on garden cell
+            -- This would typically create a plant based on the card type
+            -- and add it to the cell, then remove the card from hand
+        end
+        
+        -- Keep selection for now (comment this out if you want to deselect on release)
+        -- self.cardHand.selectedCard:deselect()
+        -- self.cardHand.selectedCard = nil
         handled = true
     end
 
