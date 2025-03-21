@@ -121,9 +121,43 @@ function CardHand:update(dt)
     end
 end
 
+-- Handle mouse press
+function CardHand:mousepressed(x, y, button)
+    -- Check cards in reverse order (top to bottom)
+    for i = #self.cards, 1, -1 do
+        local card = self.cards[i]
+        if card:containsPoint(x, y) then
+            -- Deselect previous card if any
+            if self.selectedCard and self.selectedCard ~= card then
+                self.selectedCard:deselect()
+            }
+
+            -- Select this card
+            card:select()
+            card:mousepressed(x, y, button)
+            self.selectedCard = card
+
+            -- Bring card to front by reordering array
+            table.remove(self.cards, i)
+            table.insert(self.cards, card)
+
+            return true
+        end
+    end
+    return false
+end
+
 -- Handle mouse release
 function CardHand:mousereleased(x, y, button)
-    -- To be implemented later for drag & drop
+    if self.selectedCard then
+        self.selectedCard:mousereleased(x, y, button)
+        
+        -- Re-arrange cards after drag and drop
+        self:arrangeCards()
+        
+        return true
+    }
+    return false
 end
 
 return CardHand
