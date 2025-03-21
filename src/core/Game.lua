@@ -110,6 +110,17 @@ function Game:mousepressed(x, y, button)
     end
 end
 
+-- Handle mouse movement
+function Game:mousemoved(x, y, dx, dy)
+    -- Handle mouse movement based on current state
+    local currentState = self.gameState:getCurrentState()
+    
+    if currentState == "gameplay" then
+        -- Forward to level
+        self.currentLevel:mousemoved(x, y, dx, dy)
+    end
+end
+
 -- Handle mouse releases
 function Game:mousereleased(x, y, button)
     -- Handle mouse release based on current state
