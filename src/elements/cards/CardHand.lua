@@ -25,8 +25,9 @@ function CardHand:new(maxCards)
     self.x = 0
     self.y = 0
 
-    -- Selected card
+    -- Selected and hovered cards
     self.selectedCard = nil
+    self.hoveredCard = nil
 
     return self
 end
@@ -108,16 +109,38 @@ end
 
 -- Draw hand
 function CardHand:draw()
-    -- Draw each card from bottom to top
-    for i = 1, #self.cards do
-        self.cards[i]:draw()
+    -- First, sort cards by hover state to draw hovered cards last (on top)
+    local sortedCards = {}
+    
+    -- Copy cards to new table
+    for i, card in ipairs(self.cards) do
+        sortedCards[i] = card
+    end
+    
+    -- Sort the table so non-hovered cards come first, and hovered cards last
+    table.sort(sortedCards, function(a, b) 
+        return a.isHovered == false and b.isHovered == true 
+    end)
+    
+    -- Draw each card in sorted order
+    for i, card in ipairs(sortedCards) do
+        card:draw()
     end
 end
 
 -- Update hand state
 function CardHand:update(dt)
+    -- Reset the hovered card reference
+    self.hoveredCard = nil
+    
+    -- Update each card and track which one is hovered
     for _, card in ipairs(self.cards) do
         card:update(dt)
+        
+        -- If this card is hovered, update our reference
+        if card.isHovered then
+            self.hoveredCard = card
+        end
     end
 end
 
