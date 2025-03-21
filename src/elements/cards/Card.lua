@@ -34,8 +34,8 @@ function Card:new(type, family, name)
 
     -- State
     self.isHovered = false
-    self.isSelected = false
     self.isVisible = true
+    self.isClicked = false
 
     -- Get color conversion utility
     self.color = require("utils/convertColor")
@@ -160,16 +160,6 @@ function Card:containsPoint(x, y)
     return math.abs(rx) < self.width / 2 and math.abs(ry) < self.height / 2
 end
 
--- Select the card
-function Card:select()
-    self.isSelected = true
-end
-
--- Deselect the card
-function Card:deselect()
-    self.isSelected = false
-end
-
 -- Hide the card
 function Card:hide()
     self.isVisible = false
@@ -183,14 +173,17 @@ end
 function Card:mousepressed()
     local mouseX, mouseY = love.mouse.getPosition()
     self.isClicked = self:containsPoint(mouseX, mouseY)
+    if self.isClicked then print("Clicked card") end
 end
 
-function Card:mousereleased(x, y, button)
+function Card:mousereleased()
     self.isClicked = false
+    print("Released card")
 end
 
 function Card:mousemoved(x, y, dx, dy)
     if self.isClicked then
+        print("Moving card")
         self.setPosition(self.x + dx, self.y + dy)
     end
 end
