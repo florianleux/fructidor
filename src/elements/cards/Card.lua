@@ -10,7 +10,8 @@ local CARD_CORNER_RADIUS = 5          -- Rounded corner radius
 local CARD_TEXT_COLOR = "#333333"      -- Card text color
 local CARD_TEXT_SIZE = 12             -- Font size for card text
 local CARD_TITLE_SIZE = 14            -- Font size for card title
-local CARD_HOVER_SCALE = 1.1          -- Scale factor when card is hovered
+local CARD_HOVER_SCALE = 1.35         -- Scale factor when card is hovered
+local CARD_TRANSITION_SPEED = 5       -- Speed of hover transition (higher = faster)
 
 -- Card represents a playable card (plant or item)
 local Card = {}
@@ -36,6 +37,7 @@ function Card:new(type, family, name)
     self.isHovered = false
     self.isSelected = false
     self.isVisible = true
+    self.currentScale = 1             -- Current scale for smooth transitions
     
     -- Get color conversion utility
     self.color = require("utils/convertColor")
@@ -59,6 +61,20 @@ function Card:update(dt)
     -- Update hover state
     local mouseX, mouseY = love.mouse.getPosition()
     self.isHovered = self:containsPoint(mouseX, mouseY)
+    
+    -- Smooth transition for scale
+    local targetScale = self.isHovered and CARD_HOVER_SCALE or 1
+    
+    -- Interpolate current scale towards target scale
+    if self.currentScale ~= targetScale then
+        -- Apply smooth transition with the transition speed
+        self.currentScale = self.currentScale + (targetScale - self.currentScale) * dt * CARD_TRANSITION_SPEED
+        
+        -- Check if we're close enough to snap to the target scale
+        if math.abs(self.currentScale - targetScale) < 0.01 then
+            self.currentScale = targetScale
+        end
+    end
 end
 
 -- Draw the card
@@ -77,12 +93,22 @@ function Card:draw()
     -- Apply rotation
     love.graphics.rotate(self.rotation)
     
-    -- Apply scaling if hovered
-    local scale = 1
-    if self.isHovered then
-        scale = CARD_HOVER_SCALE
+    -- Apply scaling based on hover state
+    love.graphics.scale(self.currentScale, self.currentScale)
+    
+    -- Highlight selected card with a glow effect
+    if self.isSelected then
+        -- Draw a slightly larger background for the glow effect
+        love.graphics.setColor(0.8, 0.9, 1, 0.5) -- Light blue glow
+        love.graphics.rectangle(
+            "fill",
+            -self.width / 2 - 4,
+            -self.height / 2 - 4,
+            self.width + 8,
+            self.height + 8,
+            CARD_CORNER_RADIUS + 2
+        )
     end
-    love.graphics.scale(scale, scale)
     
     -- Draw card background
     love.graphics.setColor(self.color.hex(CARD_BACKGROUND_COLOR))
@@ -154,8 +180,12 @@ function Card:containsPoint(x, y)
     local rx = dx * cos_r - dy * sin_r
     local ry = dx * sin_r + dy * cos_r
     
+    -- Account for current scale in hit testing
+    local scaledWidth = self.width / 2
+    local scaledHeight = self.height / 2
+    
     -- Check if point is inside rectangle
-    return math.abs(rx) < self.width / 2 and math.abs(ry) < self.height / 2
+    return math.abs(rx) < scaledWidth and math.abs(ry) < scaledHeight
 end
 
 -- Select the card
