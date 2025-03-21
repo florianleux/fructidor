@@ -10,7 +10,7 @@ local CARD_CORNER_RADIUS = 5            -- Rounded corner radius
 local CARD_TEXT_COLOR = "#333333"       -- Card text color
 local CARD_TEXT_SIZE = 12               -- Font size for card text
 local CARD_TITLE_SIZE = 14              -- Font size for card title
-local CARD_HOVER_SCALE = 2              -- Scale factor when card is hovered
+local CARD_HOVER_SCALE = 1.6            -- Scale factor when card is hovered
 
 -- Card represents a playable card (plant or item)
 local Card = {}
@@ -178,6 +178,21 @@ end
 -- Show the card
 function Card:show()
     self.isVisible = true
+end
+
+function Card:mousepressed()
+    local mouseX, mouseY = love.mouse.getPosition()
+    self.isClicked = self:containsPoint(mouseX, mouseY)
+end
+
+function Card:mousereleased(x, y, button)
+    self.isClicked = false
+end
+
+function Card:mousemoved(x, y, dx, dy)
+    if self.isClicked then
+        self.setPosition(self.x + dx, self.y + dy)
+    end
 end
 
 return Card
