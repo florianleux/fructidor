@@ -132,6 +132,13 @@ function Die:mousepressed(x, y, button)
     return false
 end
 
+-- Handle mouse release
+function Die:mousereleased(x, y, button)
+    -- Currently no specific behavior needed for mouse release
+    -- Added to ensure interface compatibility
+    return false
+end
+
 -- Check if point is on die
 function Die:containsPoint(x, y)
     return x >= self.x - self.size / 2 and x <= self.x + self.size / 2 and
