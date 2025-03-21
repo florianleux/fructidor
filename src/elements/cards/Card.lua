@@ -1,16 +1,16 @@
 -- src/elements/cards/Card.lua
 
 -- Constants
-local CARD_WIDTH = 80                -- Width of a card
-local CARD_HEIGHT = 120              -- Height of a card
-local CARD_BACKGROUND_COLOR = "#ffffff"  -- Card background color
-local CARD_BORDER_COLOR = "#666666"   -- Card border color
-local CARD_BORDER_WIDTH = 2           -- Width of card border
-local CARD_CORNER_RADIUS = 5          -- Rounded corner radius
-local CARD_TEXT_COLOR = "#333333"      -- Card text color
-local CARD_TEXT_SIZE = 12             -- Font size for card text
-local CARD_TITLE_SIZE = 14            -- Font size for card title
-local CARD_HOVER_SCALE = 1.1          -- Scale factor when card is hovered
+local CARD_WIDTH = 80                   -- Width of a card
+local CARD_HEIGHT = 120                 -- Height of a card
+local CARD_BACKGROUND_COLOR = "#ffffff" -- Card background color
+local CARD_BORDER_COLOR = "#666666"     -- Card border color
+local CARD_BORDER_WIDTH = 2             -- Width of card border
+local CARD_CORNER_RADIUS = 5            -- Rounded corner radius
+local CARD_TEXT_COLOR = "#333333"       -- Card text color
+local CARD_TEXT_SIZE = 12               -- Font size for card text
+local CARD_TITLE_SIZE = 14              -- Font size for card title
+local CARD_HOVER_SCALE = 1.6            -- Scale factor when card is hovered
 
 -- Card represents a playable card (plant or item)
 local Card = {}
@@ -19,27 +19,27 @@ Card.__index = Card
 -- Constructor
 function Card:new(type, family, name)
     local self = setmetatable({}, Card)
-    
+
     -- Card properties
-    self.type = type or "plant"       -- Type of card (plant)
+    self.type = type or "plant"        -- Type of card (plant)
     self.family = family or "brassika" -- Plant family (brassika, solana)
-    self.name = name or "Unknown"     -- Name of the card
-    
+    self.name = name or "Unknown"      -- Name of the card
+
     -- Position and size
     self.x = 0
     self.y = 0
     self.width = CARD_WIDTH
     self.height = CARD_HEIGHT
-    self.rotation = 0                 -- Rotation in radians
-    
+    self.rotation = 0 -- Rotation in radians
+
     -- State
     self.isHovered = false
-    self.isSelected = false
     self.isVisible = true
-    
+    self.isClicked = false
+
     -- Get color conversion utility
     self.color = require("utils/convertColor")
-    
+
     return self
 end
 
@@ -67,23 +67,25 @@ function Card:draw()
     if not self.isVisible then
         return
     end
-    
+
     -- Save the current transformation
     love.graphics.push()
-    
+
     -- Move to card position
     love.graphics.translate(self.x, self.y)
-    
+
     -- Apply rotation
     love.graphics.rotate(self.rotation)
-    
+
     -- Apply scaling if hovered
     local scale = 1
     if self.isHovered then
         scale = CARD_HOVER_SCALE
+        self.rotation = 0
+        love.graphics.translate(0, -100)
     end
     love.graphics.scale(scale, scale)
-    
+
     -- Draw card background
     love.graphics.setColor(self.color.hex(CARD_BACKGROUND_COLOR))
     love.graphics.rectangle(
@@ -94,7 +96,7 @@ function Card:draw()
         self.height,
         CARD_CORNER_RADIUS
     )
-    
+
     -- Draw card border
     love.graphics.setColor(self.color.hex(CARD_BORDER_COLOR))
     love.graphics.setLineWidth(CARD_BORDER_WIDTH)
@@ -106,7 +108,7 @@ function Card:draw()
         self.height,
         CARD_CORNER_RADIUS
     )
-    
+
     -- Draw card title
     love.graphics.setColor(self.color.hex(CARD_TEXT_COLOR))
     love.graphics.printf(
@@ -116,7 +118,7 @@ function Card:draw()
         self.width - 10,
         "center"
     )
-    
+
     -- Draw card type
     love.graphics.printf(
         self.type:upper(),
@@ -125,7 +127,7 @@ function Card:draw()
         self.width - 10,
         "center"
     )
-    
+
     -- Draw card family
     love.graphics.printf(
         self.family:upper(),
@@ -134,10 +136,10 @@ function Card:draw()
         self.width - 10,
         "center"
     )
-    
+
     -- Restore the transformation
     love.graphics.pop()
-    
+
     -- Reset color
     love.graphics.setColor(1, 1, 1)
 end
@@ -147,25 +149,15 @@ function Card:containsPoint(x, y)
     -- Transform point to local coordinates
     local dx = x - self.x
     local dy = y - self.y
-    
+
     -- Rotate point
     local cos_r = math.cos(-self.rotation)
     local sin_r = math.sin(-self.rotation)
     local rx = dx * cos_r - dy * sin_r
     local ry = dx * sin_r + dy * cos_r
-    
+
     -- Check if point is inside rectangle
     return math.abs(rx) < self.width / 2 and math.abs(ry) < self.height / 2
-end
-
--- Select the card
-function Card:select()
-    self.isSelected = true
-end
-
--- Deselect the card
-function Card:deselect()
-    self.isSelected = false
 end
 
 -- Hide the card
@@ -176,6 +168,24 @@ end
 -- Show the card
 function Card:show()
     self.isVisible = true
+end
+
+function Card:mousepressed()
+    local mouseX, mouseY = love.mouse.getPosition()
+    self.isClicked = self:containsPoint(mouseX, mouseY)
+    if self.isClicked then print("Clicked card") end
+end
+
+function Card:mousereleased()
+    self.isClicked = false
+    print("Released card")
+end
+
+function Card:mousemoved(x, y, dx, dy)
+    if self.isClicked then
+        print("Moving card")
+        self.setPosition(self.x + dx, self.y + dy)
+    end
 end
 
 return Card
