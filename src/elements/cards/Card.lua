@@ -170,22 +170,19 @@ function Card:show()
     self.isVisible = true
 end
 
-function Card:mousepressed()
-    local mouseX, mouseY = love.mouse.getPosition()
-    self.isClicked = self:containsPoint(mouseX, mouseY)
-    if self.isClicked then print("Clicked card") end
+-- Select the card
+function Card:select()
+    self.isSelected = true
 end
 
-function Card:mousereleased()
-    self.isClicked = false
-    print("Released card")
+-- Deselect the card
+function Card:deselect()
+    self.isSelected = false
 end
 
-function Card:mousemoved(x, y, dx, dy)
-    if self.isClicked then
-        print("Moving card")
-        self.setPosition(self.x + dx, self.y + dy)
-    end
+-- Deselect the card
+function Card:move(dx, dy)
+    self.setPosition(self.x + dx, self.y + dy)
 end
 
 return Card

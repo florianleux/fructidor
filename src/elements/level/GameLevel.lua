@@ -118,10 +118,10 @@ end
 -- Handle mouse press events with priority order
 function GameLevel:mousepressed(x, y, button)
     if not self.isActive then return end
-    
+
     -- Établir l'ordre de priorité pour les événements
     local handled = false
-    
+
     -- 1. Vérifier d'abord les cartes en main (plus haute priorité)
     for i = #self.cardHand.cards, 1, -1 do
         local card = self.cardHand.cards[i]
@@ -136,7 +136,7 @@ function GameLevel:mousepressed(x, y, button)
             break
         end
     end
-    
+
     -- 2. Si aucune carte n'a capté l'événement, passer aux cellules du jardin
     if not handled then
         local cell = self.garden:getCellAtPosition(x, y)
@@ -149,20 +149,20 @@ function GameLevel:mousepressed(x, y, button)
             handled = true
         end
     end
-    
+
     -- 3. Vérifier les autres composants en ordre de priorité décroissante
     if not handled then
         if self.sunDie:mousepressed(x, y, button) then
             handled = true
         end
     end
-    
+
     if not handled then
         if self.rainDie:mousepressed(x, y, button) then
             handled = true
         end
     end
-    
+
     -- Dernier élément vérifié
     if not handled then
         self.roundBoard:mousepressed(x, y, button)
@@ -172,39 +172,42 @@ end
 -- Handle mouse move events with priority order
 function GameLevel:mousemoved(x, y, dx, dy)
     if not self.isActive then return end
-    
+
     -- Mise à jour des états de hover des différents composants
     -- Note: ici nous permettons à plusieurs composants de réagir au mouvement
     -- car il s'agit principalement d'effets visuels (hover)
-    
+
     -- Mettre à jour hover des cartes
     for _, card in ipairs(self.cardHand.cards) do
         card.isHovered = card:containsPoint(x, y)
+        if card.isSelected and card.isHovered  then card.move(dx, dy) end
     end
-    
+
     -- Mettre à jour hover des cellules
     for _, cell in ipairs(self.garden.cells) do
         cell.isHovered = cell:containsPoint(x, y)
     end
-    
+
     -- Laisser les autres composants traiter le mouvement
     -- pour leurs propres effets visuels
-    self.sunDie:update(0)  -- Utilise update pour actualiser l'état hover
+    self.sunDie:update(0) -- Utilise update pour actualiser l'état hover
     self.rainDie:update(0)
 end
 
 -- Handle mouse release events with priority order
 function GameLevel:mousereleased(x, y, button)
     if not self.isActive then return end
-    
+
     local handled = false
-    
+
     -- 1. Vérifier les cartes
     if self.cardHand.selectedCard then
         -- Logique de sélection/désélection uniquement
+        self.cardHand.selectedCard:deselect()
+        self.cardHand.selectedCard = nil
         handled = true
     end
-    
+
     -- 2. Vérifier les cellules du jardin
     if not handled then
         local cell = self.garden:getCellAtPosition(x, y)
@@ -212,7 +215,7 @@ function GameLevel:mousereleased(x, y, button)
             handled = true
         end
     end
-    
+
     -- 3. Traiter les autres composants
     if not handled then
         if self.sunDie:containsPoint(x, y) then
@@ -220,14 +223,14 @@ function GameLevel:mousereleased(x, y, button)
             handled = true
         end
     end
-    
+
     if not handled then
         if self.rainDie:containsPoint(x, y) then
             self.rainDie:mousereleased(x, y, button)
             handled = true
         end
     end
-    
+
     if not handled then
         self.roundBoard:mousereleased(x, y, button)
     end
