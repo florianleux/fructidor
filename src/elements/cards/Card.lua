@@ -36,6 +36,7 @@ function Card:new(type, family, name)
     self.isHovered = false
     self.isVisible = true
     self.isClicked = false
+    self.isSelected = false
 
     -- Get color conversion utility
     self.color = require("utils/convertColor")
@@ -180,9 +181,27 @@ function Card:deselect()
     self.isSelected = false
 end
 
--- Deselect the card
+-- Move the card by delta coordinates
 function Card:move(dx, dy)
     self:setPosition(self.x + dx, self.y + dy)
+end
+
+-- Handle mouse press
+function Card:mousepressed(x, y, button)
+    if self:containsPoint(x, y) then
+        self.isClicked = true
+        return true
+    end
+    return false
+end
+
+-- Handle mouse release
+function Card:mousereleased(x, y, button)
+    if self.isClicked then
+        self.isClicked = false
+        return true
+    end
+    return false
 end
 
 return Card
