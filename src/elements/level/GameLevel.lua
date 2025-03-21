@@ -180,7 +180,7 @@ function GameLevel:mousemoved(x, y, dx, dy)
     -- Mettre à jour hover des cartes
     for _, card in ipairs(self.cardHand.cards) do
         card.isHovered = card:containsPoint(x, y)
-        if card.isSelected and card.isHovered  then card.move(dx, dy) end
+        if card.isSelected and card.isHovered then card:move(dx, dy) end
     end
 
     -- Mettre à jour hover des cellules
