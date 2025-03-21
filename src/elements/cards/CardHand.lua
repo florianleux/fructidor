@@ -130,7 +130,7 @@ function CardHand:mousepressed(x, y, button)
             -- Deselect previous card if any
             if self.selectedCard and self.selectedCard ~= card then
                 self.selectedCard:deselect()
-            }
+            end
 
             -- Select this card
             card:select()
@@ -156,7 +156,7 @@ function CardHand:mousereleased(x, y, button)
         self:arrangeCards()
         
         return true
-    }
+    end
     return false
 end
 
