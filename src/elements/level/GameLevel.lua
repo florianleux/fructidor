@@ -126,11 +126,12 @@ function GameLevel:mousepressed(x, y, button)
     for i = #self.cardHand.cards, 1, -1 do
         local card = self.cardHand.cards[i]
         if card:containsPoint(x, y) then
-            -- Sélectionner cette carte
+            -- Commencer le drag de la carte
             if self.cardHand.selectedCard then
                 self.cardHand.selectedCard:deselect()
             end
-            card:select()
+            
+            card:startDrag(x, y)
             self.cardHand.selectedCard = card
             handled = true
             break
@@ -173,14 +174,17 @@ end
 function GameLevel:mousemoved(x, y, dx, dy)
     if not self.isActive then return end
 
-    -- Mise à jour des états de hover des différents composants
-    -- Note: ici nous permettons à plusieurs composants de réagir au mouvement
-    -- car il s'agit principalement d'effets visuels (hover)
+    -- Priorité au drag and drop des cartes
+    if self.cardHand.selectedCard and self.cardHand.selectedCard.isDragging then
+        -- Mise à jour directe de la position de la carte en cours de drag
+        self.cardHand.selectedCard:drag(x, y)
+        return -- On termine ici pour optimiser
+    end
 
+    -- Mise à jour des états de hover des différents composants
     -- Mettre à jour hover des cartes
     for _, card in ipairs(self.cardHand.cards) do
         card.isHovered = card:containsPoint(x, y)
-        if card.isSelected and card.isHovered then card:move(dx, dy) end
     end
 
     -- Mettre à jour hover des cellules
@@ -200,15 +204,29 @@ function GameLevel:mousereleased(x, y, button)
 
     local handled = false
 
-    -- 1. Vérifier les cartes
+    -- 1. Vérifier les cartes en cours de drag
     if self.cardHand.selectedCard then
-        -- Logique de sélection/désélection uniquement
+        -- Si on est au-dessus d'une cellule valide du jardin, placer la carte
+        local targetCell = self.garden:getCellAtPosition(x, y)
+        
+        if targetCell and targetCell:isEmpty() then
+            -- Ici on pourrait implémenter la logique pour placer la plante dans la cellule
+            -- Par exemple: targetCell:addPlant(new Plant(self.cardHand.selectedCard.family))
+            -- Et retirer la carte de la main: self.cardHand:removeCard(self.cardHand.selectedCard)
+            
+            -- Pour l'instant, on se contente de déplacer
+            print("Drop sur cellule " .. targetCell.gridX .. "," .. targetCell.gridY)
+        end
+        
+        -- Fin du drag and drop
+        self.cardHand.selectedCard:endDrag()
         self.cardHand.selectedCard:deselect()
         self.cardHand.selectedCard = nil
+        
         handled = true
     end
 
-    -- 2. Vérifier les cellules du jardin
+    -- 2. Vérifier les cellules du jardin si rien d'autre n'a été traité
     if not handled then
         local cell = self.garden:getCellAtPosition(x, y)
         if cell then
