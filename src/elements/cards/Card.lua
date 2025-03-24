@@ -173,11 +173,16 @@ end
 -- Select the card
 function Card:select()
     self.isSelected = true
+    self.originalX = self.x
+    self.originalY = self.y
 end
 
 -- Deselect the card
 function Card:deselect()
     self.isSelected = false
+    self:setPosition(self.originalX, self.originalY)
+    self.originalX = nil
+    self.originalY = nil
 end
 
 -- Deselect the card
