@@ -1,29 +1,51 @@
 -- src/elements/cards/Card.lua
 
 -- Constants
-local CARD_WIDTH = 80                   -- Width of a card
-local CARD_HEIGHT = 120                 -- Height of a card
-local CARD_BACKGROUND_COLOR = "#ffffff" -- Card background color
-local CARD_BORDER_COLOR = "#666666"     -- Card border color
-local CARD_BORDER_WIDTH = 2             -- Width of card border
-local CARD_CORNER_RADIUS = 5            -- Rounded corner radius
-local CARD_TEXT_COLOR = "#333333"       -- Card text color
-local CARD_TEXT_SIZE = 12               -- Font size for card text
-local CARD_TITLE_SIZE = 14              -- Font size for card title
-local CARD_HOVER_SCALE = 1.6            -- Scale factor when card is hovered
+local CARD_WIDTH = 80               -- Width of a card
+local CARD_HEIGHT = 120             -- Height of a card
+local CARD_BORDER_COLOR = "#666666" -- Card border color
+local CARD_BORDER_WIDTH = 2         -- Width of card border
+local CARD_CORNER_RADIUS = 5        -- Rounded corner radius
+local CARD_TEXT_COLOR = "#333333"   -- Card text color
+local CARD_TEXT_SIZE = 12           -- Font size for card text
+local CARD_TITLE_SIZE = 14          -- Font size for card title
+local CARD_HOVER_SCALE = 1.6        -- Scale factor when card is hovered
+local possibleColors = { 'red', 'green', 'blue' }
+local backgroundColors = {
+    red = '#f55b5b',
+    green = '#5bf55b',
+    blue = '#5b5bf5',
+}
+local outlineColors = {
+    red = '##ba0000',
+    green = '#00ba00',
+    blue = '#0000ba',
+}
 
 -- Card represents a playable card (plant or item)
 local Card = {}
 Card.__index = Card
 
 -- Constructor
-function Card:new(type, family, name)
+function Card:new(type, family, color, name, baseScore, seasonsToSow, sunToPlant, rainToPlant, sunToFruit, rainToFruit)
     local self = setmetatable({}, Card)
 
     -- Card properties
-    self.type = type or "plant"        -- Type of card (plant)
-    self.family = family or "brassika" -- Plant family (brassika, solana)
-    self.name = name or "Unknown"      -- Name of the card
+    self.type = type or "plant"                                        -- Type of card (plant)
+    self.family = family or "brassika"                                 -- Plant family (brassika, solana)
+    self.name = name or "Unknown"                                      -- Name of the card
+    self.backgroundColor = backgroundColors[color] or
+        backgroundColors[possibleColors[math.random(#possibleColors)]] -- Color of the card
+    self.outlineColor = outlineColors[color] or
+        outlineColors[possibleColors[math.random(#possibleColors)]]    -- Color of the card
+    self.baseScore = baseScore or math.random(10, 30)                  -- Base score of the card
+    self.sunToPlant = sunToPlant or math.random(-1, 6)                 -- Sun points required to plant
+    self.rainToPlant = rainToPlant or math.random(-1, 6)               -- Rain points required to plant
+    self.sunToFruit = sunToFruit or math.random(-1, 6)                 -- Sun points required to fruit
+    self.rainToFruit = rainToFruit or math.random(-1, 6)               -- Rain points required to fruit
+    self.seasonsToSow = seasonsToSow or { 'SPRING' }                   -- Seasons when the card can be played
+
+
 
     -- Position and size
     self.x = 0
@@ -87,7 +109,7 @@ function Card:draw()
     love.graphics.scale(scale, scale)
 
     -- Draw card background
-    love.graphics.setColor(self.color.hex(CARD_BACKGROUND_COLOR))
+    love.graphics.setColor(self.color.hex(self.backgroundColor))
     love.graphics.rectangle(
         "fill",
         -self.width / 2,
@@ -98,7 +120,7 @@ function Card:draw()
     )
 
     -- Draw card border
-    love.graphics.setColor(self.color.hex(CARD_BORDER_COLOR))
+    love.graphics.setColor(self.color.hex(self.outlineColor))
     love.graphics.setLineWidth(CARD_BORDER_WIDTH)
     love.graphics.rectangle(
         "line",
