@@ -223,7 +223,7 @@ function Card:drawHeader()
 
     -- Dessiner le rectangle de score en haut à droite
     local headerWidth = 30
-    local headerHeight = 30
+    local headerHeight = 60
     local headerX = self.width / 2 - headerWidth -- Coin droit
     local headerY = -self.height / 2             -- Bord supérieur
 
