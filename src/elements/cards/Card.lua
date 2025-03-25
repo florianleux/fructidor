@@ -17,7 +17,7 @@ local backgroundColors = {
     blue = '#5b5bf5',
 }
 local outlineColors = {
-    red = '##ba0000',
+    red = '#ba0000',
     green = '#00ba00',
     blue = '#0000ba',
 }
