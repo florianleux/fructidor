@@ -161,6 +161,8 @@ function Card:draw()
         "center"
     )
 
+    self:drawHeader()
+
     -- Restore the transformation
     love.graphics.pop()
 
@@ -214,7 +216,7 @@ function Card:move(dx, dy)
     self:setPosition(self.x + dx, self.y + dy)
 end
 
-function Card:drawHeader(score, seasonsToSow)
+function Card:drawHeader()
     love.graphics.setColor(self.color.hex(self.backgroundColor))
     love.graphics.rectangle("fill", self.x + self.width - 15, self.y - 15, 30, 65)
     love.graphics.setColor(self.color.hex('#ffffff'))
