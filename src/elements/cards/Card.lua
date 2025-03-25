@@ -17,7 +17,7 @@ local backgroundColors = {
     blue = '#5b5bf5',
 }
 local outlineColors = {
-    red = '##ba0000',
+    red = '#ba0000',
     green = '#00ba00',
     blue = '#0000ba',
 }
@@ -30,20 +30,22 @@ Card.__index = Card
 function Card:new(type, family, color, name, baseScore, seasonsToSow, sunToPlant, rainToPlant, sunToFruit, rainToFruit)
     local self = setmetatable({}, Card)
 
+    if not color then
+        color = possibleColors[math.random(#possibleColors)]
+    end
+
     -- Card properties
-    self.type = type or "plant"                                        -- Type of card (plant)
-    self.family = family or "brassika"                                 -- Plant family (brassika, solana)
-    self.name = name or "Unknown"                                      -- Name of the card
-    self.backgroundColor = backgroundColors[color] or
-        backgroundColors[possibleColors[math.random(#possibleColors)]] -- Color of the card
-    self.outlineColor = outlineColors[color] or
-        outlineColors[possibleColors[math.random(#possibleColors)]]    -- Color of the card
-    self.baseScore = baseScore or math.random(10, 30)                  -- Base score of the card
-    self.sunToPlant = sunToPlant or math.random(-1, 6)                 -- Sun points required to plant
-    self.rainToPlant = rainToPlant or math.random(-1, 6)               -- Rain points required to plant
-    self.sunToFruit = sunToFruit or math.random(-1, 6)                 -- Sun points required to fruit
-    self.rainToFruit = rainToFruit or math.random(-1, 6)               -- Rain points required to fruit
-    self.seasonsToSow = seasonsToSow or { 'SPRING' }                   -- Seasons when the card can be played
+    self.type = type or "plant"                          -- Type of card (plant)
+    self.family = family or "brassika"                   -- Plant family (brassika, solana)
+    self.name = name or "Unknown"                        -- Name of the card
+    self.backgroundColor = backgroundColors[color]       -- Color of the card
+    self.outlineColor = outlineColors[color]             -- Color of the card
+    self.baseScore = baseScore or math.random(10, 30)    -- Base score of the card
+    self.sunToPlant = sunToPlant or math.random(-1, 6)   -- Sun points required to plant
+    self.rainToPlant = rainToPlant or math.random(-1, 6) -- Rain points required to plant
+    self.sunToFruit = sunToFruit or math.random(-1, 6)   -- Sun points required to fruit
+    self.rainToFruit = rainToFruit or math.random(-1, 6) -- Rain points required to fruit
+    self.seasonsToSow = seasonsToSow or { 'SPRING' }     -- Seasons when the card can be played
 
 
 
