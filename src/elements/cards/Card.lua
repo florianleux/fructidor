@@ -32,6 +32,8 @@ function Card:new(type, family, color, name, baseScore, seasonsToSow, sunToPlant
         color = possibleColors[math.random(#possibleColors)]
     end
 
+    print("Creating card with color: " .. color)
+
     -- Card properties
     self.type = type or "plant"                          -- Type of card (plant)
     self.family = family or "brassika"                   -- Plant family (brassika, solana)
