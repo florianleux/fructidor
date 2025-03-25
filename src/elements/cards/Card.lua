@@ -221,11 +221,11 @@ function Card:drawHeader()
     love.graphics.rectangle("fill", self.x + self.width - 15, self.y - 15, 30, 65)
     love.graphics.setColor(self.color.hex('#ffffff'))
     love.graphics.printf(
-        self.type:upper(),
+        self.baseScore,
         self.x + self.width - 10,
         self.y - 15,
         20,
-        self.baseScore
+        'center'
     )
 end
 
