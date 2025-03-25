@@ -111,7 +111,7 @@ function Card:draw()
     love.graphics.scale(scale, scale)
 
     -- Draw card background
-    love.graphics.setColor(self.color.hex(self.backgroundColor))
+    love.graphics.setColor(self.color.hex('#ffffff'))
     love.graphics.rectangle(
         "fill",
         -self.width / 2,
@@ -162,6 +162,7 @@ function Card:draw()
     )
 
     self:drawHeader()
+    self:drawFooter()
 
     -- Restore the transformation
     love.graphics.pop()
