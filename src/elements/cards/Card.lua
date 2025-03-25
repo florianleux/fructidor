@@ -214,4 +214,17 @@ function Card:move(dx, dy)
     self:setPosition(self.x + dx, self.y + dy)
 end
 
+function Card:drawHeader(score, seasonsToSow)
+    love.graphics.setColor(self.color.hex(self.backgroundColor))
+    love.graphics.rectangle("fill", self.x + self.width - 15, self.y - 15, 30, 65)
+    love.graphics.setColor(self.color.hex('#ffffff'))
+    love.graphics.printf(
+        self.type:upper(),
+        self.x + self.width - 10,
+        self.y - 15,
+        20,
+        self.baseScore
+    )
+end
+
 return Card
