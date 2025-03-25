@@ -217,6 +217,7 @@ function Card:move(dx, dy)
 end
 
 function Card:drawHeader()
+    print("Drawing header")
     -- Utiliser des coordonnées relatives à l'origine de la carte (transformée)
     -- Rappel: à ce stade, l'origine (0,0) est au centre de la carte
     love.graphics.setColor(self.color.hex(self.backgroundColor))
