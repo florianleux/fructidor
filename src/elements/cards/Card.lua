@@ -25,7 +25,7 @@ local Card = {}
 Card.__index = Card
 
 -- Constructor
-function Card:new(type, family, color, name, baseScore, seasonsToSow, sunToPlant, rainToPlant, sunToFruit, rainToFruit)
+function Card:new(type, family, name, color, baseScore, seasonsToSow, sunToPlant, rainToPlant, sunToFruit, rainToFruit)
     local self = setmetatable({}, Card)
 
     if not color then
