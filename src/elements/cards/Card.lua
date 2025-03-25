@@ -216,6 +216,58 @@ function Card:move(dx, dy)
     self:setPosition(self.x + dx, self.y + dy)
 end
 
+function Card:drawFooter()
+    -- Dessiner le score en blanc
+    love.graphics.setColor(self.color.hex('#ffffff'))
+    love.graphics.printf(
+        'Plant',
+        -self.width / 2,
+        0,
+        self.width / 4,
+        'center'
+    )
+
+    love.graphics.printf(
+        self.sunToPlant .. '🌞',
+        -self.width / 2,
+        20,
+        self.width / 4,
+        'center'
+    )
+
+    love.graphics.printf(
+        self.rainToPlant .. '💧',
+        -self.width / 2,
+        40,
+        self.width / 4,
+        'center'
+    )
+
+    love.graphics.printf(
+        'Fruit',
+        0,
+        0,
+        self.width / 4,
+        'center'
+    )
+
+    love.graphics.printf(
+        self.sunToFruit .. '🌞',
+        0,
+        20,
+        self.width / 4,
+        'center'
+    )
+
+    love.graphics.printf(
+        self.rainToFruit .. '💧',
+        0,
+        40,
+        self.width / 4,
+        'center'
+    )
+end
+
 function Card:drawHeader()
     print("Drawing header")
     -- Utiliser des coordonnées relatives à l'origine de la carte (transformée)
@@ -225,8 +277,8 @@ function Card:drawHeader()
     -- Dessiner le rectangle de score en haut à droite
     local headerWidth = 30
     local headerHeight = 60
-    local headerX = self.width / 2 - headerWidth -- Coin droit
-    local headerY = -self.height / 2             -- Bord supérieur
+    local headerX = self.width / 2 - headerWidth / 2    -- Coin droit
+    local headerY = -self.height / 2 - headerHeight / 2 -- Bord supérieur
 
     love.graphics.rectangle("fill", headerX, headerY, headerWidth, headerHeight)
 
