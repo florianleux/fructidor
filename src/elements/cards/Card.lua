@@ -217,15 +217,25 @@ function Card:move(dx, dy)
 end
 
 function Card:drawHeader()
-    print("Drawing header")
+    -- Utiliser des coordonnées relatives à l'origine de la carte (transformée)
+    -- Rappel: à ce stade, l'origine (0,0) est au centre de la carte
     love.graphics.setColor(self.color.hex(self.backgroundColor))
-    love.graphics.rectangle("fill", self.x + self.width - 15, self.y - 15, 30, 65)
+
+    -- Dessiner le rectangle de score en haut à droite
+    local headerWidth = 30
+    local headerHeight = 30
+    local headerX = self.width / 2 - headerWidth -- Coin droit
+    local headerY = -self.height / 2             -- Bord supérieur
+
+    love.graphics.rectangle("fill", headerX, headerY, headerWidth, headerHeight)
+
+    -- Dessiner le score en blanc
     love.graphics.setColor(self.color.hex('#ffffff'))
     love.graphics.printf(
         self.baseScore,
-        self.x + self.width - 10,
-        self.y - 15,
-        20,
+        headerX,
+        headerY + 8, -- Centré verticalement
+        headerWidth,
         'center'
     )
 end
