@@ -224,20 +224,20 @@ function Card:drawFooter()
         'Plant',
         -self.width / 2,
         0,
-        self.width / 4,
+        self.width / 2,
         'center'
     )
 
     love.graphics.printf(
-        self.sunToPlant .. '🌞',
+        self.sunToPlant .. 'sun',
         -self.width / 2,
         20,
-        self.width / 4,
+        self.width / 2,
         'center'
     )
 
     love.graphics.printf(
-        self.rainToPlant .. '💧',
+        self.rainToPlant .. 'rain',
         -self.width / 2,
         40,
         self.width / 4,
@@ -248,23 +248,23 @@ function Card:drawFooter()
         'Fruit',
         0,
         0,
-        self.width / 4,
+        self.width / 2,
         'center'
     )
 
     love.graphics.printf(
-        self.sunToFruit .. '🌞',
+        self.sunToFruit .. 'sun',
         0,
         20,
-        self.width / 4,
+        self.width / 2,
         'center'
     )
 
     love.graphics.printf(
-        self.rainToFruit .. '💧',
+        self.rainToFruit .. 'rain',
         0,
         40,
-        self.width / 4,
+        self.width / 2,
         'center'
     )
 end
