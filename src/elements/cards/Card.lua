@@ -219,7 +219,7 @@ end
 
 function Card:drawFooter()
     -- Dessiner le score en blanc
-    love.graphics.setColor(self.color.hex('#ffffff'))
+    love.graphics.setColor(self.color.hex('#000000'))
     love.graphics.printf(
         'Plant',
         -self.width / 2,
