@@ -126,11 +126,13 @@ function GameLevel:mousepressed(x, y, button)
     for i = #self.cardHand.cards, 1, -1 do
         local card = self.cardHand.cards[i]
         if card:containsPoint(x, y) then
-            -- Sélectionner cette carte
+            -- Démarrer le drag and drop de la carte
             if self.cardHand.selectedCard then
                 self.cardHand.selectedCard:deselect()
             end
-            card:select()
+            
+            -- Utiliser startDrag plutôt que select pour le drag and drop
+            card:startDrag(x, y)
             self.cardHand.selectedCard = card
             handled = true
             break
@@ -173,14 +175,18 @@ end
 function GameLevel:mousemoved(x, y, dx, dy)
     if not self.isActive then return end
 
-    -- Mise à jour des états de hover des différents composants
-    -- Note: ici nous permettons à plusieurs composants de réagir au mouvement
-    -- car il s'agit principalement d'effets visuels (hover)
+    -- Priorité au drag and drop des cartes
+    if self.cardHand.selectedCard and self.cardHand.selectedCard.isDragging then
+        -- Mise à jour directe de la position de la carte en cours de drag
+        self.cardHand.selectedCard:drag(x, y)
+        return -- Optimisation: on arrête ici pour le drag
+    end
 
+    -- Mise à jour des états de hover des différents composants
     -- Mettre à jour hover des cartes
     for _, card in ipairs(self.cardHand.cards) do
-        card.isHovered = card:containsPoint(x, y)
-        if card.isSelected and card.isHovered then card:move(dx, dy) end
+        -- L'état hover est géré dans la méthode update de la carte
+        card:update(0)
     end
 
     -- Mettre à jour hover des cellules
@@ -200,28 +206,26 @@ function GameLevel:mousereleased(x, y, button)
 
     local handled = false
 
-    -- 1. Vérifier les cartes
+    -- 1. Vérifier les cartes en cours de drag
     if self.cardHand.selectedCard then
         -- Verifier si on dépose une carte sur une cellule du potager
-        if not handled then
-            local cell = self.garden:getCellAtPosition(x, y)
-            if cell then
-                cell:sowPlant(self.cardHand.selectedCard)
-                self.cardHand.selectedCard:sowCard()
-                self.cardHand:removeCard(self.cardHand.selectedCard)
-                handled = true
-            end
+        local cell = self.garden:getCellAtPosition(x, y)
+        if cell then
+            -- Planter la carte dans la cellule
+            cell:sowPlant(self.cardHand.selectedCard)
+            self.cardHand.selectedCard:sowCard()
+            self.cardHand:removeCard(self.cardHand.selectedCard)
+            handled = true
         else
-            -- Logique de sélection/désélection uniquement
+            -- Terminer le drag sans effet (retour à la position d'origine)
+            self.cardHand.selectedCard:endDrag()
             self.cardHand.selectedCard:deselect()
             self.cardHand.selectedCard = nil
             handled = true
         end
     end
 
-
-
-    -- 3. Traiter les autres composants
+    -- 2. Traiter les autres composants si nécessaire
     if not handled then
         if self.sunDie:containsPoint(x, y) then
             self.sunDie:mousereleased(x, y, button)
