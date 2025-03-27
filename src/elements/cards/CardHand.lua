@@ -80,6 +80,11 @@ function CardHand:arrangeCards()
 
     -- Position each card along the arc
     for i, card in ipairs(self.cards) do
+        -- Si la carte est en cours de drag, ne pas la repositionner
+        if card.isDragging then
+            goto continue
+        end
+        
         local angle = startAngle + (i - 1) * angleStep
 
         -- Calculate position on arc
@@ -92,6 +97,8 @@ function CardHand:arrangeCards()
 
         -- Rotate card to face outward from arc center
         card:setRotation(angle)
+        
+        ::continue::
     end
 end
 
@@ -111,9 +118,21 @@ end
 
 -- Draw hand
 function CardHand:draw()
-    -- Draw each card from bottom to top
+    -- Draw cards in order with priorité pour les cartes en drag
+    local draggedCard = nil
+    
+    -- D'abord toutes les cartes normales
     for i = 1, #self.cards do
-        self.cards[i]:draw()
+        if self.cards[i].isDragging then
+            draggedCard = self.cards[i]
+        else
+            self.cards[i]:draw()
+        end
+    end
+    
+    -- Dessiner la carte en drag en dernier pour qu'elle apparaisse au-dessus
+    if draggedCard then
+        draggedCard:draw()
     end
 end
 
@@ -121,6 +140,19 @@ end
 function CardHand:update(dt)
     for _, card in ipairs(self.cards) do
         card:update(dt)
+    end
+    
+    -- Réarranger les cartes (sauf s'il y a une carte en cours de drag)
+    local needRearrange = true
+    for _, card in ipairs(self.cards) do
+        if card.isDragging then
+            needRearrange = false
+            break
+        end
+    end
+    
+    if needRearrange then
+        self:arrangeCards()
     end
 end
 
