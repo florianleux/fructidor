@@ -160,7 +160,8 @@ function GardenCell:isEmpty()
     return self.plant == nil
 end
 
-function GardenCell:setPlant(plant)
+function GardenCell:sowPlant(plant)
+    print("Sowing plant " .. plant.name .. " in cell " .. self.gridX .. "," .. self.gridY)
     self.plant = plant
 end
 

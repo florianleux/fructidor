@@ -206,7 +206,7 @@ function GameLevel:mousereleased(x, y, button)
         if not handled then
             local cell = self.garden:getCellAtPosition(x, y)
             if cell then
-                cell:setPlant(self.cardHand.selectedCard)
+                cell:sowPlant(self.cardHand.selectedCard)
                 self.cardHand.selectedCard:sowCard()
                 handled = true
             end
