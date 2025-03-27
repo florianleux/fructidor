@@ -48,6 +48,7 @@ function Card:new(type, family, name, color, baseScore, seasonsToSow, sunToPlant
     self.seasonsToSow = seasonsToSow or { 'SPRING' }     -- Seasons when the card can be played
 
 
+    self.isSowed = false
 
     -- Position and size
     self.x = 0
@@ -88,7 +89,7 @@ end
 -- Draw the card
 function Card:draw()
     -- Only draw if visible
-    if not self.isVisible then
+    if not self.isVisible or self.isSowed then
         return
     end
 
@@ -292,6 +293,12 @@ function Card:drawHeader()
         headerWidth,
         'center'
     )
+end
+
+function Card:sowCard()
+    self.isSowed = true
+
+    -- TODO: delete card from hand
 end
 
 return Card

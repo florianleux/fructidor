@@ -202,19 +202,23 @@ function GameLevel:mousereleased(x, y, button)
 
     -- 1. Vérifier les cartes
     if self.cardHand.selectedCard then
-        -- Logique de sélection/désélection uniquement
-        self.cardHand.selectedCard:deselect()
-        self.cardHand.selectedCard = nil
-        handled = true
-    end
-
-    -- 2. Vérifier les cellules du jardin
-    if not handled then
-        local cell = self.garden:getCellAtPosition(x, y)
-        if cell then
+        -- Verifier si on dépose une carte sur une cellule du potager
+        if not handled then
+            local cell = self.garden:getCellAtPosition(x, y)
+            if cell then
+                cell:setPlant(self.cardHand.selectedCard)
+                self.cardHand.selectedCard:sowCard()
+                handled = true
+            end
+        else
+            -- Logique de sélection/désélection uniquement
+            self.cardHand.selectedCard:deselect()
+            self.cardHand.selectedCard = nil
             handled = true
         end
     end
+
+
 
     -- 3. Traiter les autres composants
     if not handled then
