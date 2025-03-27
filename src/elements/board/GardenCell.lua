@@ -163,6 +163,7 @@ end
 function GardenCell:sowPlant(plant)
     print("Sowing plant " .. plant.name .. " in cell " .. self.gridX .. "," .. self.gridY)
     self.plant = plant
+
 end
 
 return GardenCell

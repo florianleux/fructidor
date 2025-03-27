@@ -208,6 +208,7 @@ function GameLevel:mousereleased(x, y, button)
             if cell then
                 cell:sowPlant(self.cardHand.selectedCard)
                 self.cardHand.selectedCard:sowCard()
+                self.cardHand:removeCard(self.cardHand.selectedCard)
                 handled = true
             end
         else

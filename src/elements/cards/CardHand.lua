@@ -56,6 +56,9 @@ function CardHand:removeCard(card)
         if c == card then
             table.remove(self.cards, i)
             self:arrangeCards()
+            if card == self.selectedCard then
+                self.selectedCard = nil
+            end
             return c
         end
     end
